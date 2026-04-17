@@ -8,10 +8,7 @@ require github.com/deadsy/sdfx v0.0.1
 // parallel octree renderer, bbox-pruned unions, flat-polygon SDF)
 // that fluent-sdfx depends on. Imports stay as github.com/deadsy/sdfx
 // so source stays portable if the fork is merged upstream.
-//
-// TODO: once the sdfx fork is pushed and tagged v0.0.1, swap this to
-//   replace github.com/deadsy/sdfx => github.com/snowbldr/sdfx v0.0.1
-replace github.com/deadsy/sdfx => /Users/r/sdfx
+replace github.com/deadsy/sdfx => github.com/snowbldr/sdfx v0.0.1
 
 require (
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
