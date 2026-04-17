@@ -5,13 +5,22 @@ import (
 
 	"github.com/deadsy/sdfx/render"
 	"github.com/deadsy/sdfx/sdf"
-	v3 "github.com/deadsy/sdfx/vec/v3"
+	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	flrender "github.com/snowbldr/fluent-sdfx/render"
 	"github.com/snowbldr/fluent-sdfx/shape"
+	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 type Solid struct {
 	sdf.SDF3
+}
+
+func v3Slice(pts []v3.Vec) []v3sdf.Vec {
+	out := make([]v3sdf.Vec, len(pts))
+	for i, p := range pts {
+		out[i] = v3sdf.Vec(p)
+	}
+	return out
 }
 
 // New wraps a raw SDF3 (with optional error) into a Solid.
@@ -27,6 +36,16 @@ func Wrap(sdf sdf.SDF3) *Solid {
 	return &Solid{sdf}
 }
 
+// BoundingBox returns the solid's 3D axis-aligned bounding box.
+func (s *Solid) BoundingBox() Box3 {
+	return v3.FromSDF(s.SDF3.BoundingBox())
+}
+
+// Evaluate returns the signed distance from p to the solid's surface.
+func (s *Solid) Evaluate(p v3.Vec) float64 {
+	return s.SDF3.Evaluate(v3sdf.Vec(p))
+}
+
 // --- Constructors ---
 
 func Cylinder(height, radius, round float64) *Solid {
@@ -34,7 +53,7 @@ func Cylinder(height, radius, round float64) *Solid {
 }
 
 func Box(size v3.Vec, round float64) *Solid {
-	return New(sdf.Box3D(size, round))
+	return New(sdf.Box3D(v3sdf.Vec(size), round))
 }
 
 func Sphere(radius float64) *Solid {
@@ -46,54 +65,54 @@ func Cone(height, r0, r1, round float64) *Solid {
 }
 
 func Extrude(profile *shape.Shape, height float64) *Solid {
-	return &Solid{sdf.Extrude3D(profile, height)}
+	return &Solid{sdf.Extrude3D(profile.SDF2, height)}
 }
 
 // Slice cuts a cross-section through a solid, returning a 2D shape.
 func Slice(s *Solid, origin, dir v3.Vec) *shape.Shape {
-	return shape.Wrap2D(sdf.Slice2D(s, origin, dir))
+	return shape.Wrap2D(sdf.Slice2D(s.SDF3, v3sdf.Vec(origin), v3sdf.Vec(dir)))
 }
 
 func TwistExtrude(profile *shape.Shape, height, twist float64) *Solid {
-	return &Solid{sdf.TwistExtrude3D(profile, height, twist)}
+	return &Solid{sdf.TwistExtrude3D(profile.SDF2, height, twist)}
 }
 
 func Screw(profile *shape.Shape, height, start, pitch float64, num int) *Solid {
-	return New(sdf.Screw3D(profile, height, start, pitch, num))
+	return New(sdf.Screw3D(profile.SDF2, height, start, pitch, num))
 }
 
 // --- Transform methods ---
 
 func (s *Solid) ZeroZ() *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.Translate3d(v3.Vec{Z: -s.BoundingBox().Min.Z}))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec{Z: -s.BoundingBox().Min.Z}))}
 }
 
 func (s *Solid) Translate(v v3.Vec) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.Translate3d(v))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec(v)))}
 }
 
 func (s *Solid) RotateX(angleDeg float64) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.RotateX(angleDeg*math.Pi/180))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateX(angleDeg*math.Pi/180))}
 }
 
 func (s *Solid) RotateY(angleDeg float64) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.RotateY(angleDeg*math.Pi/180))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateY(angleDeg*math.Pi/180))}
 }
 
 func (s *Solid) RotateZ(angleDeg float64) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.RotateZ(angleDeg*math.Pi/180))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateZ(angleDeg*math.Pi/180))}
 }
 
 func (s *Solid) RotateAxis(axis v3.Vec, angleDeg float64) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.Rotate3d(axis, angleDeg*math.Pi/180))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.Rotate3d(v3sdf.Vec(axis), angleDeg*math.Pi/180))}
 }
 
 func (s *Solid) Scale(v v3.Vec) *Solid {
-	return &Solid{sdf.Transform3D(s, sdf.Scale3d(v))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.Scale3d(v3sdf.Vec(v)))}
 }
 
-func (s *Solid) Transform(m sdf.M44) *Solid {
-	return &Solid{sdf.Transform3D(s, m)}
+func (s *Solid) Transform(m M44) *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.M44(m))}
 }
 
 // --- Boolean methods ---
@@ -152,7 +171,12 @@ func (s *Solid) Correct(factor float64) *Solid {
 // meshCells controls resolution (number of cells on the longest axis).
 // Optional factor (0-1) controls mesh decimation: 0.5 = keep 50% of triangles.
 func (s *Solid) ToSTL(path string, meshCells int, factor ...float64) {
-	flrender.ToSTL(s.SDF3, path, render.NewMarchingCubesOctreeParallel(meshCells), factor...)
+	flrender.ToSTL(s, path, render.NewMarchingCubesOctreeParallel(meshCells), factor...)
+}
+
+// To3MF renders the solid to a 3MF file using the parallel octree renderer.
+func (s *Solid) To3MF(path string, meshCells int) {
+	flrender.To3MF(s, path, meshCells)
 }
 
 type offsetSDF3 struct {
@@ -160,13 +184,13 @@ type offsetSDF3 struct {
 	offset float64
 }
 
-func (o *offsetSDF3) Evaluate(p v3.Vec) float64 {
+func (o *offsetSDF3) Evaluate(p v3sdf.Vec) float64 {
 	return o.sdf.Evaluate(p) + o.offset
 }
 
 func (o *offsetSDF3) BoundingBox() sdf.Box3 {
 	bb := o.sdf.BoundingBox()
-	d := v3.Vec{X: o.offset, Y: o.offset, Z: o.offset}
+	d := v3sdf.Vec{X: o.offset, Y: o.offset, Z: o.offset}
 	return sdf.Box3{Min: bb.Min.Add(d), Max: bb.Max.Sub(d)}
 }
 
@@ -175,7 +199,7 @@ type correctedSDF3 struct {
 	factor float64
 }
 
-func (c *correctedSDF3) Evaluate(p v3.Vec) float64 {
+func (c *correctedSDF3) Evaluate(p v3sdf.Vec) float64 {
 	return c.s.Evaluate(p) * c.factor
 }
 

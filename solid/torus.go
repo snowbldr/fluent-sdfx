@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/deadsy/sdfx/sdf"
-	v3 "github.com/deadsy/sdfx/vec/v3"
+	v3sdf "github.com/deadsy/sdfx/vec/v3"
 )
 
 // Torus creates a torus (donut) centered at the origin in the XY plane.
@@ -19,7 +19,7 @@ type torusSDF3 struct {
 	minorR float64
 }
 
-func (t *torusSDF3) Evaluate(p v3.Vec) float64 {
+func (t *torusSDF3) Evaluate(p v3sdf.Vec) float64 {
 	q := math.Sqrt(p.X*p.X+p.Y*p.Y) - t.majorR
 	return math.Sqrt(q*q+p.Z*p.Z) - t.minorR
 }
@@ -27,7 +27,7 @@ func (t *torusSDF3) Evaluate(p v3.Vec) float64 {
 func (t *torusSDF3) BoundingBox() sdf.Box3 {
 	r := t.majorR + t.minorR
 	return sdf.Box3{
-		Min: v3.Vec{X: -r, Y: -r, Z: -t.minorR},
-		Max: v3.Vec{X: r, Y: r, Z: t.minorR},
+		Min: v3sdf.Vec{X: -r, Y: -r, Z: -t.minorR},
+		Max: v3sdf.Vec{X: r, Y: r, Z: t.minorR},
 	}
 }

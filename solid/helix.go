@@ -3,9 +3,9 @@ package solid
 import (
 	"math"
 
-	v2 "github.com/deadsy/sdfx/vec/v2"
-	v3 "github.com/deadsy/sdfx/vec/v3"
 	"github.com/snowbldr/fluent-sdfx/shape"
+	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 // SweepHelix sweeps a 2D profile along a helix at the given radius.

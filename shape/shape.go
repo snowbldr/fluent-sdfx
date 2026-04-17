@@ -4,7 +4,8 @@ import (
 	"math"
 
 	"github.com/deadsy/sdfx/sdf"
-	v2 "github.com/deadsy/sdfx/vec/v2"
+	v2sdf "github.com/deadsy/sdfx/vec/v2"
+	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 )
 
 type Shape struct {
@@ -16,10 +17,28 @@ func Wrap2D(s sdf.SDF2) *Shape {
 	return &Shape{s}
 }
 
+// BoundingBox returns the shape's 2D axis-aligned bounding box.
+func (s *Shape) BoundingBox() Box2 {
+	return v2.FromSDF(s.SDF2.BoundingBox())
+}
+
+// Evaluate returns the signed distance from p to the shape's surface.
+func (s *Shape) Evaluate(p v2.Vec) float64 {
+	return s.SDF2.Evaluate(v2sdf.Vec(p))
+}
+
+func v2Slice(pts []v2.Vec) []v2sdf.Vec {
+	out := make([]v2sdf.Vec, len(pts))
+	for i, p := range pts {
+		out[i] = v2sdf.Vec(p)
+	}
+	return out
+}
+
 // --- Constructors ---
 
 func Rect(size v2.Vec, round float64) *Shape {
-	return &Shape{sdf.Box2D(size, round)}
+	return &Shape{sdf.Box2D(v2sdf.Vec(size), round)}
 }
 
 func Circle(radius float64) *Shape {
@@ -28,7 +47,7 @@ func Circle(radius float64) *Shape {
 }
 
 func Polygon(pts []v2.Vec) *Shape {
-	s, err := sdf.FlatPolygon2D(pts)
+	s, err := sdf.FlatPolygon2D(v2Slice(pts))
 	if err != nil {
 		panic(err)
 	}
@@ -38,31 +57,31 @@ func Polygon(pts []v2.Vec) *Shape {
 // --- Transform methods ---
 
 func (s *Shape) Translate(v v2.Vec) *Shape {
-	return &Shape{sdf.Transform2D(s, sdf.Translate2d(v))}
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.Translate2d(v2sdf.Vec(v)))}
 }
 
 func (s *Shape) Rotate(angleDeg float64) *Shape {
-	return &Shape{sdf.Transform2D(s, sdf.Rotate2d(angleDeg*math.Pi/180))}
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.Rotate2d(angleDeg*math.Pi/180))}
 }
 
 func (s *Shape) Scale(v v2.Vec) *Shape {
-	return &Shape{sdf.Transform2D(s, sdf.Scale2d(v))}
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.Scale2d(v2sdf.Vec(v)))}
 }
 
 func (s *Shape) MirrorX() *Shape {
-	return &Shape{sdf.Transform2D(s, sdf.MirrorX())}
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.MirrorX())}
 }
 
 func (s *Shape) MirrorY() *Shape {
-	return &Shape{sdf.Transform2D(s, sdf.MirrorY())}
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.MirrorY())}
 }
 
-func (s *Shape) Transform(m sdf.M33) *Shape {
-	return &Shape{sdf.Transform2D(s, m)}
+func (s *Shape) Transform(m M33) *Shape {
+	return &Shape{sdf.Transform2D(s.SDF2, sdf.M33(m))}
 }
 
 func (s *Shape) Offset(amount float64) *Shape {
-	return &Shape{sdf.Offset2D(s, amount)}
+	return &Shape{sdf.Offset2D(s.SDF2, amount)}
 }
 
 // --- Boolean methods ---

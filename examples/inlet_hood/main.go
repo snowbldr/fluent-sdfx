@@ -1,0 +1,43 @@
+package main
+
+import (
+	"math"
+
+	"github.com/snowbldr/fluent-sdfx/obj"
+	"github.com/snowbldr/fluent-sdfx/solid"
+	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+)
+
+// material shrinkage
+const shrink = 1.0 / 0.999 // PLA ~0.1%
+
+var baseSize = v3.XYZ(40, 60, 10)
+var portSize = v3.XYZ(30, 50, 10)
+
+func outerBase() *solid.Solid {
+	trp := obj.TruncRectPyramidParms{
+		Size:        baseSize,
+		BaseAngle:   (90.0 - 2.0) * math.Pi / 180,
+		BaseRadius:  baseSize.X * 0.5,
+		RoundRadius: 0,
+	}
+	return obj.TruncRectPyramid3D(trp)
+}
+
+func innerBase() *solid.Solid {
+	trp := obj.TruncRectPyramidParms{
+		Size:        portSize,
+		BaseAngle:   (90.0 - 5.0) * math.Pi / 180,
+		BaseRadius:  portSize.X * 0.5,
+		RoundRadius: 0,
+	}
+	return obj.TruncRectPyramid3D(trp)
+}
+
+func hood() *solid.Solid {
+	return outerBase().Cut(innerBase())
+}
+
+func main() {
+	hood().ScaleUniform(shrink).ToSTL("hood.stl", 300)
+}

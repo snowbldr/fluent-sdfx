@@ -3,7 +3,7 @@ package shape
 import (
 	"math"
 
-	v2 "github.com/deadsy/sdfx/vec/v2"
+	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 )
 
 func Star(outer, inner float64, points int) *Shape {

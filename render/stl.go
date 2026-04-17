@@ -12,10 +12,11 @@ import (
 
 // ToSTL renders an SDF3 to an STL file atomically.
 // Optional factor (0-1) controls mesh decimation: 0.5 = keep 50% of triangles.
-func ToSTL(s sdf.SDF3, path string, r render.Render3, factor ...float64) {
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+func ToSTL(s SDF3, path string, r render.Render3, factor ...float64) {
+	a := sdf3Adapter{s}
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
 
-	mesh := render.ToTriangles(s, r)
+	mesh := render.ToTriangles(a, r)
 	fmt.Printf("  %d triangles", len(mesh))
 
 	decimateFactor := 0.0

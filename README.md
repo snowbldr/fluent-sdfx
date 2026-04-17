@@ -18,7 +18,7 @@ go get github.com/snowbldr/fluent-sdfx
 package main
 
 import (
-    v3 "github.com/deadsy/sdfx/vec/v3"
+    v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
     "github.com/snowbldr/fluent-sdfx/solid"
 )
 
@@ -28,10 +28,10 @@ func main() {
     hole := solid.Cylinder(25, 2, 0)
 
     part := body.Cut(
-        hole.Translate(v3.Vec{X: 5}),
-        hole.Translate(v3.Vec{X: -5}),
-        hole.Translate(v3.Vec{Y: 5}),
-        hole.Translate(v3.Vec{Y: -5}),
+        hole.Translate(v3.X(5)),
+        hole.Translate(v3.X(-5)),
+        hole.Translate(v3.Y(5)),
+        hole.Translate(v3.Y(-5)),
     )
 
     part.ToSTL("part.stl", 300)
@@ -58,15 +58,34 @@ func main() {
 | `Triangle(radius)` | Equilateral triangle |
 | `Cross(width, thickness)` | Cross / plus sign |
 | `WireGroove(radius, depth, tailAngle)` | Wire groove profile |
+| `Flange1(distance, centerR, sideR)` | Flange profile (two tangent-joined circles) |
+| `CubicSpline(knots)` | Closed cubic spline |
+| `Nagon(n, radius)` | Vertices of a regular N-gon |
+| `AcmeThread/ISOThread/ANSIButtressThread/PlasticButtressThread` | Screw thread profiles |
+| `ThreadLookup(name)` | Look up a standard thread by name |
+| `FlatFlankCam` / `MakeFlatFlankCam` | Flat-flank cam profile |
+| `ThreeArcCam` / `MakeThreeArcCam` | Three-arc cam profile |
+| `GearRack(params)` | Linear gear rack |
+| `Text(font, str, height)` + `LoadFont(path)` | Truetype-rendered text |
+| `NewPoly()` | Fluent polygon builder with `.Smooth/.Chamfer/.Arc/.Rel/.Polar` vertices |
+| `NewBezier()` | Fluent bezier builder with slope handles |
 | `Wrap2D(sdf2)` | Wrap a raw `sdf.SDF2` |
 
 **Transforms:** `Translate`, `Rotate`, `Scale`, `MirrorX`, `MirrorY`, `ScaleUniform`, `Center`, `CenterAndScale`, `Transform`
 
 **Booleans:** `Union`, `Cut`, `Intersect`
 
-**Modifiers:** `Offset`, `CutLine`, `Elongate`
+**Smooth blends:** `SmoothUnion`, `SmoothCut`, `SmoothIntersect` (pair with min/max funcs from `solid`)
 
-**Patterns:** `Array`, `RotateCopy`, `RotateUnion`, `Multi`, `LineOf`
+**Modifiers:** `Offset`, `CutLine`, `Elongate`, `Cache`
+
+**Patterns:** `Array`, `SmoothArray`, `RotateCopy`, `RotateUnion`, `SmoothRotateUnion`, `Multi`, `LineOf`
+
+**Bench / inspect:** `.Benchmark(description)` reports SDF2 evaluation speed; `.MeshBoxes()` returns the acceleration-structure boxes of a mesh-backed shape.
+
+**Bounding boxes:** `Box2` type alias + `NewBox2(center, size)` for creating 2D AABBs (e.g., for random point sampling).
+
+**Mesh-from-lines:** `Mesh2D(segments)` / `Mesh2DSlow(segments)` build a `*Shape` from `[]*Line2`.
 
 ### `solid` — 3D Primitives
 
@@ -111,27 +130,98 @@ func main() {
 
 **Booleans:** `Union`, `UnionAll`, `Cut`, `Intersect`
 
-**Modifiers:** `Shrink`, `Grow`, `Correct`, `Shell`, `CutPlane`, `Elongate`
+**Smooth blends:** `SmoothUnion`, `SmoothDifference`, `SmoothIntersection` with `RoundMin`, `ChamferMin`, `ExpMin`, `PowMin`, `PolyMin`, `PolyMax`
 
-**Patterns:** `Array`, `RotateCopyZ`, `RotateUnionZ`, `Multi`, `LineOf`, `Orient`
+**Mesh / voxel:** `Mesh(triangles)`, `MeshSlow(triangles)`, `.Voxel(cells, progress)`
 
-### `render` — STL Output
+**Modifiers:** `Shrink`, `Grow`, `Correct`, `Shell`, `CutPlane`, `Elongate`, `Offset`
+
+**Patterns:** `Array`, `SmoothArray`, `RotateCopyZ`, `RotateUnionZ`, `SmoothRotateUnionZ`, `Multi`, `LineOf`, `Orient`
+
+**Bench:** `.Benchmark(description)` reports SDF3 evaluation speed.
+
+**Bounding boxes:** `Box3` type alias + `NewBox3(center, size)` for creating 3D AABBs.
+
+### `obj` — Parametric Helpers
+
+Wraps `sdfx/obj` higher-level parametric parts so they plug into the fluent API directly. All helpers take parameter structs by value and panic on invalid input. 2D helpers return `*shape.Shape`; 3D helpers return `*solid.Solid`.
+
+| Function | Description |
+|---|---|
+| `Angle2D/3D(AngleParams)` | L-profile angle bracket |
+| `Arrow3D(ArrowParms)` / `DirectedArrow3D` / `Axes3D(p0, p1)` | Arrows and axis indicators |
+| `Bolt(BoltParms)` | Bolt with hex or socket cap head |
+| `Nut(NutParms)` / `ThreadedCylinder(ThreadedCylinderParms)` | Threaded fasteners |
+| `Washer2D/3D(WasherParms)` | Washers |
+| `Hex2D(r, round)` / `Hex3D(r, h, round)` / `HexHead3D(r, h, "tb")` | Hex shapes/prisms |
+| `ChamferedCylinder(s, kb, kt)` | Chamfer a cylinder top/bottom |
+| `CounterBoredHole3D` / `ChamferedHole3D` / `CounterSunkHole3D` | Hole styles |
+| `BoltCircle2D/3D` / `CircleGrille2D/3D(CircleGrilleParms)` | Hole patterns |
+| `KeyedHole2D/3D(KeyedHoleParms)` | Circle with N key slots |
+| `Keyway2D/3D(KeywayParameters)` | Shaft with keyway |
+| `Knurl3D(KnurlParms)` / `KnurledHead3D(r, h, pitch)` | Knurled surfaces |
+| `Panel2D/3D(PanelParms)` / `PanelHole3D` | Panels with mount holes |
+| `EuroRackPanel2D/3D(EuroRackParms)` | Eurorack module panels |
+| `PanelBox3D(PanelBoxParms)` | Panel-box enclosure — returns `[]*solid.Solid` |
+| `Standoff3D(StandoffParms)` | PCB standoff |
+| `Pipe3D(oR, iR, L)` / `StdPipe3D(name, units, L)` / `PipeLookup(name, units)` | Standard pipes |
+| `PipeConnector3D` / `StdPipeConnector3D` | Multi-port pipe connectors |
+| `Servo3D` / `Servo2D` / `ServoLookup(name)` / `ServoHorn(ServoHornParms)` | Servo bodies and horns |
+| `Spring2D/3D(SpringParms)` / `SpringLength` | Flat planar springs |
+| `GfBase(GfBaseParms)` / `GfBody(GfBodyParms)` | Gridfinity base/body |
+| `DrainCover(DrainCoverParms)` | Drain covers |
+| `Display(DisplayParms, negative)` | Display bezels |
+| `DroneMotorArm` / `DroneMotorArmSocket` | Drone arm parts |
+| `FingerButton2D(FingerButtonParms)` | Finger button profile |
+| `InvoluteGear(InvoluteGearParms)` | Involute gear profile |
+| `Geneva2D(GenevaParms)` | Geneva drive — returns driver and driven |
+| `IsocelesTrapezoid2D` / `IsocelesTriangle2D` | Simple polygon primitives |
+| `TruncRectPyramid3D(TruncRectPyramidParms)` | Truncated rectangular pyramid |
+| `ImportSTL(path, ...)` / `ImportTriMesh(tris, ...)` | Load a mesh as SDF3 |
+| `NewStraightTab` / `NewAngleTab` / `NewScrewTab` / `AddTabs(s, tab, upper, mset)` | Splitting tabs |
+
+### `render` — Output Formats
 
 ```go
 part.ToSTL("output.stl", 600)      // 600 cells along longest axis
-part.ToSTL("output.stl", 600, 0.5) // optional decimation (keep 50%)
+part.ToSTL("output.stl", 600, 0.5) // optional decimation/simplification (keep 50%)
+part.To3MF("output.3mf", 600)
+
+profile.ToDXF("profile.dxf", 400)
+profile.ToSVG("profile.svg", 400)
+profile.ToPNG("preview.png", 800, 600)
 ```
 
-Uses sdfx's parallel marching cubes octree renderer. Optional mesh decimation via [meshoptimizer](https://github.com/zeux/meshoptimizer) (requires CGo).
+3D uses the parallel marching cubes octree renderer. 2D uses the quadtree marching-squares renderer. Optional STL mesh decimation via [meshoptimizer](https://github.com/zeux/meshoptimizer) (requires CGo).
 
-For lower-level access: `render.ToSTL(sdf, path, renderer, factor...)` accepts any `render.Render3`.
+For lower-level access the `render` package exposes `ToSTL`, `To3MF`, `ToDXF`, `ToSVG`, `ToDXFWith`, `ToSVGWith`, `ToPNG`, `SaveDXF`, `SaveSVG`, and renderer constructors `NewMarchingCubesOctreeParallel`, `NewMarchingSquaresQuadtree`, `NewDualContouring2D`. For interactive 2D output, `NewPNG(path, bb, pixels)` and `NewDXF(path)` return `*PNG` / `*DXF` drawing targets with `RenderSDF2`, `Triangle`, `Line`, `Lines`, `Box`, `Points`, `Save` methods.
+
+### `mesh` — Triangle-Mesh Utilities
+
+Type aliases (`Triangle3`, `Triangle2`, `Line2`, `TriangleISet`) plus helpers that bypass the SDF pipeline: `ToTriangles(solid, r)`, `CollectTriangles(solid, r)`, `CountBoundaryEdges`, `SaveSTL(path, tris)`, `Delaunay2d(vs)`, `Delaunay2dSlow(vs)`, `VertexToLine(vs, closed)`.
+
+### `units` — Constants and Conversions
+
+Re-exports the constants and helpers you'll want from `sdf`: `Pi`, `Tau`, `Mil`, `MillimetresPerInch`, `InchesPerMillimetre`, `DtoR(deg)`, `RtoD(rad)`, `EqualFloat64`, `ErrMsg`.
+
+### `vec/{v2,v3,v2i,v3i,p2,conv}` — Vector Types
+
+Re-exports of sdfx's vector packages plus named constructors so you can skip the `Vec{X: ..., Y: ...}` boilerplate:
+
+```go
+v3.X(5)          // Vec{X: 5}
+v3.YZ(2, 3)      // Vec{Y: 2, Z: 3}
+v3.XYZ(1, 2, 3)  // Vec{X: 1, Y: 2, Z: 3}
+v3.Zero          // Vec{}
+```
+
+`v2`/`v3` provide `X`, `Y`, `Z`, `XY`, `XZ`, `YZ`, `XYZ`, `Zero` (float64). `v2i`/`v3i` provide integer-component variants. `p2.R(r)`, `p2.T(theta)`, `p2.RT(r, theta)` build polar vectors. `conv` provides `V2ToV3`, `P2ToV2`, `V2ToV2i`, and the other cross-type conversions.
 
 ## Design
 
-- **Chainable**: every transform/boolean returns a new object, so you can chain: `solid.Cylinder(10, 5, 0).RotateX(90).Translate(v3.Vec{Z: 10})`
+- **Chainable**: every transform/boolean returns a new object, so you can chain: `solid.Cylinder(10, 5, 0).RotateX(90).Translate(v3.Z(10))`
 - **Degrees everywhere**: all angle parameters are in degrees, converted to radians internally
 - **No error returns**: constructors panic on invalid input rather than returning errors — CAD geometry errors are programming bugs, not runtime conditions
-- **Zero raw sdfx needed**: the API covers every operation in sdfx's SDF2, SDF3, and matrix packages
 
 ## License
 
