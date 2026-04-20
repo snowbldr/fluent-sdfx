@@ -1,8 +1,8 @@
 package shape
 
 import (
-	"github.com/deadsy/sdfx/sdf"
 	"github.com/golang/freetype/truetype"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // Font is an opaque truetype font handle for text rendering.

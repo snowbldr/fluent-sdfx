@@ -1,8 +1,8 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
+	"github.com/snowbldr/sdfx/obj"
 )
 
 // FingerButtonParms configures a finger button 2D profile.

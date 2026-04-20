@@ -1,8 +1,8 @@
 package v3
 
 import (
-	"github.com/deadsy/sdfx/sdf"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/sdf"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // Triangle3 is a 3D triangle defined by three vertices.

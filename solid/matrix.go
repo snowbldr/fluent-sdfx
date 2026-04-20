@@ -1,9 +1,9 @@
 package solid
 
 import (
-	"github.com/deadsy/sdfx/sdf"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/sdf"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // M44 is a 4x4 homogeneous transformation matrix.

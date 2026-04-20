@@ -1,10 +1,10 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/obj"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 // DisplayParms configures a display bezel.

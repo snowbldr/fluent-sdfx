@@ -1,9 +1,9 @@
 package shape
 
 import (
-	"github.com/deadsy/sdfx/sdf"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 // M33 is a 3x3 homogeneous transformation matrix for 2D.

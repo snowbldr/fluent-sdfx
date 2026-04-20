@@ -2,7 +2,7 @@
 package p2
 
 import (
-	p2sdf "github.com/deadsy/sdfx/vec/p2"
+	p2sdf "github.com/snowbldr/sdfx/vec/p2"
 )
 
 // Vec is a 2D polar vector with R (radius) and Theta (radians) components.

@@ -3,12 +3,12 @@ package solid
 import (
 	"math"
 
-	"github.com/deadsy/sdfx/render"
-	"github.com/deadsy/sdfx/sdf"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	flrender "github.com/snowbldr/fluent-sdfx/render"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/render"
+	"github.com/snowbldr/sdfx/sdf"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 type Solid struct {

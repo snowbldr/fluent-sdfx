@@ -1,8 +1,8 @@
 package v2
 
 import (
-	"github.com/deadsy/sdfx/sdf"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 // Line2 is a 2D line segment defined by two endpoints.

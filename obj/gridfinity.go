@@ -1,12 +1,12 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	v2isdf "github.com/deadsy/sdfx/vec/v2i"
-	v3isdf "github.com/deadsy/sdfx/vec/v3i"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v2i "github.com/snowbldr/fluent-sdfx/vec/v2i"
 	v3i "github.com/snowbldr/fluent-sdfx/vec/v3i"
+	"github.com/snowbldr/sdfx/obj"
+	v2isdf "github.com/snowbldr/sdfx/vec/v2i"
+	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
 // GfBaseParms configures a Gridfinity base.

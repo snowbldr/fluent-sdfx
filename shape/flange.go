@@ -1,6 +1,6 @@
 package shape
 
-import "github.com/deadsy/sdfx/sdf"
+import "github.com/snowbldr/sdfx/sdf"
 
 // Flange1 returns a 2D flange profile built from a center circle and two side circles
 // connected by tangent lines.

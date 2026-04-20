@@ -3,9 +3,9 @@ package shape
 import (
 	"math"
 
-	"github.com/deadsy/sdfx/sdf"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 // Bezier is a fluent wrapper over sdf.Bezier for building bezier curves.

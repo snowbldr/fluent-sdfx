@@ -2,7 +2,7 @@
 package v3i
 
 import (
-	v3isdf "github.com/deadsy/sdfx/vec/v3i"
+	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
 // Vec is a 3D integer vector with X, Y, Z int components.

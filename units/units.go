@@ -1,7 +1,7 @@
 // Package units re-exports common numeric constants and helpers from sdfx.
 package units
 
-import "github.com/deadsy/sdfx/sdf"
+import "github.com/snowbldr/sdfx/sdf"
 
 // Math constants.
 const (

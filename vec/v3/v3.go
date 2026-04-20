@@ -8,10 +8,10 @@
 package v3
 
 import (
-	"github.com/deadsy/sdfx/vec/conv"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
-	v3isdf "github.com/deadsy/sdfx/vec/v3i"
 	"github.com/snowbldr/fluent-sdfx/vec/v3i"
+	"github.com/snowbldr/sdfx/vec/conv"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
+	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
 // Vec is a 3D vector with X, Y, Z float64 components.

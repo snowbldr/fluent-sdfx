@@ -3,8 +3,8 @@ package shape
 import (
 	"fmt"
 
-	"github.com/deadsy/sdfx/sdf"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // Line2 is a 2D line segment.

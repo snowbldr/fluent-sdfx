@@ -26,6 +26,7 @@ github.com/qmuntal/opc v0.7.12/go.mod h1:jYcgCT/xuTl5oMYeS/nSrfRe9gNrrsAPPeOFE2o
 github.com/snowbldr/sdfx v0.0.1 h1:fOOux/U/3alTk7y1ml95wd2zNrKrSSWZiS0LNbNr5PI=
 github.com/snowbldr/sdfx v0.0.1/go.mod h1:OtSHlC3/o8nWAYSxaEfSny2nRfOqoY91FW1HkeK0/IQ=
 github.com/snowbldr/sdfx v0.0.2/go.mod h1:OtSHlC3/o8nWAYSxaEfSny2nRfOqoY91FW1HkeK0/IQ=
+github.com/snowbldr/sdfx v0.0.3/go.mod h1:zUbBM053fioXSdmecAprNujylqLaQC125jIhd18gvM8=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

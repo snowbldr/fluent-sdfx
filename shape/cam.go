@@ -3,7 +3,7 @@ package shape
 import (
 	"math"
 
-	"github.com/deadsy/sdfx/sdf"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // FlatFlankCam returns a 2D cam profile made from a base circle, a nose circle, and tangential flats.

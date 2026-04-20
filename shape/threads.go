@@ -1,6 +1,6 @@
 package shape
 
-import "github.com/deadsy/sdfx/sdf"
+import "github.com/snowbldr/sdfx/sdf"
 
 // AcmeThread returns the 2D profile of an ACME thread of the given radius and pitch.
 func AcmeThread(radius, pitch float64) *Shape {

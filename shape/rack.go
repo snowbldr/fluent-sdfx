@@ -3,7 +3,7 @@ package shape
 import (
 	"math"
 
-	"github.com/deadsy/sdfx/sdf"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // GearRackParams defines the parameters for a 2D gear rack.

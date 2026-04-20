@@ -1,6 +1,6 @@
 package shape
 
-import "github.com/deadsy/sdfx/sdf"
+import "github.com/snowbldr/sdfx/sdf"
 
 // SmoothUnion blends shapes with a smooth min function (see solid.RoundMin etc for Mins).
 func SmoothUnion(min sdf.MinFunc, shapes ...*Shape) *Shape {

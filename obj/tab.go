@@ -1,11 +1,11 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	"github.com/deadsy/sdfx/sdf"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/obj"
+	"github.com/snowbldr/sdfx/sdf"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // Tab is an interface for tab geometry used when splitting a solid across a plane.

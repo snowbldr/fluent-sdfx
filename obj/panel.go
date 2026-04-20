@@ -1,13 +1,13 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/obj"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // PanelParms configures a 2D/3D panel with holes.

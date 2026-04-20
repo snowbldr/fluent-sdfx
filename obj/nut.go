@@ -1,8 +1,8 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/solid"
+	"github.com/snowbldr/sdfx/obj"
 )
 
 // NutParms configures a nut.

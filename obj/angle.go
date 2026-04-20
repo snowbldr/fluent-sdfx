@@ -1,9 +1,9 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
+	"github.com/snowbldr/sdfx/obj"
 )
 
 // AngleLeg describes one leg of an angle bracket.

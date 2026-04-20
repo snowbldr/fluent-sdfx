@@ -1,10 +1,10 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/obj"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // PanelBoxParms configures a panel box enclosure.

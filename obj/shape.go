@@ -1,8 +1,8 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
+	"github.com/snowbldr/sdfx/obj"
 )
 
 // IsocelesTrapezoid2D returns a 2D isoceles trapezoid.

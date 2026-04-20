@@ -2,7 +2,7 @@
 package v2i
 
 import (
-	v2isdf "github.com/deadsy/sdfx/vec/v2i"
+	v2isdf "github.com/snowbldr/sdfx/vec/v2i"
 )
 
 // Vec is a 2D integer vector with X, Y int components.

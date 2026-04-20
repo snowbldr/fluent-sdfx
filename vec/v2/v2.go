@@ -7,13 +7,13 @@
 package v2
 
 import (
-	"github.com/deadsy/sdfx/vec/conv"
-	p2sdf "github.com/deadsy/sdfx/vec/p2"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
-	v2isdf "github.com/deadsy/sdfx/vec/v2i"
 	"github.com/snowbldr/fluent-sdfx/vec/p2"
 	"github.com/snowbldr/fluent-sdfx/vec/v2i"
 	"github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/vec/conv"
+	p2sdf "github.com/snowbldr/sdfx/vec/p2"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
+	v2isdf "github.com/snowbldr/sdfx/vec/v2i"
 )
 
 // Vec is a 2D vector with X, Y float64 components.

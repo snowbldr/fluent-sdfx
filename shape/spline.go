@@ -1,8 +1,8 @@
 package shape
 
 import (
-	"github.com/deadsy/sdfx/sdf"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // CubicSpline returns a 2D SDF approximation of a closed cubic spline through the given knots.

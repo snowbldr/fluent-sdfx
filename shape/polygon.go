@@ -1,9 +1,9 @@
 package shape
 
 import (
-	"github.com/deadsy/sdfx/sdf"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 // Poly is a fluent wrapper over sdf.Polygon that supports smoothed,

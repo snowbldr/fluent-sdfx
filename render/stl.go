@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deadsy/sdfx/render"
-	"github.com/deadsy/sdfx/sdf"
 	"github.com/snowbldr/fluent-sdfx/render/meshopt"
+	"github.com/snowbldr/sdfx/render"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // ToSTL renders an SDF3 to an STL file atomically.

@@ -1,12 +1,12 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/obj"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // DroneArmParms configures a drone motor arm.

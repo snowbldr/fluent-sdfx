@@ -1,9 +1,9 @@
 package obj
 
 import (
-	"github.com/deadsy/sdfx/obj"
-	"github.com/deadsy/sdfx/sdf"
 	"github.com/snowbldr/fluent-sdfx/solid"
+	"github.com/snowbldr/sdfx/obj"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // ImportTriMesh builds an SDF3 from triangle mesh data with a BVH using the

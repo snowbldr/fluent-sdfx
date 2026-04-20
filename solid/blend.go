@@ -1,7 +1,7 @@
 package solid
 
 import (
-	"github.com/deadsy/sdfx/sdf"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // Blend controls how unions/differences/intersections are combined.

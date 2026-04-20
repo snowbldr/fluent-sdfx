@@ -3,13 +3,13 @@ package solid
 import (
 	"math"
 
-	"github.com/deadsy/sdfx/sdf"
-	v2sdf "github.com/deadsy/sdfx/vec/v2"
-	v3sdf "github.com/deadsy/sdfx/vec/v3"
-	v3isdf "github.com/deadsy/sdfx/vec/v3i"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/sdf"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
+	v3sdf "github.com/snowbldr/sdfx/vec/v3"
+	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
 // --- Additional constructors ---

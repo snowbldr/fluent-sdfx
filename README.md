@@ -1,6 +1,6 @@
 # fluent-sdfx
 
-A fluent, chainable API for [sdfx](https://github.com/deadsy/sdfx) — Go's signed distance function CAD library.
+A fluent, chainable API for [sdfx](https://github.com/snowbldr/sdfx) — Go's signed distance function CAD library.
 
 fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid`, giving you a chainable API that reads like a description of the part you're building. All angles are in degrees. All constructors handle errors internally so you can chain without interruption.
 

@@ -1,8 +1,8 @@
 package solid
 
 import (
-	"github.com/deadsy/sdfx/sdf"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 func toSDFTris(triangles []*v3.Triangle3) []*sdf.Triangle3 {
