@@ -11,20 +11,21 @@ import (
 )
 
 // ToSTL renders an SDF3 to an STL file atomically.
-// Optional factor (0-1) controls mesh decimation: 0.5 = keep 50% of triangles.
-func ToSTL(s SDF3, path string, r render.Render3, factor ...float64) {
+// Optional decimate (0-1) is the fraction of triangles to remove:
+// 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%). 0 disables decimation.
+func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
 	a := sdf3Adapter{s}
 	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
 
 	mesh := render.ToTriangles(a, r)
 	fmt.Printf("  %d triangles", len(mesh))
 
-	decimateFactor := 0.0
-	if len(factor) > 0 {
-		decimateFactor = factor[0]
+	removeRatio := 0.0
+	if len(decimate) > 0 {
+		removeRatio = decimate[0]
 	}
-	if decimateFactor > 0 && decimateFactor < 1 {
-		mesh = decimateMesh(mesh, 1-decimateFactor)
+	if removeRatio > 0 && removeRatio < 1 {
+		mesh = decimateMesh(mesh, 1-removeRatio)
 	}
 	fmt.Println()
 
@@ -53,7 +54,8 @@ func ToSTL(s SDF3, path string, r render.Render3, factor ...float64) {
 	}
 }
 
-func decimateMesh(mesh []*sdf.Triangle3, factor float64) []*sdf.Triangle3 {
+// decimateMesh simplifies a triangle mesh down to keepRatio of its original size.
+func decimateMesh(mesh []*sdf.Triangle3, keepRatio float64) []*sdf.Triangle3 {
 	n := len(mesh)
 	verts := make([]float32, n*9)
 	for i, t := range mesh {
@@ -69,7 +71,7 @@ func decimateMesh(mesh []*sdf.Triangle3, factor float64) []*sdf.Triangle3 {
 		verts[off+8] = float32(t[2].Z)
 	}
 
-	target := int(float64(n) * factor)
+	target := int(float64(n) * keepRatio)
 	out, count := meshopt.Simplify(verts, n, target, 0.1)
 
 	result := make([]*sdf.Triangle3, count)
@@ -82,6 +84,6 @@ func decimateMesh(mesh []*sdf.Triangle3, factor float64) []*sdf.Triangle3 {
 		}
 		result[i] = &tri
 	}
-	fmt.Printf(" → %d after decimation (%.0f%%)", count, factor*100)
+	fmt.Printf(" → %d after decimation (kept %.0f%%)", count, keepRatio*100)
 	return result
 }

@@ -115,11 +115,10 @@ func entranceReducer() *solid.Solid {
 	const xSize = 6.0 * units.MillimetresPerInch
 	const ySize = 1.9 * units.MillimetresPerInch
 
-	k := obj.PanelParms{
+	s := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(xSize, ySize),
 		CornerRadius: 5.0,
-	}
-	s := obj.Panel2D(k)
+	})
 
 	const holeRadius = (3.0 / 16.0) * units.MillimetresPerInch
 	hole := shape.Line(2*holeRadius, holeRadius).Rotate(90)
@@ -141,14 +140,12 @@ func angleHole() *solid.Solid {
 	const t = 0.125 * units.MillimetresPerInch
 	const r = 0.125 * units.MillimetresPerInch
 
-	k := obj.AngleParams{
+	return obj.Angle3D(obj.AngleParams{
 		X:          obj.AngleLeg{Length: l, Thickness: t},
 		Y:          obj.AngleLeg{Length: l, Thickness: t},
 		RootRadius: r,
 		Length:     12 * units.MillimetresPerInch,
-	}
-
-	return obj.Angle3D(k).Translate(v3.XYZ(-0.5*l, -0.5*l, 0))
+	}).Translate(v3.XYZ(-0.5*l, -0.5*l, 0))
 }
 
 func antCap() *solid.Solid {
@@ -172,11 +169,11 @@ func antCap() *solid.Solid {
 }
 
 func main() {
-	entranceReducer().ScaleUniform(shrink).ToSTL("reducer.stl", 300)
+	entranceReducer().ScaleUniform(shrink).STL("reducer.stl", 3.0)
 
-	entranceWheel().ScaleUniform(shrink).ToSTL("wheel.stl", 300)
+	entranceWheel().ScaleUniform(shrink).STL("wheel.stl", 3.0)
 
-	wheelRetainer().ScaleUniform(shrink).ToSTL("retainer.stl", 300)
+	wheelRetainer().ScaleUniform(shrink).STL("retainer.stl", 3.0)
 
-	antCap().ScaleUniform(shrink).ToSTL("antcap.stl", 300)
+	antCap().ScaleUniform(shrink).STL("antcap.stl", 3.0)
 }

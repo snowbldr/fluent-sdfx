@@ -22,27 +22,24 @@ const pipeRadius = 0.5 * pipeDiameter
 const pipeFillet = 0.95 * pipeWall
 
 func flange() *solid.Solid {
-	pp := obj.PanelParms{
+	base := solid.Extrude(obj.Panel2D(obj.PanelParms{
 		Size:         baseSize,
 		CornerRadius: 18.0,
 		HoleDiameter: 3.5, // #6 screw
 		HoleMargin:   [4]float64{12.0, 12.0, 12.0, 12.0},
 		HolePattern:  [4]string{"x", "x", "x", "x"},
-	}
-	panel := obj.Panel2D(pp)
-	base := solid.Extrude(panel, 2.0*baseThickness)
+	}), 2.0*baseThickness)
 
 	outerPipe := solid.Cylinder(2.0*pipeLength, pipeRadius+pipeWall, 0.0).
 		Translate(pipeOffset.ToV3(0))
 	innerPipe := solid.Cylinder(2.0*pipeLength, pipeRadius, 0.0).
 		Translate(pipeOffset.ToV3(0))
 
-	s0 := solid.SmoothUnion(solid.PolyMin(pipeFillet), base, outerPipe)
-	s := s0.Cut(innerPipe)
-
-	return s.CutPlane(v3.XYZ(0, 0, 0), v3.XYZ(0, 0, 1))
+	return solid.SmoothUnion(solid.PolyMin(pipeFillet), base, outerPipe).
+		Cut(innerPipe).
+		CutPlane(v3.XYZ(0, 0, 0), v3.XYZ(0, 0, 1))
 }
 
 func main() {
-	flange().ScaleUniform(shrink).ToSTL("flange.stl", 300)
+	flange().ScaleUniform(shrink).STL("flange.stl", 3.0)
 }

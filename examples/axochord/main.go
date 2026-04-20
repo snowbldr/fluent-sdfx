@@ -86,15 +86,13 @@ func panel() *solid.Solid {
 	sx := (float64(buttonsH-1)*bDeltaH + vx) * 1.5
 	sy := vy * 1.9
 
-	pp := obj.PanelParms{
+	return solid.Extrude(obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(sx, sy),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.0,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"xx", "x", "xx", "x"},
-	}
-	panel := obj.Panel2D(pp)
-	return solid.Extrude(panel, 2.0*(bH0+bH1))
+	}), 2.0*(bH0+bH1))
 }
 
 func main() {
@@ -104,8 +102,8 @@ func main() {
 	upper := s.CutPlane(v3.Zero, v3.XYZ(0, 0, 1))
 	lower := s.CutPlane(v3.Zero, v3.XYZ(0, 0, -1))
 
-	upper.ToSTL("upper.stl", 400)
-	lower.ToSTL("lower.stl", 400)
+	upper.STL("upper.stl", 4.0)
+	lower.STL("lower.stl", 4.0)
 
 	cherryMX().ToDXF("plate.dxf", 400)
 }

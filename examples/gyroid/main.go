@@ -55,14 +55,14 @@ func gyroidTeapot(cyclesPerSide int) (*solid.Solid, error) {
 }
 
 func main() {
-	gyroidCube().ToSTL("gyroid_cube.stl", 300)
-	gyroidSurface().ToSTL("gyroid_surface.stl", 150)
+	gyroidCube().STL("gyroid_cube.stl", 3.0)
+	gyroidSurface().STL("gyroid_surface.stl", 1.5)
 
 	s2, err := gyroidTeapot(10)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
-	s2.ToSTL("gyroid_teapot.stl", 200)
+	s2.STL("gyroid_teapot.stl", 2.0)
 
 	// Rendering to triangles and then saving the STL.
 	m2 := mesh.ToTriangles(s2, flrender.NewMarchingCubesOctreeParallel(200))

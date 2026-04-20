@@ -110,7 +110,7 @@ func dustDeputyToPipeFM(name string) *solid.Solid {
 }
 
 func main() {
-	dustDeputyToVacuumFF().ToSTL("fdd_fvh25.stl", 150)
-	vacuumToPipeMM("sch40:2").ToSTL("mvh25_mpvc.stl", 150)
-	dustDeputyToPipeFM("sch40:2").ToSTL("fdd_mpvc.stl", 150)
+	dustDeputyToVacuumFF().STL("fdd_fvh25.stl", 1.5)
+	vacuumToPipeMM("sch40:2").STL("mvh25_mpvc.stl", 1.5)
+	dustDeputyToPipeFM("sch40:2").STL("fdd_mpvc.stl", 1.5)
 }

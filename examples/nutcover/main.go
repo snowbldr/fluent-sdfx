@@ -44,5 +44,5 @@ func nutcover() *solid.Solid {
 }
 
 func main() {
-	nutcover().ToSTL("cover.stl", 150)
+	nutcover().STL("cover.stl", 1.5)
 }

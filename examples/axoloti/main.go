@@ -30,13 +30,6 @@ const pillarHeight = 16.8
 
 // multiple standoffs
 func standoffs() *solid.Solid {
-	k := obj.StandoffParms{
-		PillarHeight:   pillarHeight,
-		PillarDiameter: 6.0,
-		HoleDepth:      10.0,
-		HoleDiameter:   2.4,
-	}
-
 	zOfs := 0.5 * (pillarHeight + baseThickness)
 
 	// from the board mechanicals
@@ -50,31 +43,33 @@ func standoffs() *solid.Solid {
 		v3.XYZ(116.0, 10.0, zOfs), // H8
 	}
 
-	return obj.Standoff3D(k).Multi(positions)
+	return obj.Standoff3D(obj.StandoffParms{
+		PillarHeight:   pillarHeight,
+		PillarDiameter: 6.0,
+		HoleDepth:      10.0,
+		HoleDiameter:   2.4,
+	}).Multi(positions)
 }
 
 // base returns the base mount.
 func base() *solid.Solid {
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseLength, baseWidth),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{7.0, 20.0, 7.0, 20.0},
 		HolePattern:  [4]string{"xx", "x", "xx", "x"},
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	// cutout
 	l := baseLength - (2.0 * baseFootWidth)
 	w := 18.0
-	yOfs := 0.5 * (baseWidth - pcbWidth)
-	cutout := shape.Rect(v2.XY(l, w), baseFootCornerRadius).Translate(v2.Y(yOfs))
+	cutoutYOfs := 0.5 * (baseWidth - pcbWidth)
+	cutout := shape.Rect(v2.XY(l, w), baseFootCornerRadius).Translate(v2.Y(cutoutYOfs))
 
-	diff := base2d.Cut(cutout)
-	s2 := solid.Extrude(diff, baseThickness)
 	xOfs := 0.5 * pcbLength
-	yOfs = pcbWidth - (0.5 * baseWidth)
-	s2 = s2.Translate(v3.XY(xOfs, yOfs))
+	yOfs := pcbWidth - (0.5 * baseWidth)
+	s2 := solid.Extrude(base2d.Cut(cutout), baseThickness).Translate(v3.XY(xOfs, yOfs))
 
 	// standoffs + body blended with fillet
 	return solid.SmoothUnion(solid.PolyMin(3.0), s2, standoffs())
@@ -95,12 +90,11 @@ func panelCutouts() *shape.Shape {
 	sJack1 := shape.Circle(0.5 * 5.5)
 	sLed := shape.Rect(v2.XY(1.6, 1.6), 0)
 
-	k := obj.FingerButtonParms{
+	sButton := obj.FingerButton2D(obj.FingerButtonParms{
 		Width:  4.0,
 		Gap:    0.6,
 		Length: 20.0,
-	}
-	sButton := obj.FingerButton2D(k).Rotate(-90)
+	}).Rotate(-90)
 
 	jackX := 123.0
 	midiX := 18.8
@@ -136,42 +130,38 @@ func panelCutouts() *shape.Shape {
 
 // frontPanel returns the front panel mount.
 func frontPanel() *solid.Solid {
-	pp := obj.PanelParms{
+	xOfs := 0.5 * pcbLength
+	yOfs := (0.5 * frontPanelHeight) - frontPanelYOffset
+	panel2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(frontPanelLength, frontPanelHeight),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"xx", "x", "xx", "x"},
-	}
-	panel := obj.Panel2D(pp)
-
-	xOfs := 0.5 * pcbLength
-	yOfs := (0.5 * frontPanelHeight) - frontPanelYOffset
-	panel2d := panel.Translate(v2.XY(xOfs, yOfs))
-
-	fp := solid.Extrude(panel2d.Cut(panelCutouts()), frontPanelThickness)
+	}).Translate(v2.XY(xOfs, yOfs))
 
 	// Add buttons to the finger button
 	bHeight := 4.0
 	b := solid.Cylinder(bHeight, 1.4, 0)
-	b0 := b.Translate(pb0.ToV3(-0.5 * bHeight))
-	b1 := b.Translate(pb1.ToV3(-0.5 * bHeight))
 
-	return fp.Union(b0, b1)
+	return solid.Extrude(panel2d.Cut(panelCutouts()), frontPanelThickness).Union(
+		b.Translate(pb0.ToV3(-0.5*bHeight)),
+		b.Translate(pb1.ToV3(-0.5*bHeight)),
+	)
 }
 
 func main() {
 	// front panel
 	s0 := frontPanel()
 	sx := s0.RotateY(180)
-	sx.ScaleUniform(shrink).ToSTL("panel.stl", 400)
+	sx.ScaleUniform(shrink).STL("panel.stl", 4.0)
 
 	// base
 	s1 := base()
-	s1.ScaleUniform(shrink).ToSTL("base.stl", 400)
+	s1.ScaleUniform(shrink).STL("base.stl", 4.0)
 
 	// both together
 	s0moved := s0.Translate(v3.Y(80))
 	s3 := s0moved.Union(s1)
-	s3.ScaleUniform(shrink).ToSTL("panel_and_base.stl", 400)
+	s3.ScaleUniform(shrink).STL("panel_and_base.stl", 4.0)
 }

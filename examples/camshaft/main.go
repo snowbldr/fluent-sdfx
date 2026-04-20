@@ -62,5 +62,5 @@ func camshaft() *solid.Solid {
 }
 
 func main() {
-	camshaft().ToSTL("camshaft.stl", 400)
+	camshaft().STL("camshaft.stl", 4.0)
 }

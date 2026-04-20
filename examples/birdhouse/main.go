@@ -24,13 +24,12 @@ func holeRadius() float64 {
 }
 
 func hook() *solid.Solid {
-	k := obj.WasherParms{
+	return obj.Washer3D(obj.WasherParms{
 		Thickness:   thickness,
 		InnerRadius: hookHeight * 0.5,
 		OuterRadius: hookHeight,
 		Remove:      0.5,
-	}
-	return obj.Washer3D(k).RotateY(90).Translate(v3.XYZ(0, 0, height+thickness))
+	}).RotateY(90).Translate(v3.XYZ(0, 0, height+thickness))
 }
 
 func frame() *solid.Solid {
@@ -58,5 +57,5 @@ func birdhouse() *solid.Solid {
 }
 
 func main() {
-	birdhouse().ToSTL("birdhouse.stl", 300)
+	birdhouse().STL("birdhouse.stl", 3.0)
 }

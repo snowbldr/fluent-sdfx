@@ -159,12 +159,11 @@ func spincapDouble(male bool) (*solid.Solid, error) {
 
 // Inner washer for double spinner.
 func spincapWasher() *solid.Solid {
-	k := obj.WasherParms{
+	return obj.Washer3D(obj.WasherParms{
 		Thickness:   1.0,
 		InnerRadius: (bearingInnerID / 2) * 1.05,
 		OuterRadius: (bearingOuterOD + bearingInnerID) / 4,
-	}
-	return obj.Washer3D(k)
+	})
 }
 
 func main() {
@@ -172,27 +171,27 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
-	b1.ToSTL("body1.stl", 300)
+	b1.STL("body1.stl", 3.0)
 
 	b2, err := body2()
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
-	b2.ToSTL("body2.stl", 300)
+	b2.STL("body2.stl", 3.0)
 
-	spincapSingle().ToSTL("cap_single.stl", 150)
+	spincapSingle().STL("cap_single.stl", 1.5)
 
 	scdm, err := spincapDouble(true)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
-	scdm.ToSTL("cap_double_male.stl", 150)
+	scdm.STL("cap_double_male.stl", 1.5)
 
 	scdf, err := spincapDouble(false)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
-	scdf.ToSTL("cap_double_female.stl", 150)
+	scdf.STL("cap_double_female.stl", 1.5)
 
-	spincapWasher().ToSTL("washer.stl", 150)
+	spincapWasher().STL("washer.stl", 1.5)
 }

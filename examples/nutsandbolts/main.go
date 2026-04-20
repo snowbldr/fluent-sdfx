@@ -7,19 +7,17 @@ import (
 )
 
 func nutAndBolt(name string, totalLength, shankLength float64) *solid.Solid {
-	boltParms := obj.BoltParms{
+	bolt := obj.Bolt(obj.BoltParms{
 		Thread:      name,
 		Style:       "hex",
 		TotalLength: totalLength,
 		ShankLength: shankLength,
-	}
-	bolt := obj.Bolt(boltParms)
+	})
 
-	nutParms := obj.NutParms{
+	nut := obj.Nut(obj.NutParms{
 		Thread: name,
 		Style:  "hex",
-	}
-	nut := obj.Nut(nutParms).Translate(v3.XYZ(0, 0, totalLength*1.5))
+	}).Translate(v3.XYZ(0, 0, totalLength*1.5))
 
 	return nut.Union(bolt)
 }
@@ -31,5 +29,5 @@ func main() {
 	s1 := nutAndBolt("unc_1/2", 2.0, 0.5)
 	s2 := nutAndBolt("unc_1", 2.0, 0.5).Translate(v3.XYZ(xOffset, 0, 0))
 
-	solid.UnionAll(s0, s1, s2).ToSTL("nutandbolt.stl", 400)
+	solid.UnionAll(s0, s1, s2).STL("nutandbolt.stl", 4.0)
 }

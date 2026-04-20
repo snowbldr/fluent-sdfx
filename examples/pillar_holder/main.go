@@ -39,5 +39,5 @@ func holder() *solid.Solid {
 }
 
 func main() {
-	holder().ScaleUniform(shrink).ToSTL("holder.stl", 300)
+	holder().ScaleUniform(shrink).STL("holder.stl", 3.0)
 }

@@ -137,6 +137,6 @@ func subtractive() *solid.Solid {
 }
 
 func main() {
-	clip().ToSTL("clip.stl", 300)
-	additive().Cut(subtractive()).ToSTL("holder.stl", 300)
+	clip().STL("clip.stl", 3.0)
+	additive().Cut(subtractive()).STL("holder.stl", 3.0)
 }

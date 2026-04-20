@@ -14,28 +14,28 @@ import (
 func test1() error {
 	s0 := shape.Rect(v2.XY(0.8, 1.2), 0.05)
 	s1 := solid.RevolveAngle(s0, 225)
-	s1.ToSTL("test1.stl", 200)
+	s1.STL("test1.stl", 2.0)
 	return nil
 }
 
 func test2() error {
 	s0 := shape.Rect(v2.XY(0.8, 1.2), 0.1)
 	s1 := solid.Extrude(s0, 0.3)
-	s1.ToSTL("test2.stl", 200)
+	s1.STL("test2.stl", 2.0)
 	return nil
 }
 
 func test3() error {
 	s0 := shape.Circle(0.1).Translate(v2.X(1))
 	s1 := solid.Revolve(s0)
-	s1.ToSTL("test3.stl", 200)
+	s1.STL("test3.stl", 2.0)
 	return nil
 }
 
 func test4() error {
 	s0 := shape.Rect(v2.XY(0.2, 0.4), 0.05).Translate(v2.X(1))
 	s1 := solid.RevolveAngle(s0, 270)
-	s1.ToSTL("test4.stl", 200)
+	s1.STL("test4.stl", 2.0)
 	return nil
 }
 
@@ -44,7 +44,7 @@ func test5() error {
 		Rotate(45).
 		Translate(v2.X(1))
 	s1 := solid.RevolveAngle(s0, 315)
-	s1.ToSTL("test5.stl", 200)
+	s1.STL("test5.stl", 2.0)
 	return nil
 }
 
@@ -54,7 +54,7 @@ func test6() error {
 	s1 := s0.Translate(v3.Y(d))
 	s2 := s0.Translate(v3.Y(-d))
 	s3 := solid.SmoothUnion(solid.PolyMin(0.1), s1, s2)
-	s3.ToSTL("test6.stl", 200)
+	s3.STL("test6.stl", 2.0)
 	return nil
 }
 
@@ -63,12 +63,12 @@ func test7() error {
 	s1 := s0.RotateAxis(v3.X(1), 60)
 	s2 := solid.SmoothUnion(solid.PolyMin(0.1), s0, s1)
 	s3 := s2.RotateAxis(v3.Z(1), -30)
-	s3.ToSTL("test7.stl", 200)
+	s3.STL("test7.stl", 2.0)
 	return nil
 }
 
 func test9() error {
-	solid.Sphere(10.0).ToSTL("test9.stl", 200)
+	solid.Sphere(10.0).STL("test9.stl", 2.0)
 	return nil
 }
 
@@ -76,12 +76,12 @@ func test10() error {
 	s0 := solid.Box(v3.XYZ(0.8, 0.8, 0.05), 0)
 	s1 := s0.RotateAxis(v3.X(1), 60)
 	s := solid.SmoothUnion(solid.PolyMin(0.1), s0, s1)
-	s.ToSTL("test10.stl", 200)
+	s.STL("test10.stl", 2.0)
 	return nil
 }
 
 func test11() error {
-	solid.Capsule(3.0, 1.4).ToSTL("test11.stl", 200)
+	solid.Capsule(3.0, 1.4).STL("test11.stl", 2.0)
 	return nil
 }
 
@@ -90,7 +90,7 @@ func test12() error {
 	points := []v2.Vec{v2.XY(0, -k), v2.XY(k, k), v2.XY(-k, k)}
 	s0 := shape.Polygon(points).Translate(v2.X(0.8))
 	s1 := solid.RevolveAngle(s0, 360)
-	s1.ToSTL("test12.stl", 200)
+	s1.STL("test12.stl", 2.0)
 	return nil
 }
 
@@ -99,7 +99,7 @@ func test13() error {
 	s0 := shape.Polygon([]v2.Vec{v2.XY(k, -k), v2.XY(k, k), v2.XY(-k, k), v2.XY(-k, -k)}).
 		Translate(v2.X(0.8))
 	s1 := solid.RevolveAngle(s0, 270)
-	s1.ToSTL("test13.stl", 200)
+	s1.STL("test13.stl", 2.0)
 	return nil
 }
 
@@ -118,7 +118,7 @@ func test14() error {
 	points := []v2.Vec{v2.XY(j+c*a-si*b, k+si*a+c*b), v2.XY(j-c*a-si*b, k-si*a+c*b), v2.XY(j-c*a+si*b, k-si*a-c*b), v2.XY(j+c*a+si*b, k+si*a-c*b)}
 	s0 := shape.Polygon(points)
 	s1 := solid.RevolveAngle(s0, 300)
-	s1.ToSTL("test14.stl", 200)
+	s1.STL("test14.stl", 2.0)
 	return nil
 }
 
@@ -132,7 +132,7 @@ func test15() error {
 	points := []v2.Vec{v2.XY(0, -b), v2.XY(a, b), v2.XY(-a, b)}
 	s0 := shape.Polygon(points).Rotate(theta).Translate(v2.XY(j, k))
 	s1 := solid.RevolveAngle(s0, 300).RotateAxis(v3.Z(1), 30)
-	s1.ToSTL("test15.stl", 200)
+	s1.STL("test15.stl", 2.0)
 	return nil
 }
 
@@ -149,7 +149,7 @@ func test16() error {
 	points := []v2.Vec{v2.XY(b0, -c), v2.XY(a0, c), v2.XY(-a1, c), v2.XY(-b1, -c)}
 	s0 := shape.Polygon(points).Rotate(theta).Translate(v2.XY(j, k))
 	s1 := solid.RevolveAngle(s0, 300).RotateAxis(v3.Z(1), 30)
-	s1.ToSTL("test16.stl", 200)
+	s1.STL("test16.stl", 2.0)
 	return nil
 }
 
@@ -162,7 +162,7 @@ func test17() error {
 	points := []v2.Vec{v2.XY(a, 0), v2.XY(-a, b), v2.XY(-a, -b)}
 	s0 := shape.Polygon(points).Translate(v2.XY(j, k))
 	s1 := solid.RevolveAngle(s0, 300).RotateAxis(v3.Z(1), 30)
-	s1.ToSTL("test17.stl", 200)
+	s1.STL("test17.stl", 2.0)
 	return nil
 }
 
@@ -181,7 +181,7 @@ func test18() error {
 	points := []v2.Vec{v2.XY(0, 0), v2.XY(r0, 0), v2.XY(r0, h0), v2.XY(r1, h1), v2.XY(r2, h2), v2.XY(r3, h3), v2.XY(r3, h4), v2.XY(0, h4)}
 	s0 := shape.Polygon(points)
 	s1 := solid.RevolveAngle(s0, 300).RotateAxis(v3.Z(1), 30)
-	s1.ToSTL("test18.stl", 200)
+	s1.STL("test18.stl", 2.0)
 	return nil
 }
 
@@ -191,7 +191,7 @@ func test19() error {
 	s0 := shape.Circle(r)
 	s := s0.SmoothArray(3, 7, v2.XY(k*r, k*r), solid.PolyMin(0.8))
 	s2 := solid.Extrude(s, 1.0)
-	s2.ToSTL("test19.stl", 200)
+	s2.STL("test19.stl", 2.0)
 	return nil
 }
 
@@ -201,7 +201,7 @@ func test20() error {
 	s0 := shape.Circle(r).Translate(v2.X(d))
 	ru := s0.SmoothRotateUnion(5, shape.Rotate2d(20), solid.PolyMin(1.2))
 	s1 := solid.Extrude(ru, 10.0)
-	s1.ToSTL("test20.stl", 200)
+	s1.STL("test20.stl", 2.0)
 	return nil
 }
 
@@ -210,7 +210,7 @@ func test21() error {
 	k := 1.9
 	s0 := solid.Sphere(r)
 	s := s0.SmoothArray(3, 7, 5, v3.XYZ(k*r, k*r, k*r), solid.PolyMin(0.8))
-	s.ToSTL("test21.stl", 200)
+	s.STL("test21.stl", 2.0)
 	return nil
 }
 
@@ -219,12 +219,12 @@ func test22() error {
 	d := 20.0
 	s0 := solid.Sphere(r).Translate(v3.X(d))
 	ru := s0.SmoothRotateUnionZ(5, solid.Rotate3dMatrix(v3.Z(1), 20), solid.PolyMin(1.2))
-	ru.ToSTL("test22.stl", 200)
+	ru.STL("test22.stl", 2.0)
 	return nil
 }
 
 func test26() error {
-	solid.Cylinder(5, 2, 1).ToSTL("test26.stl", 200)
+	solid.Cylinder(5, 2, 1).STL("test26.stl", 2.0)
 	return nil
 }
 
@@ -233,53 +233,53 @@ func test27() error {
 	posn := v3.VecSet{v3.XYZ(2*r, 2*r, 0), v3.XYZ(-r, r, 0), v3.XYZ(r, -r, 0), v3.XYZ(-r, -r, 0), v3.XYZ(0, 0, 0)}
 	cyl := solid.Cylinder(3, 1, 0)
 	s := cyl.Multi(posn)
-	s.ToSTL("test27.stl", 200)
+	s.STL("test27.stl", 2.0)
 	return nil
 }
 
 func test28() error {
-	solid.Cone(20, 12, 8, 2).ToSTL("test28.stl", 200)
+	solid.Cone(20, 12, 8, 2).STL("test28.stl", 2.0)
 	return nil
 }
 
 func test29() error {
 	s0 := shape.Line(10, 3)
 	s1 := solid.Extrude(s0, 4)
-	s1.ToSTL("test29.stl", 200)
+	s1.STL("test29.stl", 2.0)
 	return nil
 }
 
 func test30() error {
 	s0 := shape.Line(10, 3).CutLine(v2.X(4), v2.XY(1, 1))
 	s1 := solid.Extrude(s0, 4)
-	s1.ToSTL("test30.stl", 200)
+	s1.STL("test30.stl", 2.0)
 	return nil
 }
 
 func test31() error {
 	s := obj.CounterSunkHole3D(30, 2)
-	s.ToSTL("test31.stl", 200)
+	s.STL("test31.stl", 2.0)
 	return nil
 }
 
 func test32() error {
 	s0 := shape.MakeFlatFlankCam(0.094, 2.0*57.5, 0.625)
 	s1 := solid.Extrude(s0, 0.1)
-	s1.ToSTL("cam0.stl", 200)
+	s1.STL("cam0.stl", 2.0)
 	return nil
 }
 
 func test33() error {
 	s0 := shape.ThreeArcCam(30, 20, 5, 50000)
 	s1 := solid.Extrude(s0, 4)
-	s1.ToSTL("cam1.stl", 200)
+	s1.STL("cam1.stl", 2.0)
 	return nil
 }
 
 func test34() error {
 	s0 := shape.MakeThreeArcCam(0.1, 2.0*80, 0.7, 1.1)
 	s1 := solid.Extrude(s0, 0.1)
-	s1.ToSTL("cam2.stl", 200)
+	s1.STL("cam2.stl", 2.0)
 	return nil
 }
 
@@ -288,22 +288,21 @@ func test35() error {
 	d := 20.0
 	s0 := shape.Line(r, 1.0).Translate(v2.X(d)).RotateCopy(15)
 	s1 := solid.Extrude(s0, 10.0)
-	s1.ToSTL("rotate_copy.stl", 200)
+	s1.STL("rotate_copy.stl", 2.0)
 	return nil
 }
 
 func test36() error {
-	k := obj.GenevaParms{
+	sDriver, sDriven := obj.Geneva2D(obj.GenevaParms{
 		NumSectors:     6,
 		CenterDistance: 100,
 		DriverRadius:   40,
 		DrivenRadius:   80,
 		PinRadius:      5,
 		Clearance:      0.5,
-	}
-	sDriver, sDriven := obj.Geneva2D(k)
-	solid.Extrude(sDriver, 10).ToSTL("driver.stl", 200)
-	solid.Extrude(sDriven, 10).ToSTL("driven.stl", 200)
+	})
+	solid.Extrude(sDriver, 10).STL("driver.stl", 2.0)
+	solid.Extrude(sDriven, 10).STL("driven.stl", 2.0)
 	return nil
 }
 
@@ -312,14 +311,14 @@ func test37() error {
 	p := 2.0
 	isoThread := shape.ISOThread(r, p, true)
 	s := solid.Screw(isoThread, 50, 0, p, 1)
-	s.ToSTL("screw.stl", 400)
+	s.STL("screw.stl", 4.0)
 	return nil
 }
 
 func test39() error {
 	s0 := shape.Flange1(30, 20, 10)
 	s1 := solid.Extrude(s0, 5)
-	s1.ToSTL("flange.stl", 200)
+	s1.STL("flange.stl", 2.0)
 	return nil
 }
 
@@ -330,7 +329,7 @@ func test40() error {
 	s1 := solid.Box(v3.XYZ(d-wall, d-wall, d), wall/2).
 		Translate(v3.Z(wall / 2))
 	s := solid.SmoothDifference(solid.PolyMax(2), s0, s1)
-	s.ToSTL("rounded_box.stl", 200)
+	s.STL("rounded_box.stl", 2.0)
 	return nil
 }
 
@@ -338,14 +337,14 @@ func test41() error {
 	s0 := solid.Cylinder(20.0, 5.0, 0)
 	s1 := solid.Slice(s0, v3.Zero, v3.YZ(1, 1))
 	s2 := solid.Revolve(s1)
-	s2.ToSTL("ellipsoid_egg.stl", 200)
+	s2.STL("ellipsoid_egg.stl", 2.0)
 	return nil
 }
 
 func test43() error {
 	s0 := shape.Line(10, 3).CutLine(v2.X(4), v2.XY(1, 1))
 	s1 := solid.ExtrudeRounded(s0, 4, 1)
-	s1.ToSTL("cut2d.stl", 300)
+	s1.STL("cut2d.stl", 3.0)
 	return nil
 }
 
@@ -354,7 +353,7 @@ func test44() error {
 	s0 := shape.Polygon(shape.Nagon(5, r))
 	s1 := shape.Circle(r / 2)
 	s2 := solid.Loft(s1, s0, 200.0, 20.0)
-	s2.ToSTL("loft.stl", 300)
+	s2.STL("loft.stl", 3.0)
 	return nil
 }
 
@@ -365,20 +364,18 @@ func test49() error {
 }
 
 func test50() error {
-	k := obj.WasherParms{
+	obj.Washer3D(obj.WasherParms{
 		Thickness:   10,
 		InnerRadius: 40,
 		OuterRadius: 50,
 		Remove:      0.3,
-	}
-	s := obj.Washer3D(k)
-	s.ToSTL("washer.stl", 300)
+	}).STL("washer.stl", 3.0)
 	return nil
 }
 
 func test51() error {
 	s := obj.StdPipe3D("sch40:1", "mm", 100)
-	s.ToSTL("standard_pipe.stl", 300)
+	s.STL("standard_pipe.stl", 3.0)
 	return nil
 }
 

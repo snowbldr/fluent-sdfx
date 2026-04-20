@@ -34,7 +34,7 @@ func main() {
         hole.Translate(v3.Y(-5)),
     )
 
-    part.ToSTL("part.stl", 300)
+    part.STL("part.stl", 3.0)
 }
 ```
 
@@ -183,14 +183,28 @@ Wraps `sdfx/obj` higher-level parametric parts so they plug into the fluent API 
 ### `render` — Output Formats
 
 ```go
-part.ToSTL("output.stl", 600)      // 600 cells along longest axis
-part.ToSTL("output.stl", 600, 0.5) // optional decimation/simplification (keep 50%)
-part.To3MF("output.3mf", 600)
+part.STL("output.stl", 6.0)      // 6 cells per mm
+part.STL("output.stl", 6.0, 0.9) // optional decimation — remove 90% of triangles (keep 10%)
+part.ThreeMF("output.3mf", 6.0)  // alias: .MF3(...)
 
 profile.ToDXF("profile.dxf", 400)
 profile.ToSVG("profile.svg", 400)
 profile.ToPNG("preview.png", 800, 600)
 ```
+
+**Picking `cellsPerMM`.** 3D output resolution is a mesh *density* in cells per millimeter along the longest bounding-box axis. Pick the number based on how much detail you want per unit of real-world size, independent of how big the part is:
+
+| Scenario | `cellsPerMM` | Resulting cells on longest axis |
+| --- | --- | --- |
+| 500 mm enclosure, rough preview | `0.2` | 100 |
+| 500 mm enclosure, final | `2.0` | 1000 |
+| 50 mm bracket, typical | `5.0` | 250 |
+| 10 mm gear, detailed | `20.0` | 200 |
+| 1 mm sphere | `12.0` | 32 (floored by `solid.MinCells`) |
+
+Render time scales roughly with cells³ — halving `cellsPerMM` is an 8× speedup. Drop it low for iteration, crank it for final output.
+
+Tiny parts are floored at `solid.MinCells` (default 32) so a 1 mm sphere at `cellsPerMM=3` still produces a recognizable mesh instead of an empty STL. Raise `solid.MinCells` for more sub-mm detail, lower it (or set to `1`) for raw behavior.
 
 3D uses the parallel marching cubes octree renderer. 2D uses the quadtree marching-squares renderer. Optional STL mesh decimation via [meshoptimizer](https://github.com/zeux/meshoptimizer) (requires CGo).
 
@@ -216,6 +230,18 @@ v3.Zero          // Vec{}
 ```
 
 `v2`/`v3` provide `X`, `Y`, `Z`, `XY`, `XZ`, `YZ`, `XYZ`, `Zero` (float64). `v2i`/`v3i` provide integer-component variants. `p2.R(r)`, `p2.T(theta)`, `p2.RT(r, theta)` build polar vectors. `conv` provides `V2ToV3`, `P2ToV2`, `V2ToV2i`, and the other cross-type conversions.
+
+## Dev loop: `stldev`
+
+For an iterative dev loop, pair fluent-sdfx with [`stldev`](https://github.com/snowbldr/stldev) — a small CLI that watches your Go source, re-runs your build command, and previews the generated STLs in [f3d](https://f3d.app) with auto-reload and tiled windows.
+
+```bash
+go install github.com/snowbldr/stldev@latest
+
+stldev -cmd "go run ." part.stl
+```
+
+See the [`stldev` README](https://github.com/snowbldr/stldev) for flags, the `--` passthrough for f3d args, and a Makefile-driven workflow that scales cleanly to multi-part assemblies.
 
 ## Design
 

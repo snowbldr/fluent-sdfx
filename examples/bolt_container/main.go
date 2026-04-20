@@ -40,5 +40,5 @@ func boltContainer() *solid.Solid {
 }
 
 func main() {
-	boltContainer().ToSTL("container.stl", 200)
+	boltContainer().STL("container.stl", 2.0)
 }

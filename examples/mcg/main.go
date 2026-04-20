@@ -78,5 +78,5 @@ func macCheeseGrater(ncol, nrow int, radius float64) *solid.Solid {
 }
 
 func main() {
-	macCheeseGrater(15, 6, 10.0).ScaleUniform(shrink).ToSTL("mcg.stl", 500)
+	macCheeseGrater(15, 6, 10.0).ScaleUniform(shrink).STL("mcg.stl", 5.0)
 }

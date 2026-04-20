@@ -9,7 +9,7 @@ const units = "mm"
 const length = 40.0
 
 func makePipeConnector(outputPath string, config [6]bool) {
-	obj.StdPipeConnector3D(name, units, length, config).ToSTL(outputPath, 300)
+	obj.StdPipeConnector3D(name, units, length, config).STL(outputPath, 3.0)
 }
 
 func main() {

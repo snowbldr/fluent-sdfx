@@ -42,6 +42,6 @@ func extrude2() *solid.Solid {
 }
 
 func main() {
-	extrude1().ToSTL("extrude1.stl", 300)
-	extrude2().ToSTL("extrude2.stl", 300)
+	extrude1().STL("extrude1.stl", 3.0)
+	extrude2().STL("extrude2.stl", 3.0)
 }

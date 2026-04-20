@@ -106,8 +106,8 @@ func box0(upper bool) *solid.Solid {
 }
 
 func main() {
-	box0(true).ScaleUniform(shrink).ToSTL("box0_upper.stl", 300)
-	box0(false).ScaleUniform(shrink).ToSTL("box0_lower.stl", 300)
-	box1(true).ScaleUniform(shrink).ToSTL("box1_upper.stl", 300)
-	box1(false).ScaleUniform(shrink).ToSTL("box1_lower.stl", 300)
+	box0(true).ScaleUniform(shrink).STL("box0_upper.stl", 3.0)
+	box0(false).ScaleUniform(shrink).STL("box0_lower.stl", 3.0)
+	box1(true).ScaleUniform(shrink).STL("box1_upper.stl", 3.0)
+	box1(false).ScaleUniform(shrink).STL("box1_lower.stl", 3.0)
 }

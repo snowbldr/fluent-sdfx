@@ -79,8 +79,8 @@ func drain12() *solid.Solid {
 }
 
 func main() {
-	vent2().ToSTL("vent2.stl", 300)
-	drain4().ToSTL("drain4.stl", 300)
-	drain6().ToSTL("drain6.stl", 300)
-	drain12().ToSTL("drain12.stl", 400)
+	vent2().STL("vent2.stl", 3.0)
+	drain4().STL("drain4.stl", 3.0)
+	drain6().STL("drain6.stl", 3.0)
+	drain12().STL("drain12.stl", 4.0)
 }

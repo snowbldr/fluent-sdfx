@@ -44,5 +44,5 @@ func roundCap(diameter, height, wall float64) *solid.Solid {
 }
 
 func main() {
-	roundCap(18, 6, 1.5).ScaleUniform(shrink).ToSTL("round_cap.stl", 150)
+	roundCap(18, 6, 1.5).ScaleUniform(shrink).STL("round_cap.stl", 1.5)
 }

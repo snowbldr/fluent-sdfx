@@ -21,14 +21,12 @@ const baseY = pcbY + 20
 
 func standoffs() *solid.Solid {
 	// standoffs with screw holes
-	k := obj.StandoffParms{
+	s := obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 6.0,
 		HoleDepth:      pillarHeight,
 		HoleDiameter:   2.4, // #4 screw
-	}
-
-	s := obj.Standoff3D(k)
+	})
 
 	positions0 := []v3.Vec{v3.Zero, v3.X(pcbX), v3.XY(pcbX, pcbY), v3.Y(pcbY)}
 
@@ -41,31 +39,28 @@ func standoffs() *solid.Solid {
 
 func mainBoard() *solid.Solid {
 	// base
-	baseParms := obj.PanelParms{
+	baseShape := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"x", "x", "x", "x"},
-	}
-	baseShape := obj.Panel2D(baseParms)
+	})
 
 	// cutout
-	cutoutParms := obj.PanelParms{
+	cutoutShape := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX-40, baseY-40),
 		CornerRadius: 5.0,
-	}
-	cutoutShape := obj.Panel2D(cutoutParms)
+	})
 
-	base2d := baseShape.Cut(cutoutShape)
-
-	// extrude the base
-	base3d := solid.Extrude(base2d, baseThickness)
-
-	// add the standoffs with polymin fillet
-	return solid.SmoothUnion(solid.PolyMin(3.0), base3d, standoffs())
+	// extrude the base, add the standoffs with polymin fillet
+	return solid.SmoothUnion(
+		solid.PolyMin(3.0),
+		solid.Extrude(baseShape.Cut(cutoutShape), baseThickness),
+		standoffs(),
+	)
 }
 
 func main() {
-	mainBoard().ScaleUniform(shrink).ToSTL("main_board.stl", 300)
+	mainBoard().ScaleUniform(shrink).STL("main_board.stl", 3.0)
 }

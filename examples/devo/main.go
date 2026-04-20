@@ -84,5 +84,5 @@ func main() {
 		log.Fatalf("error: %s", err)
 	}
 
-	s.ToSTL("energy_dome.stl", 150)
+	s.STL("energy_dome.stl", 1.5)
 }

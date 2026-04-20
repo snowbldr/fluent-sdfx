@@ -13,12 +13,10 @@ func main() {
 	const t = 0.125 * units.MillimetresPerInch
 	const r = 0.125 * units.MillimetresPerInch
 
-	k := obj.AngleParams{
+	obj.Angle3D(obj.AngleParams{
 		X:          obj.AngleLeg{Length: l, Thickness: t},
 		Y:          obj.AngleLeg{Length: l, Thickness: t},
 		RootRadius: r,
 		Length:     12 * units.MillimetresPerInch,
-	}
-
-	obj.Angle3D(k).ScaleUniform(shrink).ToSTL("angle.stl", 300)
+	}).ScaleUniform(shrink).STL("angle.stl", 3.0)
 }

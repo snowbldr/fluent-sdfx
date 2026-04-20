@@ -42,5 +42,5 @@ func gasCap() *solid.Solid {
 }
 
 func main() {
-	gasCap().ToSTL("cap.stl", 200)
+	gasCap().STL("cap.stl", 2.0)
 }

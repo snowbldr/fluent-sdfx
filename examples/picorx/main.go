@@ -26,21 +26,18 @@ const holeMargin = 0.5 * (mountWidth + panelThickness)
 func pam8302(thickness float64) *solid.Solid {
 	const pillarHeight = 4.5
 
-	k := obj.StandoffParms{
+	xOfs := 0.4 * units.MillimetresPerInch * 0.5
+	zOfs := 0.5 * (thickness + pillarHeight)
+	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 4.5,
 		HoleDepth:      pillarHeight,
 		HoleDiameter:   2.0,
-	}
-	s := obj.Standoff3D(k)
-
-	xOfs := 0.4 * units.MillimetresPerInch * 0.5
-	zOfs := 0.5 * (thickness + pillarHeight)
-	return s.Multi([]v3.Vec{v3.XYZ(xOfs, 0, zOfs), v3.XYZ(-xOfs, 0, zOfs)})
+	}).Multi([]v3.Vec{v3.XYZ(xOfs, 0, zOfs), v3.XYZ(-xOfs, 0, zOfs)})
 }
 
 func display0(thickness float64, negative bool) *solid.Solid {
-	k := obj.DisplayParms{
+	return obj.Display(obj.DisplayParms{
 		Window:          v2.XY(60, 45),
 		Rounding:        2.0,
 		Supports:        v2.XY(76.08, 44.0),
@@ -50,12 +47,11 @@ func display0(thickness float64, negative bool) *solid.Solid {
 		Offset:          v2.XY(2.5, 0),
 		Thickness:       thickness,
 		Countersunk:     true,
-	}
-	return obj.Display(k, negative)
+	}, negative)
 }
 
 func display1(thickness float64, negative bool) *solid.Solid {
-	k := obj.DisplayParms{
+	return obj.Display(obj.DisplayParms{
 		Window:          v2.XY(26, 14),
 		Rounding:        1,
 		Supports:        v2.XY(23.5, 23.8),
@@ -65,31 +61,27 @@ func display1(thickness float64, negative bool) *solid.Solid {
 		Offset:          v2.XY(0, -2.0),
 		Thickness:       thickness,
 		Countersunk:     true,
-	}
-	return obj.Display(k, negative)
+	}, negative)
 }
 
 func speakerGrille(thickness float64, negative bool) *solid.Solid {
 	const grilleRadius = 77.5 * 0.5
 
 	if negative {
-		kGrille := obj.CircleGrilleParms{
+		return obj.CircleGrille3D(obj.CircleGrilleParms{
 			HoleDiameter:      4.0,
 			GrilleDiameter:    2.0 * grilleRadius,
 			RadialSpacing:     0.5,
 			TangentialSpacing: 0.5,
 			Thickness:         thickness,
-		}
-		return obj.CircleGrille3D(kGrille)
+		})
 	}
 
-	kWall := obj.WasherParms{
+	return obj.Washer3D(obj.WasherParms{
 		Thickness:   thickness,
 		InnerRadius: grilleRadius,
 		OuterRadius: grilleRadius + thickness,
-	}
-	wall := obj.Washer3D(kWall)
-	return wall.Translate(v3.XYZ(0, 0, thickness))
+	}).Translate(v3.XYZ(0, 0, thickness))
 }
 
 // pcbMount0 mounts the adafruit half breadboard with the rpi-pico.
@@ -100,7 +92,7 @@ func pcbMount0() *solid.Solid {
 	const height = 10.0
 	const thickness = 3.0
 
-	pp := obj.PanelParms{
+	panel := obj.Panel3D(obj.PanelParms{
 		Size:         v2.XY(width, length),
 		CornerRadius: margin,
 		HoleDiameter: 3.8,
@@ -108,20 +100,16 @@ func pcbMount0() *solid.Solid {
 		HolePattern:  [4]string{"x", "x", "x", "x"},
 		Thickness:    thickness,
 		Ridge:        v2.XY(width-3.5*margin, length-3.5*margin),
-	}
-	panel := obj.Panel3D(pp)
+	})
 
-	sp := obj.StandoffParms{
+	zOfs := 0.5 * (height + thickness)
+	yOfs := 0.5 * 2.9 * units.MillimetresPerInch
+	standoffs := obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   height,
 		PillarDiameter: 8,
 		HoleDepth:      height,
 		HoleDiameter:   2.4,
-	}
-	standoff := obj.Standoff3D(sp)
-
-	zOfs := 0.5 * (height + thickness)
-	yOfs := 0.5 * 2.9 * units.MillimetresPerInch
-	standoffs := standoff.Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
+	}).Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
 
 	return panel.Union(standoffs)
 }
@@ -134,7 +122,7 @@ func pcbMount1() *solid.Solid {
 	const height = 10.0
 	const thickness = 3.0
 
-	pp := obj.PanelParms{
+	panel := obj.Panel3D(obj.PanelParms{
 		Size:         v2.XY(width, length),
 		CornerRadius: margin,
 		HoleDiameter: 3.8,
@@ -142,20 +130,16 @@ func pcbMount1() *solid.Solid {
 		HolePattern:  [4]string{"x", "x", "x", "x"},
 		Thickness:    thickness,
 		Ridge:        v2.XY(width-3.5*margin, length-3.5*margin),
-	}
-	panel := obj.Panel3D(pp)
+	})
 
-	sp := obj.StandoffParms{
+	zOfs := 0.5 * (height + thickness)
+	yOfs := 0.5 * 3.4 * units.MillimetresPerInch
+	standoffs := obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   height,
 		PillarDiameter: 8,
 		HoleDepth:      height,
 		HoleDiameter:   2.4,
-	}
-	standoff := obj.Standoff3D(sp)
-
-	zOfs := 0.5 * (height + thickness)
-	yOfs := 0.5 * 3.4 * units.MillimetresPerInch
-	standoffs := standoff.Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
+	}).Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
 
 	return panel.Union(standoffs)
 }
@@ -163,7 +147,7 @@ func pcbMount1() *solid.Solid {
 func picoRxBezel(thickness float64) *solid.Solid {
 	const ridgeWidth = panelWidth - (2.0 * mountWidth) - 1.0
 
-	kPanel := obj.PanelParms{
+	panel := obj.Panel3D(obj.PanelParms{
 		Size:         v2.XY(panelWidth, panelHeight),
 		CornerRadius: 5.0,
 		HoleDiameter: panelHoleDiameter,
@@ -171,16 +155,14 @@ func picoRxBezel(thickness float64) *solid.Solid {
 		HolePattern:  [4]string{"x", "x", "x", "x"},
 		Thickness:    thickness,
 		Ridge:        v2.XY(ridgeWidth, 0),
-	}
-	panel := obj.Panel3D(kPanel)
+	})
 
-	kRotaryEncoder := obj.KeyedHoleParms{
+	re := obj.KeyedHole3D(obj.KeyedHoleParms{
 		Diameter:  9.2,
 		KeySize:   0.9,
 		NumKeys:   2,
 		Thickness: thickness,
-	}
-	re := obj.KeyedHole3D(kRotaryEncoder)
+	})
 
 	pb := solid.Box(v3.XYZ(13.2, 10.8, thickness), 0)
 	xOfs := 22.0
@@ -282,9 +264,9 @@ func lhsMount(thickness float64) *solid.Solid {
 }
 
 func main() {
-	pcbMount0().ToSTL("pcb_mount0.stl", 500)
-	pcbMount1().ToSTL("pcb_mount1.stl", 500)
-	picoRxBezel(panelThickness).ToSTL("bezel.stl", 500)
-	rhsMount(panelThickness).ToSTL("rhs.stl", 500)
-	lhsMount(panelThickness).ToSTL("lhs.stl", 500)
+	pcbMount0().STL("pcb_mount0.stl", 5.0)
+	pcbMount1().STL("pcb_mount1.stl", 5.0)
+	picoRxBezel(panelThickness).STL("bezel.stl", 5.0)
+	rhsMount(panelThickness).STL("rhs.stl", 5.0)
+	lhsMount(panelThickness).STL("lhs.stl", 5.0)
 }

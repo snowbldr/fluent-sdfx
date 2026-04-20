@@ -38,7 +38,7 @@ func servos() {
 		yOfs += 0.5 * k.Body.Y
 	}
 
-	s.ToSTL("servos.stl", 300)
+	s.STL("servos.stl", 3.0)
 }
 
 func main() {

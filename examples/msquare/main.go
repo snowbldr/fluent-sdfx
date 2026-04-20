@@ -52,14 +52,13 @@ func envelope(k *msParms, machined bool) *solid.Solid {
 
 // wall returns an outside wall with casting draft of length l
 func wall(k *msParms, l float64) *solid.Solid {
-	trp := obj.TruncRectPyramidParms{
+	ofs := (k.wallThickness - k.allowance) * 0.5
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(l, k.wallThickness+k.allowance, (k.width*0.5)+k.allowance),
 		BaseAngle:   units.DtoR(90.0 - draft),
 		BaseRadius:  (k.wallThickness + k.allowance) * 0.5,
 		RoundRadius: k.wallThickness * 0.25,
-	}
-	ofs := (k.wallThickness - k.allowance) * 0.5
-	return obj.TruncRectPyramid3D(trp).Translate(v3.XYZ(0, ofs, 0))
+	}).Translate(v3.XYZ(0, ofs, 0))
 }
 
 func walls(k *msParms) *solid.Solid {
@@ -137,27 +136,25 @@ func web(k *msParms) *solid.Solid {
 
 func corner90(k *msParms) *solid.Solid {
 	r := 2.0 * k.wallThickness
-	trp := obj.TruncRectPyramidParms{
+	ofs := 0.8 * r
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
 		BaseAngle:   units.DtoR(90.0 - 3.0*draft),
 		BaseRadius:  r,
 		RoundRadius: k.wallThickness * 0.25,
-	}
-	ofs := 0.8 * r
-	return obj.TruncRectPyramid3D(trp).Translate(v3.XYZ(ofs, ofs, 0))
+	}).Translate(v3.XYZ(ofs, ofs, 0))
 }
 
 func corner45(k *msParms) *solid.Solid {
 	r := 2.3 * k.wallThickness
-	trp := obj.TruncRectPyramidParms{
+	dy := 0.7 * r
+	dx := dy * (1.0 + math.Sqrt(2.0))
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
 		BaseAngle:   units.DtoR(90.0 - 3.0*draft),
 		BaseRadius:  r,
 		RoundRadius: k.wallThickness * 0.25,
-	}
-	dy := 0.7 * r
-	dx := dy * (1.0 + math.Sqrt(2.0))
-	return obj.TruncRectPyramid3D(trp).Translate(v3.XYZ(k.size-dx, dy, 0))
+	}).Translate(v3.XYZ(k.size-dx, dy, 0))
 }
 
 func corners(k *msParms) *solid.Solid {
@@ -215,13 +212,13 @@ func mSquare(k *msParms, machined bool) {
 	s = s.Intersect(env)
 
 	s = s.ScaleUniform(shrink * scale)
-	s.ToSTL(fmt.Sprintf("%s.stl", k.name), 300)
+	s.STL(fmt.Sprintf("%s.stl", k.name), 3.0)
 
 	sUpper := s.CutPlane(v3.XYZ(0, 0, 0), v3.XYZ(0, 0, 1))
-	sUpper.ToSTL(fmt.Sprintf("%s_upper.stl", k.name), 300)
+	sUpper.STL(fmt.Sprintf("%s_upper.stl", k.name), 3.0)
 
 	sLower := s.CutPlane(v3.XYZ(0, 0, 0), v3.XYZ(0, 0, -1))
-	sLower.ToSTL(fmt.Sprintf("%s_lower.stl", k.name), 300)
+	sLower.STL(fmt.Sprintf("%s_lower.stl", k.name), 3.0)
 }
 
 func main() {

@@ -44,8 +44,8 @@ func box() error {
 	base := theBox.CutPlane(v3.XYZ(0, 0, lidZ), v3.XYZ(0, 0, -1))
 	top := theBox.CutPlane(v3.XYZ(0, 0, lidZ), v3.XYZ(0, 0, 1))
 
-	base.ToSTL("base.stl", 300)
-	top.ToSTL("top.stl", 300)
+	base.STL("base.stl", 3.0)
+	top.STL("top.stl", 3.0)
 
 	return nil
 }

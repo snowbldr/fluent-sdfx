@@ -31,23 +31,20 @@ func ap723hSupport() *solid.Solid {
 }
 
 func ap723hStandoffs() *solid.Solid {
-	k0 := obj.StandoffParms{
+	s := obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 10.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   4.0,
-	}
-	k1 := obj.StandoffParms{
+	}).Union(obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight + 2.0,
 		PillarDiameter: 5.5,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}
-	s := obj.Standoff3D(k0).Union(obj.Standoff3D(k1))
+	}))
 
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	positions := []v3.Vec{v3.XYZ(0, 0, zOfs), v3.XYZ(103.0, 0, zOfs), v3.XYZ(103.0, 152.0, zOfs), v3.XYZ(0, 152.0, zOfs)}
-	return s.Multi(positions)
+	return s.Multi([]v3.Vec{v3.XYZ(0, 0, zOfs), v3.XYZ(103.0, 0, zOfs), v3.XYZ(103.0, 152.0, zOfs), v3.XYZ(0, 152.0, zOfs)})
 }
 
 func ap723hMount() *solid.Solid {
@@ -56,11 +53,10 @@ func ap723hMount() *solid.Solid {
 	baseX := pcbX + 20.0
 	baseY := pcbY + 20.0
 
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	c1 := shape.Rect(v2.XY(baseX-35, baseY-35), 5.0)
 
@@ -85,21 +81,19 @@ func ap723hMount() *solid.Solid {
 
 func ap725Standoffs() *solid.Solid {
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	k := obj.StandoffParms{
+	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 138.0 * units.Mil * 2.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}
-	positions := []v3.Vec{
+	}).Multi([]v3.Vec{
 		v3.XYZ(0, 0, zOfs),
 		v3.XYZ(5984.255*units.Mil, 0, zOfs),
 		v3.XYZ(5551.185*units.Mil, 4704.72*units.Mil, zOfs),
 		v3.XYZ(433.071*units.Mil, 4704.72*units.Mil, zOfs),
 		v3.XYZ(2700.795*units.Mil, 5389.76*units.Mil, zOfs),
 		v3.XYZ(3714.565*units.Mil, 1708.66*units.Mil, zOfs),
-	}
-	return obj.Standoff3D(k).Multi(positions)
+	})
 }
 
 func ap725Mount() *solid.Solid {
@@ -108,13 +102,12 @@ func ap725Mount() *solid.Solid {
 	pcbX := 5984.255 * units.Mil
 	pcbY := 5389.76 * units.Mil
 
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	c1 := shape.Rect(v2.XY(100, 65.0), 3.0).Translate(v2.Y(20))
 	c2 := shape.Rect(v2.XY(135, 25.0), 3.0).Translate(v2.Y(-50))
@@ -139,13 +132,12 @@ const holeSquare = 6102.36 * units.Mil
 
 func ap745Standoffs() *solid.Solid {
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	k := obj.StandoffParms{
+	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 138.0 * units.Mil * 2.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}
-	positions := []v3.Vec{
+	}).Multi([]v3.Vec{
 		v3.XYZ(0, holeSquare, zOfs),
 		v3.XYZ(0, 0, zOfs),
 		v3.XYZ(holeSquare, holeSquare, zOfs),
@@ -154,8 +146,7 @@ func ap745Standoffs() *solid.Solid {
 		v3.XYZ(1240.16*units.Mil, 5570.87*units.Mil, zOfs),
 		v3.XYZ(2648.46*units.Mil, 3485.15*units.Mil, zOfs),
 		v3.XYZ(3693.46*units.Mil, 610.15*units.Mil, zOfs),
-	}
-	return obj.Standoff3D(k).Multi(positions)
+	})
 }
 
 func ap745Mount() *solid.Solid {
@@ -164,13 +155,12 @@ func ap745Mount() *solid.Solid {
 	pcbX := 6102.36 * units.Mil
 	pcbY := 7047.24 * units.Mil
 
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	c1 := shape.Rect(v2.XY(140, 50.0), 3.0).Translate(v2.Y(-37))
 	c2 := shape.Rect(v2.XY(90.0, 50.0), 3.0).Translate(v2.XY(15, 45))
@@ -190,8 +180,8 @@ func ap745Mount() *solid.Solid {
 }
 
 func main() {
-	ap725Mount().ToSTL("ap725.stl", 500)
-	ap745Mount().ToSTL("ap745.stl", 500)
-	ap723hMount().ToSTL("ap723h.stl", 500)
-	ap723hSupport().ToSTL("ap723h_support.stl", 500)
+	ap725Mount().STL("ap725.stl", 5.0)
+	ap745Mount().STL("ap745.stl", 5.0)
+	ap723hMount().STL("ap723h.stl", 5.0)
+	ap723hSupport().STL("ap723h_support.stl", 5.0)
 }

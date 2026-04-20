@@ -27,6 +27,6 @@ var kSocket = obj.DroneArmSocketParms{
 }
 
 func main() {
-	obj.DroneMotorArm(kArm).ScaleUniform(shrink).ToSTL("arm.stl", 300)
-	obj.DroneMotorArmSocket(kSocket).ScaleUniform(shrink).ToSTL("socket.stl", 300)
+	obj.DroneMotorArm(kArm).ScaleUniform(shrink).STL("arm.stl", 3.0)
+	obj.DroneMotorArmSocket(kSocket).ScaleUniform(shrink).STL("socket.stl", 3.0)
 }

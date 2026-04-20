@@ -30,5 +30,5 @@ func sprue(r, l, k float64) *solid.Solid {
 }
 
 func main() {
-	sprue(20, 100, 3000).ScaleUniform(shrink).ToSTL("sprue.stl", 300)
+	sprue(20, 100, 3000).ScaleUniform(shrink).STL("sprue.stl", 3.0)
 }

@@ -39,15 +39,14 @@ func testHoles() *solid.Solid {
 	holes = holes.Translate(v2.XY(xOfs, yOfs))
 
 	// make a panel
-	k := obj.PanelParms{
+	panel := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY((nX+1)*xInc, (nY+1)*yInc),
 		CornerRadius: xInc * 0.2,
-	}
-	panel := obj.Panel2D(k).Cut(holes)
+	}).Cut(holes)
 
 	return solid.Extrude(panel, 3)
 }
 
 func main() {
-	testHoles().ScaleUniform(shrink).ToSTL("test_holes.stl", 300)
+	testHoles().ScaleUniform(shrink).STL("test_holes.stl", 3.0)
 }

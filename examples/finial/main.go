@@ -53,6 +53,6 @@ func finial2() *solid.Solid {
 }
 
 func main() {
-	finial1().ToSTL("f1.stl", 300)
-	finial2().ToSTL("f2.stl", 300)
+	finial1().STL("f1.stl", 3.0)
+	finial2().STL("f2.stl", 3.0)
 }

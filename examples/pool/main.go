@@ -28,5 +28,5 @@ func pool() *solid.Solid {
 }
 
 func main() {
-	pool().ToSTL("pool1.stl", 300)
+	pool().STL("pool1.stl", 3.0)
 }

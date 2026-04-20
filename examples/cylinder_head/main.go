@@ -346,5 +346,5 @@ func main() {
 	if sub := subtractive(); sub != nil {
 		result = result.Cut(sub)
 	}
-	result.ScaleUniform(shrink).ToSTL("head.stl", 400)
+	result.ScaleUniform(shrink).STL("head.stl", 4.0)
 }

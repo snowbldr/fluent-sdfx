@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	k := obj.PanelBoxParms{
+	s := obj.PanelBox3D(obj.PanelBoxParms{
 		Size:       v3.XYZ(50.0, 40.0, 60.0),
 		Wall:       2.5,     // wall thickness
 		Panel:      3.0,     // panel thickness
@@ -15,9 +15,8 @@ func main() {
 		BackInset:  2.0,     // inset for pack panel
 		Hole:       3.4,     // #6 screw
 		SideTabs:   "TbtbT", // tab pattern
-	}
-	s := obj.PanelBox3D(k)
-	s[0].ToSTL("panel.stl", 300)
-	s[1].ToSTL("top.stl", 300)
-	s[2].ToSTL("bottom.stl", 300)
+	})
+	s[0].STL("panel.stl", 3.0)
+	s[1].STL("top.stl", 3.0)
+	s[2].STL("bottom.stl", 3.0)
 }

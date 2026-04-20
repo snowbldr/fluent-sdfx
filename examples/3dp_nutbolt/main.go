@@ -10,47 +10,39 @@ import (
 const mmTolerance = 0.3
 const inchTolerance = mmTolerance / units.MillimetresPerInch
 
-// Quality: The long axis of the model is rendered with n cells.
-const quality = 200
+// Quality: mesh resolution in cells per millimeter.
+const quality = 2.0
 
 func inch() {
-	// bolt
-	boltParms := obj.BoltParms{
+	obj.Bolt(obj.BoltParms{
 		Thread:      "unc_5/8",
 		Style:       "knurl",
 		Tolerance:   inchTolerance,
 		TotalLength: 2.0,
 		ShankLength: 0.5,
-	}
-	obj.Bolt(boltParms).ScaleUniform(units.MillimetresPerInch).ToSTL("inch_bolt.stl", quality)
+	}).ScaleUniform(units.MillimetresPerInch).STL("inch_bolt.stl", quality)
 
-	// nut
-	nutParms := obj.NutParms{
+	obj.Nut(obj.NutParms{
 		Thread:    "unc_5/8",
 		Style:     "knurl",
 		Tolerance: inchTolerance,
-	}
-	obj.Nut(nutParms).ScaleUniform(units.MillimetresPerInch).ToSTL("inch_nut.stl", quality)
+	}).ScaleUniform(units.MillimetresPerInch).STL("inch_nut.stl", quality)
 }
 
 func metric() {
-	// bolt
-	boltParms := obj.BoltParms{
+	obj.Bolt(obj.BoltParms{
 		Thread:      "M16x2",
 		Style:       "hex",
 		Tolerance:   mmTolerance,
 		TotalLength: 50.0,
 		ShankLength: 10.0,
-	}
-	obj.Bolt(boltParms).ToSTL("metric_bolt.stl", quality)
+	}).STL("metric_bolt.stl", quality)
 
-	// nut
-	nutParms := obj.NutParms{
+	obj.Nut(obj.NutParms{
 		Thread:    "M16x2",
 		Style:     "hex",
 		Tolerance: mmTolerance,
-	}
-	obj.Nut(nutParms).ToSTL("metric_nut.stl", quality)
+	}).STL("metric_nut.stl", quality)
 }
 
 func main() {

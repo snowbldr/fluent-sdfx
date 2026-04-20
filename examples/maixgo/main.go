@@ -16,7 +16,11 @@ const baseThickness = 3.0
 func boardStandoffs() *solid.Solid {
 	pillarHeight := 14.0
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	k := obj.StandoffParms{
+	x := 82.0
+	y := 54.0
+	x0 := -34.0
+	y0 := -0.5 * y
+	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 4.5,
 		HoleDepth:      11.0,
@@ -25,30 +29,22 @@ func boardStandoffs() *solid.Solid {
 		WebHeight:      10,
 		WebDiameter:    12,
 		WebWidth:       3.5,
-	}
-	x := 82.0
-	y := 54.0
-	x0 := -34.0
-	y0 := -0.5 * y
-	positions := []v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)}
-	return obj.Standoff3D(k).Multi(positions)
+	}).Multi([]v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)})
 }
 
 func bezelStandoffs() *solid.Solid {
 	pillarHeight := 22.0
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	k := obj.StandoffParms{
-		PillarHeight:   pillarHeight,
-		PillarDiameter: 6.0,
-		HoleDepth:      11.0,
-		HoleDiameter:   2.4,
-	}
 	x := 140.0
 	y := 55.0
 	x0 := -0.5 * x
 	y0 := -0.5 * y
-	positions := []v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)}
-	return obj.Standoff3D(k).Multi(positions)
+	return obj.Standoff3D(obj.StandoffParms{
+		PillarHeight:   pillarHeight,
+		PillarDiameter: 6.0,
+		HoleDepth:      11.0,
+		HoleDiameter:   2.4,
+	}).Multi([]v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)})
 }
 
 func speakerHoles(d float64, ofs v2.Vec) *shape.Shape {
@@ -61,13 +57,12 @@ func speakerHoles(d float64, ofs v2.Vec) *shape.Shape {
 func speakerHolder(d float64, ofs v2.Vec) *solid.Solid {
 	thickness := 3.0
 	zOfs := 0.5 * (thickness + baseThickness)
-	k := obj.WasherParms{
+	return obj.Washer3D(obj.WasherParms{
 		Thickness:   thickness,
 		InnerRadius: 0.5 * d,
 		OuterRadius: 0.5 * (d + 4.0),
 		Remove:      0.3,
-	}
-	return obj.Washer3D(k).
+	}).
 		RotateZ(180).
 		Translate(v3.XYZ(ofs.X, ofs.Y, zOfs))
 }
@@ -107,5 +102,5 @@ func bezel() *solid.Solid {
 }
 
 func main() {
-	bezel().ScaleUniform(shrink).ToSTL("bezel.stl", 330)
+	bezel().ScaleUniform(shrink).STL("bezel.stl", 3.3)
 }

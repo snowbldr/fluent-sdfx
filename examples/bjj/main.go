@@ -80,21 +80,19 @@ var involute_facets = 10
 func gears() *solid.Solid {
 	g_height := 10.0
 
-	k := obj.InvoluteGearParms{
+	g0 := solid.Extrude(obj.InvoluteGear(obj.InvoluteGearParms{
 		NumberTeeth:   12,
 		Module:        gear_module,
 		PressureAngle: pressure_angle,
 		Facets:        involute_facets,
-	}
-	g0 := solid.Extrude(obj.InvoluteGear(k), g_height)
+	}), g_height)
 
-	k = obj.InvoluteGearParms{
+	g1 := solid.Extrude(obj.InvoluteGear(obj.InvoluteGearParms{
 		NumberTeeth:   16,
 		Module:        gear_module,
 		PressureAngle: pressure_angle,
 		Facets:        involute_facets,
-	}
-	g1 := solid.Extrude(obj.InvoluteGear(k), g_height)
+	}), g_height)
 
 	s0 := g0.Translate(v3.XYZ(0, 0, g_height/2.0))
 	s1 := g1.Translate(v3.XYZ(0, 0, -g_height/2.0))
@@ -109,7 +107,7 @@ func gears() *solid.Solid {
 }
 
 func main() {
-	bushing().ToSTL("bushing.stl", 100)
-	gears().ToSTL("gear.stl", 300)
-	plate().ToSTL("plate.stl", 300)
+	bushing().STL("bushing.stl", 1.0)
+	gears().STL("gear.stl", 3.0)
+	plate().STL("plate.stl", 3.0)
 }

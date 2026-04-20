@@ -25,5 +25,5 @@ func tubeCap() *solid.Solid {
 }
 
 func main() {
-	tubeCap().ScaleUniform(shrink).ToSTL("cap.stl", 120)
+	tubeCap().ScaleUniform(shrink).STL("cap.stl", 1.2)
 }

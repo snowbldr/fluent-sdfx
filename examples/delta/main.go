@@ -43,13 +43,12 @@ func upperArm() *solid.Solid {
 		Translate(v3.Y(upperArmLength - dy))
 
 	// servo mounting
-	k := obj.ServoHornParms{
+	horn := solid.Extrude(obj.ServoHorn(obj.ServoHornParms{
 		CenterRadius: 3,
 		NumHoles:     4,
 		CircleRadius: 14 * 0.5,
 		HoleRadius:   1.9,
-	}
-	horn := solid.Extrude(obj.ServoHorn(k), upperArmThickness)
+	}), upperArmThickness)
 
 	const hornRadius = 10
 	const hornThickness = 2.3
@@ -133,13 +132,12 @@ func deltaBase() *solid.Solid {
 		Translate(v3.Z(-baseThickness * 0.5))
 
 	// pillars
-	k := obj.StandoffParms{
+	pillars := obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   basePillarHeight,
 		PillarDiameter: 15,
 		HoleDepth:      15,
 		HoleDiameter:   3,
-	}
-	pillars := obj.Standoff3D(k).
+	}).
 		RotateX(180).
 		Translate(v3.YZ(-baseSide*0.4, -(0.5*basePillarHeight + baseThickness))).
 		RotateCopyZ(3)
@@ -221,9 +219,9 @@ func platform() *solid.Solid {
 }
 
 func main() {
-	upperArm().ScaleUniform(shrink).ToSTL("arm.stl", 500)
-	servoMount().ScaleUniform(shrink).ToSTL("servomount.stl", 250)
-	deltaBase().ScaleUniform(shrink).ToSTL("base.stl", 300)
-	rodEnd().ScaleUniform(shrink).ToSTL("rodend.stl", 100)
-	platform().ScaleUniform(shrink).ToSTL("platform.stl", 300)
+	upperArm().ScaleUniform(shrink).STL("arm.stl", 5.0)
+	servoMount().ScaleUniform(shrink).STL("servomount.stl", 2.5)
+	deltaBase().ScaleUniform(shrink).STL("base.stl", 3.0)
+	rodEnd().ScaleUniform(shrink).STL("rodend.stl", 1.0)
+	platform().ScaleUniform(shrink).STL("platform.stl", 3.0)
 }

@@ -50,14 +50,13 @@ func nRF52dk() *solid.Solid {
 	pcbX := 102.0
 	pcbY := 63.5
 
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"x", "x", "x", "x"},
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	c1 := shape.Rect(v2.XY(53.0, 35.0), 3.0).Translate(v2.XY(-22.0, 1.0))
 	c2 := shape.Rect(v2.XY(20.0, 40.0), 3.0).Translate(v2.XY(37.0, 3.0))
@@ -105,14 +104,13 @@ func nRF52833dk() *solid.Solid {
 	pcbX := 136.53
 	pcbY := 63.50
 
-	pp := obj.PanelParms{
+	base2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"x", "x", "x", "x"},
-	}
-	base2d := obj.Panel2D(pp)
+	})
 
 	c1 := shape.Rect(v2.XY(53.0, 35.0), 3.0).Translate(v2.X(-40.0))
 	c2 := shape.Rect(v2.XY(40.0, 35.0), 3.0).Translate(v2.X(32.0))
@@ -125,6 +123,6 @@ func nRF52833dk() *solid.Solid {
 }
 
 func main() {
-	nRF52dk().ScaleUniform(shrink).ToSTL("nrf52dk.stl", 300)
-	nRF52833dk().ScaleUniform(shrink).ToSTL("nrf52833dk.stl", 300)
+	nRF52dk().ScaleUniform(shrink).STL("nrf52dk.stl", 3.0)
+	nRF52833dk().ScaleUniform(shrink).STL("nrf52833dk.stl", 3.0)
 }

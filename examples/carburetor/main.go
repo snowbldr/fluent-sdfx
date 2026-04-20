@@ -53,6 +53,6 @@ func blockOffPlate() *solid.Solid {
 }
 
 func main() {
-	blockOffPlate().ToSTL("plate.stl", 300)
-	airIntakeCover().ToSTL("air.stl", 300)
+	blockOffPlate().STL("plate.stl", 3.0)
+	airIntakeCover().STL("air.stl", 3.0)
 }

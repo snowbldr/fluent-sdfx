@@ -15,23 +15,21 @@ var baseSize = v3.XYZ(40, 60, 10)
 var portSize = v3.XYZ(30, 50, 10)
 
 func outerBase() *solid.Solid {
-	trp := obj.TruncRectPyramidParms{
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        baseSize,
 		BaseAngle:   (90.0 - 2.0) * math.Pi / 180,
 		BaseRadius:  baseSize.X * 0.5,
 		RoundRadius: 0,
-	}
-	return obj.TruncRectPyramid3D(trp)
+	})
 }
 
 func innerBase() *solid.Solid {
-	trp := obj.TruncRectPyramidParms{
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        portSize,
 		BaseAngle:   (90.0 - 5.0) * math.Pi / 180,
 		BaseRadius:  portSize.X * 0.5,
 		RoundRadius: 0,
-	}
-	return obj.TruncRectPyramid3D(trp)
+	})
 }
 
 func hood() *solid.Solid {
@@ -39,5 +37,5 @@ func hood() *solid.Solid {
 }
 
 func main() {
-	hood().ScaleUniform(shrink).ToSTL("hood.stl", 300)
+	hood().ScaleUniform(shrink).STL("hood.stl", 3.0)
 }

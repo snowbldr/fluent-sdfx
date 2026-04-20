@@ -167,16 +167,64 @@ func (s *Solid) Correct(factor float64) *Solid {
 	return &Solid{&correctedSDF3{s.SDF3, factor}}
 }
 
-// ToSTL renders the solid to an STL file using the parallel octree renderer.
-// meshCells controls resolution (number of cells on the longest axis).
-// Optional factor (0-1) controls mesh decimation: 0.5 = keep 50% of triangles.
-func (s *Solid) ToSTL(path string, meshCells int, factor ...float64) {
-	flrender.ToSTL(s, path, render.NewMarchingCubesOctreeParallel(meshCells), factor...)
+// MinCells is the floor applied by CellsFor so sub-mm parts (e.g. a 1 mm
+// sphere at 3 cells/mm, which would otherwise give 3 cells and render as
+// an empty mesh) still produce a recognizable shape. Raise it for more
+// sub-mm detail, lower it (or set to 1) for raw density behavior.
+var MinCells = 32
+
+// STL renders the solid to an STL file using the parallel octree renderer.
+//
+// cellsPerMM is a mesh density — cells per millimeter along the longest
+// bounding-box axis — so the same value gives proportional detail across
+// parts of different sizes. Examples:
+//
+//	500 mm enclosure, preview        → 0.2   (100 cells)
+//	500 mm enclosure, final          → 2.0   (1000 cells)
+//	50 mm bracket, typical           → 5.0   (250 cells)
+//	10 mm gear, detailed             → 20.0  (200 cells)
+//	1 mm sphere                      → 12.0  (floored to MinCells=32)
+//
+// Render time scales roughly with cells³, so halving cellsPerMM is ~8×
+// faster — drop it low for iteration, crank it for final output. Tiny
+// parts are floored at MinCells cells (see MinCells) so they don't
+// render as empty.
+//
+// Optional decimate (0-1) is the fraction of triangles to remove:
+// 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%). 0 disables decimation.
+func (s *Solid) STL(path string, cellsPerMM float64, decimate ...float64) {
+	flrender.ToSTL(s, path, render.NewMarchingCubesOctreeParallel(CellsFor(s, cellsPerMM)), decimate...)
 }
 
-// To3MF renders the solid to a 3MF file using the parallel octree renderer.
-func (s *Solid) To3MF(path string, meshCells int) {
-	flrender.To3MF(s, path, meshCells)
+// ThreeMF renders the solid to a 3MF file using the parallel octree renderer.
+//
+// cellsPerMM is a mesh density — cells per millimeter along the longest
+// bounding-box axis — so the same value gives proportional detail across
+// parts of different sizes. See STL for a table of typical values and
+// notes on the MinCells floor.
+func (s *Solid) ThreeMF(path string, cellsPerMM float64) {
+	flrender.To3MF(s, path, CellsFor(s, cellsPerMM))
+}
+
+// MF3 is an alias for ThreeMF, for users who expect to autocomplete from "3".
+func (s *Solid) MF3(path string, cellsPerMM float64) {
+	s.ThreeMF(path, cellsPerMM)
+}
+
+// CellsFor returns the cell count along the longest bounding-box axis
+// for a given mesh density, floored at MinCells.
+//
+// The result is ceil(longestAxis_mm * cellsPerMM), clamped up to MinCells
+// so sub-mm parts don't collapse to zero or single-cell renders that
+// marching cubes emits as empty meshes.
+func CellsFor(s *Solid, cellsPerMM float64) int {
+	size := s.BoundingBox().Size()
+	longest := math.Max(math.Max(size.X, size.Y), size.Z)
+	cells := int(math.Ceil(longest * cellsPerMM))
+	if cells < MinCells {
+		cells = MinCells
+	}
+	return cells
 }
 
 type offsetSDF3 struct {

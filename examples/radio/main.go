@@ -106,11 +106,11 @@ func vcapMount() *solid.Solid {
 
 func main() {
 	knob := vcapKnob()
-	knob.ToSTL("vc_knob.stl", 500)
+	knob.STL("vc_knob.stl", 5.0)
 
 	mount := vcapMount()
-	mount.ToSTL("vc_mount.stl", 500)
+	mount.STL("vc_mount.stl", 5.0)
 
 	fm := ferriteMount()
-	fm.ToSTL("fr_mount.stl", 500)
+	fm.STL("fr_mount.stl", 5.0)
 }

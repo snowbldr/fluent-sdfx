@@ -96,5 +96,5 @@ func tool() *solid.Solid {
 }
 
 func main() {
-	tool().ScaleUniform(shrink).ToSTL("tool.stl", 300)
+	tool().ScaleUniform(shrink).STL("tool.stl", 3.0)
 }

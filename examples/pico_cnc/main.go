@@ -23,15 +23,6 @@ func keypadPanel() *solid.Solid {
 	const panelYb = 45
 	const panelY = 2 * (panelYa + panelYb)
 
-	k := obj.PanelParms{
-		Size:         v2.XY(panelX, panelY),
-		CornerRadius: 4,
-		HoleDiameter: baseHoleDiameter,
-		HoleMargin:   [4]float64{7, 7, 7, 7},
-		HolePattern:  [4]string{"x", "xx", "x", "xx"},
-		Thickness:    panelThickness,
-	}
-
 	// key hole
 	const holeRadius = (22.0 + 1.5) * 0.5
 
@@ -39,7 +30,14 @@ func keypadPanel() *solid.Solid {
 	hole1 := hole0.Translate(v3.Y(panelYb))
 	hole2 := hole0.Translate(v3.Y(-panelYb))
 
-	return obj.Panel3D(k).Cut(hole0.Union(hole1, hole2))
+	return obj.Panel3D(obj.PanelParms{
+		Size:         v2.XY(panelX, panelY),
+		CornerRadius: 4,
+		HoleDiameter: baseHoleDiameter,
+		HoleMargin:   [4]float64{7, 7, 7, 7},
+		HolePattern:  [4]string{"x", "xx", "x", "xx"},
+		Thickness:    panelThickness,
+	}).Cut(hole0.Union(hole1, hole2))
 }
 
 //-----------------------------------------------------------------------------
@@ -89,15 +87,12 @@ func picoCncStandoffs() *solid.Solid {
 	const dx = pcbX - (2.0 * pcbHoleMargin)
 	const dy = pcbY - (2.0 * pcbHoleMargin)
 
-	// standoffs with screw holes
-	k := obj.StandoffParms{
+	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 6.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4, // #4 screw
-	}
-	positions0 := v3.VecSet{v3.XYZ(0, 0, zOfs), v3.XYZ(dx, 0, zOfs), v3.XYZ(0, dy, zOfs), v3.XYZ(dx, dy, zOfs)}
-	return obj.Standoff3D(k).Multi(positions0)
+	}).Multi(v3.VecSet{v3.XYZ(0, 0, zOfs), v3.XYZ(dx, 0, zOfs), v3.XYZ(0, dy, zOfs), v3.XYZ(dx, dy, zOfs)})
 }
 
 func picoCnc() *solid.Solid {
@@ -109,21 +104,19 @@ func picoCnc() *solid.Solid {
 	const cutoutY = baseY - (2.0 * cutoutMargin)
 
 	// base
-	pp := obj.PanelParms{
+	s0 := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(baseX, baseY),
 		CornerRadius: 5.0,
 		HoleDiameter: baseHoleDiameter,
 		HoleMargin:   [4]float64{6.0, 6.0, 6.0, 6.0},
 		HolePattern:  [4]string{".x...x", ".x...x", ".x...x", ".x...x"},
-	}
-	s0 := obj.Panel2D(pp)
+	})
 
 	// cutouts
 	c0 := shape.Rect(v2.XY(cutoutX, cutoutY), 3.0)
 
 	// extrude the base
-	base2d := s0.Cut(c0)
-	s2 := solid.Extrude(base2d, baseThickness)
+	s2 := solid.Extrude(s0.Cut(c0), baseThickness)
 
 	const xOfs = (0.5 * baseX) - holeMargin - pcbHoleMargin
 	const yOfs = (0.5 * baseY) - holeMargin - pcbHoleMargin
@@ -160,13 +153,12 @@ func penHolder() *solid.Solid {
 		RotateY(90)
 
 	// shaft screw boss
-	bossParms := obj.ThreadedCylinderParms{
+	bossT := obj.ThreadedCylinder(obj.ThreadedCylinderParms{
 		Height:    0.5 * holderHeight,
 		Diameter:  bossDiameter,
 		Thread:    "unc_8_32",
 		Tolerance: 0,
-	}
-	bossT := obj.ThreadedCylinder(bossParms).Translate(v3.Z(30))
+	}).Translate(v3.Z(30))
 
 	return spring.Union(bossT).Cut(shaft)
 }
@@ -174,11 +166,11 @@ func penHolder() *solid.Solid {
 //-----------------------------------------------------------------------------
 
 func main() {
-	picoCnc().ScaleUniform(shrink).ToSTL("pico_cnc.stl", 300)
+	picoCnc().ScaleUniform(shrink).STL("pico_cnc.stl", 3.0)
 
-	serialConverter().ScaleUniform(shrink).ToSTL("serial.stl", 300)
+	serialConverter().ScaleUniform(shrink).STL("serial.stl", 3.0)
 
-	keypadPanel().ScaleUniform(shrink).ToSTL("keypad_panel.stl", 300)
+	keypadPanel().ScaleUniform(shrink).STL("keypad_panel.stl", 3.0)
 
-	penHolder().ScaleUniform(shrink).ToSTL("pen_holder.stl", 300)
+	penHolder().ScaleUniform(shrink).STL("pen_holder.stl", 3.0)
 }

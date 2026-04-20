@@ -44,26 +44,23 @@ func alignmentHoles() *solid.Solid {
 
 // pinLug returns a single pin lug.
 func pinLug(w float64) *solid.Solid {
-	k := obj.TruncRectPyramidParms{
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(w, lugThickness, lugHeight),
 		BaseAngle:   units.DtoR(90 - lugDraft),
 		BaseRadius:  lugThickness * 0.5,
 		RoundRadius: lugThickness * 0.1,
-	}
-	return obj.TruncRectPyramid3D(k)
+	})
 }
 
 // pinLugs returns the pin lugs pattern.
 func pinLugs() *solid.Solid {
 	w := lugBaseWidth
-	r := lugThickness*0.5 + lugOffset
-	k := obj.TruncRectPyramidParms{
+	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(w, w, lugBaseThickness),
 		BaseAngle:   units.DtoR(90 - lugBaseDraft),
-		BaseRadius:  r,
+		BaseRadius:  lugThickness*0.5 + lugOffset,
 		RoundRadius: lugBaseThickness * 0.25,
-	}
-	base := obj.TruncRectPyramid3D(k)
+	})
 
 	pinWidth := w - 2.0*lugOffset
 	pin := pinLug(pinWidth)
@@ -80,14 +77,12 @@ func pinLugs() *solid.Solid {
 // sandKey returns an internal sand key.
 func sandKey(size v3.Vec) *solid.Solid {
 	theta := units.DtoR(90 - keyDraft)
-	r := keyDepth / math.Tan(theta)
-	k := obj.TruncRectPyramidParms{
+	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        size,
 		BaseAngle:   theta,
-		BaseRadius:  r,
+		BaseRadius:  keyDepth / math.Tan(theta),
 		RoundRadius: size.X * 0.5,
-	}
-	return obj.TruncRectPyramid3D(k)
+	})
 }
 
 // oddSide returns odd sides at either end of the flask pattern.
@@ -99,13 +94,12 @@ func oddSide(height float64) *solid.Solid {
 	sy := height*1.1 + 2.0*d
 	sz := d
 
-	k := obj.TruncRectPyramidParms{
+	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(sx, sy, sz),
 		BaseAngle:   theta45,
 		BaseRadius:  0.5 * sx,
 		RoundRadius: 0,
-	}
-	base := obj.TruncRectPyramid3D(k)
+	})
 
 	// mounting/pull holes
 	h := 3.0 * d
@@ -208,9 +202,9 @@ func main() {
 	for _, w := range widths {
 		s := flaskSide(w, height).RotateX(-sideDraft).ScaleUniform(shrink)
 		name := fmt.Sprintf("flask_%d.stl", int(w))
-		s.ToSTL(name, 300)
+		s.STL(name, 3.0)
 	}
 
-	pinLugs().ScaleUniform(shrink).ToSTL("pins.stl", 120)
-	oddSide(height).ScaleUniform(shrink).ToSTL("odd_side.stl", 300)
+	pinLugs().ScaleUniform(shrink).STL("pins.stl", 1.2)
+	oddSide(height).ScaleUniform(shrink).STL("odd_side.stl", 3.0)
 }

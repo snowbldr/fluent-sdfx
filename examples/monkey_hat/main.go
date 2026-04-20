@@ -25,5 +25,5 @@ func monkeyWithHat() *solid.Solid {
 }
 
 func main() {
-	monkeyWithHat().ToSTL("monkey-out.stl", 128)
+	monkeyWithHat().STL("monkey-out.stl", 1.28)
 }

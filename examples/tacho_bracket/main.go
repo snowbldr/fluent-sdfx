@@ -51,5 +51,5 @@ func tachoBracket() *solid.Solid {
 }
 
 func main() {
-	tachoBracket().ToSTL("tacho.stl", 300)
+	tachoBracket().STL("tacho.stl", 3.0)
 }

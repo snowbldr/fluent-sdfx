@@ -7,22 +7,19 @@ import (
 )
 
 func main() {
-	kBase := obj.GfBaseParms{
+	obj.GfBase(obj.GfBaseParms{
 		Size:   v2i.XY(4, 4),
 		Magnet: true,
 		Hole:   true,
-	}
-	obj.GfBase(kBase).ToSTL("base_4x4.stl", 300)
+	}).STL("base_4x4.stl", 3.0)
 
-	kBody := obj.GfBodyParms{
+	obj.GfBody(obj.GfBodyParms{
 		Size:  v3i.XYZ(1, 1, 3),
 		Hole:  true,
 		Empty: true,
-	}
-	obj.GfBody(kBody).ToSTL("body_1x1x3.stl", 300)
+	}).STL("body_1x1x3.stl", 3.0)
 
-	kBody2 := obj.GfBodyParms{
+	obj.GfBody(obj.GfBodyParms{
 		Size: v3i.XYZ(1, 2, 1),
-	}
-	obj.GfBody(kBody2).ToSTL("body_1x2x1.stl", 300)
+	}).STL("body_1x2x1.stl", 3.0)
 }

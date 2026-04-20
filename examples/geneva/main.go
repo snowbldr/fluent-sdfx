@@ -51,11 +51,11 @@ func main() {
 		Translate(v3.Z(wheelHeight / 2))
 	driven = driven.Union(hub).Cut(hole)
 
-	const meshCells = 300
-	driver.ToSTL("driver.stl", meshCells)
-	driven.ToSTL("driven.stl", meshCells)
+	const cellsPerMM = 3.0
+	driver.STL("driver.stl", cellsPerMM)
+	driven.STL("driven.stl", cellsPerMM)
 
 	driver = driver.Translate(v3.X(-0.8 * k.DrivenRadius))
 	driven = driven.Translate(v3.X(k.DrivenRadius))
-	driver.Union(driven).ToSTL("geneva.stl", meshCells)
+	driver.Union(driven).STL("geneva.stl", cellsPerMM)
 }

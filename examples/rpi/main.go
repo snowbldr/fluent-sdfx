@@ -134,5 +134,5 @@ func DisplayStand() *solid.Solid {
 }
 
 func main() {
-	DisplayStand().ScaleUniform(shrink).ToSTL("display_stand.stl", 300)
+	DisplayStand().ScaleUniform(shrink).STL("display_stand.stl", 3.0)
 }

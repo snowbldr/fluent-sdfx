@@ -15,5 +15,5 @@ func carveinside(path string) *solid.Solid {
 }
 
 func main() {
-	carveinside("../../files/teapot.stl").ToSTL("inside-carved-out.stl", 300)
+	carveinside("../../files/teapot.stl").STL("inside-carved-out.stl", 3.0)
 }

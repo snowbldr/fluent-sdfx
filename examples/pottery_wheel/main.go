@@ -146,11 +146,11 @@ func core_box() *solid.Solid {
 
 func main() {
 	s0 := wheel_pattern().ScaleUniform(shrink)
-	s0.ToSTL("wheel.stl", 200)
+	s0.STL("wheel.stl", 2.0)
 	// DXF slice (non-STL output)
 	slice := solid.Slice(s0, v3.XYZ(0, 0, 15), v3.XYZ(0, 0, 1))
 	slice.ToDXF("wheel.dxf", 200)
 
 	s1 := core_box().ScaleUniform(shrink)
-	s1.ToSTL("core_box.stl", 200)
+	s1.STL("core_box.stl", 2.0)
 }

@@ -47,11 +47,10 @@ func planView() *shape.Shape {
 
 	s1 := shape.Circle(radiusOuterSmall).Translate(v2.XY(0, centerToCenter))
 
-	k := obj.WasherParms{
+	s2 := obj.Washer2D(obj.WasherParms{
 		InnerRadius: radiusInnerBig,
 		OuterRadius: radiusOuterBig,
-	}
-	s2 := obj.Washer2D(k)
+	})
 
 	s3 := shape.SmoothUnion(solid.PolyMin(0.3), s0, s1, s2)
 	return sOuter.Intersect(s3)
@@ -89,13 +88,12 @@ func sideView() *shape.Shape {
 }
 
 func shaft() *solid.Solid {
-	k := obj.KeywayParameters{
+	return obj.Keyway3D(obj.KeywayParameters{
 		ShaftRadius: shaftRadius,
 		KeyRadius:   keyRadius,
 		KeyWidth:    keyWidth,
 		ShaftLength: overallHeight,
-	}
-	return obj.Keyway3D(k).
+	}).
 		RotateY(-90).
 		RotateX(-30).
 		Translate(v3.XYZ(0, radiusOuterSmall, 0))
@@ -115,5 +113,5 @@ func part() *solid.Solid {
 var _ = radiusInnerSmall // keep constant referenced
 
 func main() {
-	part().ToSTL("part.stl", 300)
+	part().STL("part.stl", 3.0)
 }

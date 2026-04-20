@@ -16,5 +16,5 @@ func main() {
 	cached.ToDXF("shape.dxf", 600)
 	cached.ToSVG("shape.svg", 600)
 
-	solid.ExtrudeRounded(cached, 1.0, 0.2).ToSTL("shape.stl", 600)
+	solid.ExtrudeRounded(cached, 1.0, 0.2).STL("shape.stl", 6.0)
 }

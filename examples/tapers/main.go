@@ -32,6 +32,6 @@ func taper2() *solid.Solid {
 }
 
 func main() {
-	taper1().ToSTL("taper1.stl", 300)
-	taper2().ToSTL("taper2.stl", 300)
+	taper1().STL("taper1.stl", 3.0)
+	taper2().STL("taper2.stl", 3.0)
 }
