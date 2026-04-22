@@ -132,6 +132,14 @@ func CountBoundaryEdges(tris []Triangle3) int {
 	return render.CountBoundaryEdges(sdfTris)
 }
 
+// IsWatertight reports whether the mesh is a closed surface: every edge is
+// shared by exactly two triangles. Returns true and zero boundary edges for
+// a sealed solid.
+func IsWatertight(tris []Triangle3) (bool, int) {
+	n := CountBoundaryEdges(tris)
+	return n == 0, n
+}
+
 // SaveSTL writes a triangle mesh to an STL file.
 func SaveSTL(path string, mesh []*Triangle3) {
 	if err := render.SaveSTL(path, toSDFTris(mesh)); err != nil {
