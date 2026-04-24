@@ -32,7 +32,7 @@ func camshaft() *solid.Solid {
 	p.Add(0, l4).Rel()
 	p.Add(-r3, 0).Rel()
 
-	shaft := solid.Revolve(p.Build())
+	shaft := p.Build().Revolve()
 
 	// make the cams
 	const valveDiameter = 0.25
@@ -47,16 +47,16 @@ func camshaft() *solid.Solid {
 	exhaust2d := shape.MakeThreeArcCam(lift, 125.0, camDiameter, k)
 
 	zOfs := (13.0 / 16.0) + (3.0 / 32.0) + (camWidth / 2.0)
-	ex4 := solid.Extrude(exhaust2d, camWidth).Translate(v3.Z(zOfs))
+	ex4 := exhaust2d.Extrude(camWidth).Translate(v3.Z(zOfs))
 
 	zOfs += (5.0 / 16.0) + camWidth
-	in3 := solid.Extrude(inlet2d, camWidth).Translate(v3.Z(zOfs)).RotateZ(inletThetaDeg)
+	in3 := inlet2d.Extrude(camWidth).Translate(v3.Z(zOfs)).RotateZ(inletThetaDeg)
 
 	zOfs += (11.0 / 16.0) + camWidth
-	in2 := solid.Extrude(inlet2d, camWidth).Translate(v3.Z(zOfs)).RotateZ(inletThetaDeg + 180)
+	in2 := inlet2d.Extrude(camWidth).Translate(v3.Z(zOfs)).RotateZ(inletThetaDeg + 180)
 
 	zOfs += (5.0 / 16.0) + camWidth
-	ex1 := solid.Extrude(exhaust2d, camWidth).Translate(v3.Z(zOfs)).RotateZ(180)
+	ex1 := exhaust2d.Extrude(camWidth).Translate(v3.Z(zOfs)).RotateZ(180)
 
 	return solid.UnionAll(shaft, ex1, in2, in3, ex4)
 }

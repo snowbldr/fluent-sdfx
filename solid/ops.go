@@ -3,7 +3,6 @@ package solid
 import (
 	"math"
 
-	"github.com/snowbldr/fluent-sdfx/shape"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 	"github.com/snowbldr/sdfx/sdf"
@@ -25,33 +24,33 @@ func Gyroid(scale v3.Vec) *Solid {
 }
 
 // Revolve creates a solid of revolution by rotating a 2D profile around the Y axis.
-func Revolve(profile *shape.Shape) *Solid {
-	return New(sdf.Revolve3D(profile.SDF2))
+func Revolve(profile sdf.SDF2) *Solid {
+	return New(sdf.Revolve3D(profile))
 }
 
 // RevolveAngle creates a partial solid of revolution (theta in degrees).
-func RevolveAngle(profile *shape.Shape, angleDeg float64) *Solid {
-	return New(sdf.RevolveTheta3D(profile.SDF2, angleDeg*math.Pi/180))
+func RevolveAngle(profile sdf.SDF2, angleDeg float64) *Solid {
+	return New(sdf.RevolveTheta3D(profile, angleDeg*math.Pi/180))
 }
 
 // ExtrudeRounded extrudes a 2D profile with rounded edges.
-func ExtrudeRounded(profile *shape.Shape, height, round float64) *Solid {
-	return New(sdf.ExtrudeRounded3D(profile.SDF2, height, round))
+func ExtrudeRounded(profile sdf.SDF2, height, round float64) *Solid {
+	return New(sdf.ExtrudeRounded3D(profile, height, round))
 }
 
 // ScaleExtrude extrudes a 2D profile while scaling it over the height.
-func ScaleExtrude(profile *shape.Shape, height float64, scale v2.Vec) *Solid {
-	return &Solid{sdf.ScaleExtrude3D(profile.SDF2, height, v2sdf.Vec(scale))}
+func ScaleExtrude(profile sdf.SDF2, height float64, scale v2.Vec) *Solid {
+	return &Solid{sdf.ScaleExtrude3D(profile, height, v2sdf.Vec(scale))}
 }
 
 // ScaleTwistExtrude extrudes a 2D profile while scaling and twisting (radians) over the height.
-func ScaleTwistExtrude(profile *shape.Shape, height, twist float64, scale v2.Vec) *Solid {
-	return &Solid{sdf.ScaleTwistExtrude3D(profile.SDF2, height, twist, v2sdf.Vec(scale))}
+func ScaleTwistExtrude(profile sdf.SDF2, height, twist float64, scale v2.Vec) *Solid {
+	return &Solid{sdf.ScaleTwistExtrude3D(profile, height, twist, v2sdf.Vec(scale))}
 }
 
 // Loft transitions between two 2D profiles over a given height with optional rounding.
-func Loft(bottom, top *shape.Shape, height, round float64) *Solid {
-	return New(sdf.Loft3D(bottom.SDF2, top.SDF2, height, round))
+func Loft(bottom, top sdf.SDF2, height, round float64) *Solid {
+	return New(sdf.Loft3D(bottom, top, height, round))
 }
 
 // --- Additional transform methods ---
@@ -161,7 +160,7 @@ func (s *Solid) RotateToVector(from, to v3.Vec) *Solid {
 
 // Center translates the solid so its bounding box center is at the origin.
 func (s *Solid) Center() *Solid {
-	bb := s.BoundingBox()
+	bb := s.Bounds()
 	center := bb.Center()
 	return s.Translate(center.Neg())
 }

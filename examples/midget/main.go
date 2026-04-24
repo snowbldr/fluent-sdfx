@@ -68,7 +68,7 @@ func cylinderPattern(core, split bool) *solid.Solid {
 	p.Add(r2-r1, draft*(r2-r1)).Rel().Smooth(smooth0, smoothN)
 	p.Add(0, l1).Rel().Smooth(smooth1, smoothN)
 	p.Add(-r2, draft*r2).Rel()
-	body := solid.Revolve(p.Build())
+	body := p.Build().Revolve()
 
 	// cylinder base
 	base := cylinderBase().Translate(v3.XYZ(0, 0, cylinderBaseOffset))
@@ -81,7 +81,7 @@ func cylinderPattern(core, split bool) *solid.Solid {
 	p.Add(r0, draft*r0).Rel().Smooth(smooth1, smoothN)
 	p.Add(0, l2).Rel().Smooth(smooth1, smoothN)
 	p.Add(-r0, draft*r0).Rel()
-	corePrint := solid.Revolve(p.Build())
+	corePrint := p.Build().Revolve()
 
 	var cylinder *solid.Solid
 	if core {

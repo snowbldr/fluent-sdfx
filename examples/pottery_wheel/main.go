@@ -89,7 +89,7 @@ func web_profile() *shape.Shape {
 
 func wheel_pattern() *solid.Solid {
 	// build reinforcing webs
-	web := solid.Extrude(web_profile(), web_length)
+	web := web_profile().Extrude(web_length)
 	// equivalent of: m = Translate(0, plate_thickness, hub_radius+web_length/2)
 	//                m = RotateX(90) * m  -> rotate by 90 around X axis
 	web = web.Translate(v3.YZ(plate_thickness, hub_radius+web_length/2)).RotateX(90)
@@ -97,11 +97,11 @@ func wheel_pattern() *solid.Solid {
 	var wheel *solid.Solid
 	if pie_print {
 		web = web.RotateZ(120)
-		wheel = solid.RevolveAngle(wheel_profile(), 60)
+		wheel = wheel_profile().RevolveAngle(60)
 	} else {
 		web = web.RotateZ(90)
 		web = web.RotateCopyZ(number_of_webs)
-		wheel = solid.Revolve(wheel_profile())
+		wheel = wheel_profile().Revolve()
 	}
 
 	// union with blend
@@ -137,7 +137,7 @@ func core_box() *solid.Solid {
 	box = box.Cut(holes)
 
 	// build the core
-	core := solid.Revolve(core_profile()).
+	core := core_profile().Revolve().
 		RotateY(-90).
 		Translate(v3.XZ(h/2, d/2))
 
@@ -148,7 +148,7 @@ func main() {
 	s0 := wheel_pattern().ScaleUniform(shrink)
 	s0.STL("wheel.stl", 2.0)
 	// DXF slice (non-STL output)
-	slice := solid.Slice(s0, v3.XYZ(0, 0, 15), v3.XYZ(0, 0, 1))
+	slice := shape.SliceOf(s0, v3.XYZ(0, 0, 15), v3.XYZ(0, 0, 1))
 	slice.ToDXF("wheel.dxf", 200)
 
 	s1 := core_box().ScaleUniform(shrink)

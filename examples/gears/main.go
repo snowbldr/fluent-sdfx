@@ -14,22 +14,22 @@ var h = 0.15
 var numberTeeth = 20
 
 func gear() *solid.Solid {
-	return solid.Extrude(obj.InvoluteGear(obj.InvoluteGearParms{
+	return obj.InvoluteGear(obj.InvoluteGearParms{
 		NumberTeeth:   numberTeeth,
 		Module:        module,
 		PressureAngle: pa,
 		RingWidth:     0.05,
 		Facets:        7,
-	}), h)
+	}).Extrude(h)
 }
 
 func rack() *solid.Solid {
-	return solid.Extrude(shape.GearRack(shape.GearRackParams{
+	return shape.GearRack(shape.GearRackParams{
 		NumberTeeth:      11,
 		Module:           module,
 		PressureAngleDeg: 20.0,
 		BaseHeight:       0.025,
-	}), h)
+	}).Extrude(h)
 }
 
 func main() {

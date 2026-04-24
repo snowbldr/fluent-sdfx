@@ -32,7 +32,7 @@ func main() {
 		}
 	}
 
-	bb := s0.BoundingBox().ScaleAboutCenter(k)
+	bb := s0.Bounds().ScaleAboutCenter(k)
 	log.Printf("rendering %s (%dx%d)\n", path, pixels.X, pixels.Y)
 	d, err := render.NewPNG(path, bb, pixels)
 	if err != nil {

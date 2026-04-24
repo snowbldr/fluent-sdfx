@@ -58,7 +58,7 @@ func main() {
 	prevR := 0.0
 
 	for i, v := range vs {
-		s := solid.SweepHelix(v.profile, v.radius, v.turns, v.height, v.flatEnds)
+		s := v.profile.SweepHelix(v.radius, v.turns, v.height, v.flatEnds)
 
 		individual := fmt.Sprintf("helix_%s.stl", v.name)
 		s.STL(individual, cellsPerMM)

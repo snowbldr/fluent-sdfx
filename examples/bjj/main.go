@@ -37,7 +37,7 @@ func bushing() *solid.Solid {
 	p.Add(r2, h1)
 	p.Add(r0, h1)
 
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 func plateHoles2D() *shape.Shape {
@@ -52,8 +52,7 @@ func lockingRod() *solid.Solid {
 	l := 62.0
 	s0 := shape.Circle(rod_r)
 	s1 := shape.Rect(v2.XY(2*rod_r, rod_r), 0).Translate(v2.XY(0, -0.5*rod_r))
-	s2 := s0.Union(s1)
-	return solid.Extrude(s2, l)
+	return s0.Union(s1).Extrude(l)
 }
 
 func plate() *solid.Solid {
@@ -63,7 +62,7 @@ func plate() *solid.Solid {
 	s0 := solid.Cylinder(h, r, 0)
 
 	ph := plateHoles2D()
-	s1 := solid.Extrude(ph, h)
+	s1 := ph.Extrude(h)
 
 	s2 := solid.Cylinder(h, ch_r, 0)
 
@@ -80,19 +79,19 @@ var involute_facets = 10
 func gears() *solid.Solid {
 	g_height := 10.0
 
-	g0 := solid.Extrude(obj.InvoluteGear(obj.InvoluteGearParms{
+	g0 := obj.InvoluteGear(obj.InvoluteGearParms{
 		NumberTeeth:   12,
 		Module:        gear_module,
 		PressureAngle: pressure_angle,
 		Facets:        involute_facets,
-	}), g_height)
+	}).Extrude(g_height)
 
-	g1 := solid.Extrude(obj.InvoluteGear(obj.InvoluteGearParms{
+	g1 := obj.InvoluteGear(obj.InvoluteGearParms{
 		NumberTeeth:   16,
 		Module:        gear_module,
 		PressureAngle: pressure_angle,
 		Facets:        involute_facets,
-	}), g_height)
+	}).Extrude(g_height)
 
 	s0 := g0.Translate(v3.XYZ(0, 0, g_height/2.0))
 	s1 := g1.Translate(v3.XYZ(0, 0, -g_height/2.0))
@@ -101,7 +100,7 @@ func gears() *solid.Solid {
 
 	ph := plateHoles2D()
 	screw_depth := 10.0
-	s3 := solid.Extrude(ph, screw_depth).Translate(v3.XYZ(0, 0, screw_depth/2.0-g_height))
+	s3 := ph.Extrude(screw_depth).Translate(v3.XYZ(0, 0, screw_depth/2.0-g_height))
 
 	return s0.Union(s1).Cut(s2, s3)
 }

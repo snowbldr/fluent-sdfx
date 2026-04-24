@@ -61,7 +61,7 @@ func nRF52dk() *solid.Solid {
 	c1 := shape.Rect(v2.XY(53.0, 35.0), 3.0).Translate(v2.XY(-22.0, 1.0))
 	c2 := shape.Rect(v2.XY(20.0, 40.0), 3.0).Translate(v2.XY(37.0, 3.0))
 
-	s2 := solid.Extrude(base2d.Cut(c1.Union(c2)), baseThickness).
+	s2 := base2d.Cut(c1.Union(c2)).Extrude(baseThickness).
 		Translate(v3.XY(0.5*pcbX, pcbY-0.5*baseY))
 
 	s3 := nRF52dkStandoffs()
@@ -115,7 +115,7 @@ func nRF52833dk() *solid.Solid {
 	c1 := shape.Rect(v2.XY(53.0, 35.0), 3.0).Translate(v2.X(-40.0))
 	c2 := shape.Rect(v2.XY(40.0, 35.0), 3.0).Translate(v2.X(32.0))
 
-	s2 := solid.Extrude(base2d.Cut(c1.Union(c2)), baseThickness).
+	s2 := base2d.Cut(c1.Union(c2)).Extrude(baseThickness).
 		Translate(v3.XY(0.5*pcbX, pcbY-0.5*baseY))
 
 	s3 := nRF52833dkStandoffs()

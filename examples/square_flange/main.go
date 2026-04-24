@@ -22,13 +22,13 @@ const pipeRadius = 0.5 * pipeDiameter
 const pipeFillet = 0.95 * pipeWall
 
 func flange() *solid.Solid {
-	base := solid.Extrude(obj.Panel2D(obj.PanelParms{
+	base := obj.Panel2D(obj.PanelParms{
 		Size:         baseSize,
 		CornerRadius: 18.0,
 		HoleDiameter: 3.5, // #6 screw
 		HoleMargin:   [4]float64{12.0, 12.0, 12.0, 12.0},
 		HolePattern:  [4]string{"x", "x", "x", "x"},
-	}), 2.0*baseThickness)
+	}).Extrude(2.0 * baseThickness)
 
 	outerPipe := solid.Cylinder(2.0*pipeLength, pipeRadius+pipeWall, 0.0).
 		Translate(pipeOffset.ToV3(0))

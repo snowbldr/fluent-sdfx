@@ -40,7 +40,7 @@ func tachoBracket() *solid.Solid {
 
 	// remove the holes
 	s4 := s3.Cut(hole.Union(slot, panelHole))
-	bracket := solid.Extrude(s4, bracketHeight)
+	bracket := s4.Extrude(bracketHeight)
 
 	// clamp hole
 	clampHole := solid.Cylinder(1.1*tabWidth, screwRadius, 0).

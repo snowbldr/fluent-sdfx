@@ -39,7 +39,7 @@ func dome(r, h, w float64) (*solid.Solid, error) {
 	p.Add(-stepX1, 0).Rel().Smooth(fillet, 4)
 	p.Add(-stepX0, stepH3).Rel().Smooth(fillet, 4)
 	p.Add(0, height)
-	outer := solid.Revolve(shape.Polygon(p.Vertices()))
+	outer := shape.Polygon(p.Vertices()).Revolve()
 
 	// inner shell
 	b := shape.NewBezier()
@@ -68,8 +68,7 @@ func dome(r, h, w float64) (*solid.Solid, error) {
 
 	b.Close()
 
-	innerPoly := shape.Polygon(b.Vertices())
-	inner := solid.Revolve(innerPoly)
+	inner := shape.Polygon(b.Vertices()).Revolve()
 
 	return outer.Cut(inner), nil
 }

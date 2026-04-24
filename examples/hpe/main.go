@@ -60,7 +60,7 @@ func ap723hMount() *solid.Solid {
 
 	c1 := shape.Rect(v2.XY(baseX-35, baseY-35), 5.0)
 
-	s2 := solid.Extrude(base2d.Cut(c1), baseThickness).
+	s2 := base2d.Cut(c1).Extrude(baseThickness).
 		Translate(v3.XY(0.5*pcbX, 0.5*pcbY))
 
 	// reinforcing ribs
@@ -112,7 +112,7 @@ func ap725Mount() *solid.Solid {
 	c1 := shape.Rect(v2.XY(100, 65.0), 3.0).Translate(v2.Y(20))
 	c2 := shape.Rect(v2.XY(135, 25.0), 3.0).Translate(v2.Y(-50))
 
-	s2 := solid.Extrude(base2d.Cut(c1.Union(c2)), baseThickness).
+	s2 := base2d.Cut(c1.Union(c2)).Extrude(baseThickness).
 		Translate(v3.XY(0.5*pcbX, 0.5*pcbY))
 
 	const ribHeight = 5.0
@@ -165,7 +165,7 @@ func ap745Mount() *solid.Solid {
 	c1 := shape.Rect(v2.XY(140, 50.0), 3.0).Translate(v2.Y(-37))
 	c2 := shape.Rect(v2.XY(90.0, 50.0), 3.0).Translate(v2.XY(15, 45))
 
-	s2 := solid.Extrude(base2d.Cut(c1.Union(c2)), baseThickness).
+	s2 := base2d.Cut(c1.Union(c2)).Extrude(baseThickness).
 		Translate(v3.XY(0.5*pcbX, 0.5*pcbY))
 
 	const ribHeight = 5.0

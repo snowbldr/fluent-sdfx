@@ -113,7 +113,7 @@ func powerBoardMount() *solid.Solid {
 
 	// cutout
 	c0 := shape.Rect(v2.XY(3*xSpace, 0.5*ySpace), 3.0)
-	s3 := solid.Extrude(s2.Cut(c0), baseThickness)
+	s3 := s2.Cut(c0).Extrude(baseThickness)
 
 	return solid.SmoothUnion(solid.PolyMin(3.0), s3, s1)
 }
@@ -201,7 +201,7 @@ func powerPanel() *solid.Solid {
 
 	cutouts := c0.Union(c1, c2)
 
-	return solid.Extrude(s.Cut(cutouts), baseThickness)
+	return s.Cut(cutouts).Extrude(baseThickness)
 }
 
 // powerPanelRouting returns a routing pattern for the power panel.
@@ -218,7 +218,7 @@ func powerPanelRouting() *solid.Solid {
 
 	c := shape.Rect(v2.XY(55, 65), 3)
 
-	return solid.Extrude(s.Cut(c), baseThickness)
+	return s.Cut(c).Extrude(baseThickness)
 }
 
 // arPanel returns the panel for an attack/release module.

@@ -49,7 +49,7 @@ func dustDeputyToVacuumFF() *solid.Solid {
 	p.Add(r1, h1).Smooth(t, 4)
 	p.Add(r0, h0)
 
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 // 2.5" vacuum (male) to pipe (male)
@@ -77,7 +77,7 @@ func vacuumToPipeMM(name string) *solid.Solid {
 	p.Add(r0-t, h1).Smooth(t, 4)
 	p.Add(r0-t, h0)
 
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 // dust deputy (female) to pipe (male)
@@ -106,7 +106,7 @@ func dustDeputyToPipeFM(name string) *solid.Solid {
 	p.Add(r0-t, h1).Smooth(t, 4)
 	p.Add(r0-t, h0)
 
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 func main() {

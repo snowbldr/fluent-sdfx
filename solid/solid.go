@@ -3,8 +3,8 @@ package solid
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/plane"
 	flrender "github.com/snowbldr/fluent-sdfx/render"
-	"github.com/snowbldr/fluent-sdfx/shape"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 	"github.com/snowbldr/sdfx/render"
 	"github.com/snowbldr/sdfx/sdf"
@@ -36,14 +36,11 @@ func Wrap(sdf sdf.SDF3) *Solid {
 	return &Solid{sdf}
 }
 
-// BoundingBox returns the solid's 3D axis-aligned bounding box.
-func (s *Solid) BoundingBox() Box3 {
+// Bounds returns the solid's 3D axis-aligned bounding box as a fluent v3.Box.
+// Use this instead of BoundingBox when you want the fluent box API
+// (BoundingBox returns sdfx's raw sdf.Box3).
+func (s *Solid) Bounds() Box3 {
 	return v3.FromSDF(s.SDF3.BoundingBox())
-}
-
-// Evaluate returns the signed distance from p to the solid's surface.
-func (s *Solid) Evaluate(p v3.Vec) float64 {
-	return s.SDF3.Evaluate(v3sdf.Vec(p))
 }
 
 // --- Constructors ---
@@ -64,27 +61,34 @@ func Cone(height, r0, r1, round float64) *Solid {
 	return New(sdf.Cone3D(height, r0, r1, round))
 }
 
-func Extrude(profile *shape.Shape, height float64) *Solid {
-	return &Solid{sdf.Extrude3D(profile.SDF2, height)}
+// Extrude linearly extrudes a 2D profile to a solid of the given height.
+//
+// The profile argument accepts any sdf.SDF2 — notably *shape.Shape, which
+// embeds sdf.SDF2. This keeps the package free of a back-reference to
+// shape so the shape package can import solid and attach fluent methods.
+func Extrude(profile sdf.SDF2, height float64) *Solid {
+	return &Solid{sdf.Extrude3D(profile, height)}
 }
 
-// Slice cuts a cross-section through a solid, returning a 2D shape.
-func Slice(s *Solid, origin, dir v3.Vec) *shape.Shape {
-	return shape.Wrap2D(sdf.Slice2D(s.SDF3, v3sdf.Vec(origin), v3sdf.Vec(dir)))
+// Slice cuts a planar cross-section through a solid and returns it as a
+// raw sdf.SDF2. Wrap with shape.Of for the full *shape.Shape fluent API,
+// or use shape.Slice / solid.SliceShape helpers.
+func Slice(s *Solid, origin, normal v3.Vec) sdf.SDF2 {
+	return sdf.Slice2D(s.SDF3, v3sdf.Vec(origin), v3sdf.Vec(normal))
 }
 
-func TwistExtrude(profile *shape.Shape, height, twist float64) *Solid {
-	return &Solid{sdf.TwistExtrude3D(profile.SDF2, height, twist)}
+func TwistExtrude(profile sdf.SDF2, height, twist float64) *Solid {
+	return &Solid{sdf.TwistExtrude3D(profile, height, twist)}
 }
 
-func Screw(profile *shape.Shape, height, start, pitch float64, num int) *Solid {
-	return New(sdf.Screw3D(profile.SDF2, height, start, pitch, num))
+func Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid {
+	return New(sdf.Screw3D(profile, height, start, pitch, num))
 }
 
 // --- Transform methods ---
 
 func (s *Solid) ZeroZ() *Solid {
-	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec{Z: -s.BoundingBox().Min.Z}))}
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec{Z: -s.SDF3.BoundingBox().Min.Z}))}
 }
 
 func (s *Solid) Translate(v v3.Vec) *Solid {
@@ -135,6 +139,11 @@ func (s *Solid) Union(other ...*Solid) *Solid {
 	return &Solid{sdf.Union3D(sdf3s...)}
 }
 
+// Add is an alias for Union.
+func (s *Solid) Add(other ...*Solid) *Solid {
+	return s.Union(other...)
+}
+
 func (s *Solid) Intersect(other *Solid) *Solid {
 	return &Solid{sdf.Intersect3D(s.SDF3, other.SDF3)}
 }
@@ -146,6 +155,26 @@ func (s *Solid) Cut(other ...*Solid) *Solid {
 	}
 	tool := sdf.Union3D(sdf3s...)
 	return &Solid{sdf.Difference3D(s.SDF3, tool)}
+}
+
+// Difference is an alias for Cut.
+func (s *Solid) Difference(other ...*Solid) *Solid {
+	return s.Cut(other...)
+}
+
+// --- 3D → 2D cross-section methods ---
+
+// Slice2D cuts a planar cross-section through the solid and returns it as a
+// raw sdf.SDF2. Wrap with shape.Wrap2D (or use shape.SliceOf) for the fluent
+// *shape.Shape API.
+func (s *Solid) Slice2D(origin, normal v3.Vec) sdf.SDF2 {
+	return sdf.Slice2D(s.SDF3, v3sdf.Vec(origin), v3sdf.Vec(normal))
+}
+
+// SliceAt cuts a cross-section at the given plane. Wrap with shape.Wrap2D
+// (or use shape.SliceAt) for the fluent *shape.Shape API.
+func (s *Solid) SliceAt(p plane.Plane) sdf.SDF2 {
+	return s.Slice2D(p.Origin, p.Normal)
 }
 
 // --- Modification methods ---
@@ -218,7 +247,7 @@ func (s *Solid) MF3(path string, cellsPerMM float64) {
 // so sub-mm parts don't collapse to zero or single-cell renders that
 // marching cubes emits as empty meshes.
 func CellsFor(s *Solid, cellsPerMM float64) int {
-	size := s.BoundingBox().Size()
+	size := s.SDF3.BoundingBox().Size()
 	longest := math.Max(math.Max(size.X, size.Y), size.Z)
 	cells := int(math.Ceil(longest * cellsPerMM))
 	if cells < MinCells {

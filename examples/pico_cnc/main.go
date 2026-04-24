@@ -116,7 +116,7 @@ func picoCnc() *solid.Solid {
 	c0 := shape.Rect(v2.XY(cutoutX, cutoutY), 3.0)
 
 	// extrude the base
-	s2 := solid.Extrude(s0.Cut(c0), baseThickness)
+	s2 := s0.Cut(c0).Extrude(baseThickness)
 
 	const xOfs = (0.5 * baseX) - holeMargin - pcbHoleMargin
 	const yOfs = (0.5 * baseY) - holeMargin - pcbHoleMargin

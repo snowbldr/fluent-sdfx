@@ -28,7 +28,7 @@ func servos() {
 
 		servo := obj.Servo3D(*k).Translate(v3.XYZ(0, yOfs, 20))
 
-		outline := solid.Extrude(obj.Servo2D(*k, -1), 5).Translate(v3.XYZ(0, yOfs, 0))
+		outline := obj.Servo2D(*k, -1).Extrude(5).Translate(v3.XYZ(0, yOfs, 0))
 
 		if s == nil {
 			s = servo.Union(outline)

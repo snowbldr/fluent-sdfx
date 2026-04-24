@@ -22,7 +22,7 @@ func capOuter() *solid.Solid {
 
 func capInner() *solid.Solid {
 	thread := shape.PlasticButtressThread(threadRadius, threadPitch)
-	screw := solid.Screw(thread, capHeight, 0, threadPitch, 1)
+	screw := thread.Screw(capHeight, 0, threadPitch, 1)
 	return screw.Translate(v3.Z(-capThickness))
 }
 

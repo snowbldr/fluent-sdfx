@@ -41,11 +41,11 @@ func envelope(k *msParms, machined bool) *solid.Solid {
 	s0 := shape.Polygon([]v2.Vec{v2.XY(0, 0), v2.XY(l, 0), v2.XY(l, c), v2.XY(c, l), v2.XY(0, l)})
 
 	if machined {
-		return solid.Extrude(s0, k.width)
+		return s0.Extrude(k.width)
 	}
 
 	// cast
-	s1 := solid.Extrude(s0, k.width+2.0*k.allowance)
+	s1 := s0.Extrude(k.width + 2.0*k.allowance)
 	s2 := walls(k)
 	return s1.Union(s2)
 }
@@ -131,7 +131,7 @@ func web2d(k *msParms) *shape.Shape {
 // web returns the internal web.
 func web(k *msParms) *solid.Solid {
 	s0 := web2d(k)
-	return solid.ExtrudeRounded(s0, k.webThickness, 0.5*k.webThickness)
+	return s0.ExtrudeRounded(k.webThickness, 0.5*k.webThickness)
 }
 
 func corner90(k *msParms) *solid.Solid {

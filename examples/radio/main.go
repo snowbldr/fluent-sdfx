@@ -17,7 +17,7 @@ func ferriteMount() *solid.Solid {
 
 	// support wall (triangle offset)
 	triShape := obj.IsocelesTriangle2D(baseSize, rodHeight).Offset(holderRadius)
-	wall := solid.Extrude(triShape, WallThickness)
+	wall := triShape.Extrude(WallThickness)
 
 	// base
 	const baseX = baseSize + 2.0*holderRadius

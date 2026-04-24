@@ -45,7 +45,7 @@ func cc18b() *solid.Solid {
 	p.Add(6, 21)
 	p.Add(6, 20)
 	p.Add(0, 20)
-	vpipe_3d := solid.Revolve(p.Build())
+	vpipe_3d := p.Build().Revolve()
 
 	// bolt circle for the top flange
 	top_holes_3d := obj.BoltCircle3D(
@@ -66,7 +66,7 @@ func cc18b() *solid.Solid {
 	p.Add(6, 14)
 	p.Add(6, 14.35)
 	p.Add(0, 14.35)
-	hpipe_3d := solid.Revolve(p.Build())
+	hpipe_3d := p.Build().Revolve()
 
 	side_holes_3d := obj.BoltCircle3D(
 		2.0,
@@ -114,7 +114,7 @@ func cc18c() *solid.Solid {
 	// sleeve
 	r_outer := 42.3 / 2.0
 	pts := []v2.Vec{v2.XY(0, 0), v2.XY(r_outer, 0), v2.XY(r_outer, 29), v2.XY(r_outer-1.0, 30), v2.XY(0, 30)}
-	sleeve_3d := solid.Revolve(shape.Polygon(pts)).
+	sleeve_3d := shape.Polygon(pts).Revolve().
 		Translate(v3.XYZ(0, 0, -10))
 	body_3d = body_3d.Union(sleeve_3d)
 

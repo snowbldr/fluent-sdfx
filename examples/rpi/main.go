@@ -61,7 +61,7 @@ func sideProfile(t float64) *shape.Shape {
 func webs() *solid.Solid {
 	s2d := sideProfile(webSize)
 	l := webLength
-	s := solid.Extrude(s2d, l)
+	s := s2d.Extrude(l)
 	ofs := 0.5 * (baseLength - l)
 	s0 := s.Translate(v3.XYZ(0, 0, ofs))
 	s1 := s.Translate(v3.XYZ(0, 0, -ofs))
@@ -71,7 +71,7 @@ func webs() *solid.Solid {
 func supports() *solid.Solid {
 	s2d := sideProfile(0)
 	l := supportLength + webLength
-	s := solid.Extrude(s2d, l)
+	s := s2d.Extrude(l)
 	ofs := 0.5 * (baseLength - l)
 	s0 := s.Translate(v3.XYZ(0, 0, ofs))
 	s1 := s.Translate(v3.XYZ(0, 0, -ofs))
@@ -89,13 +89,13 @@ func baseProfile() *shape.Shape {
 }
 
 func base() *solid.Solid {
-	return solid.Extrude(baseProfile(), baseLength)
+	return baseProfile().Extrude(baseLength)
 }
 
 func baseCutout() *solid.Solid {
 	holeSize := v2.XY(baseLength-2*baseFootX, baseWidth-2*baseFootY)
 	s2d := shape.Rect(holeSize, filletRadius)
-	s := solid.Extrude(s2d, baseHeight)
+	s := s2d.Extrude(baseHeight)
 	s = s.RotateX(90).RotateY(90).Translate(v3.XYZ(0.5*baseWidth, 0.5*baseHeight, 0))
 	return s
 }

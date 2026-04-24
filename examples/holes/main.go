@@ -44,7 +44,7 @@ func testHoles() *solid.Solid {
 		CornerRadius: xInc * 0.2,
 	}).Cut(holes)
 
-	return solid.Extrude(panel, 3)
+	return panel.Extrude(3)
 }
 
 func main() {

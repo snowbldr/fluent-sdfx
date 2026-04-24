@@ -26,7 +26,7 @@ func cc16a() *solid.Solid {
 	slot1 := slot.Translate(v2.XY(-base_w/2, 0))
 	slots := slot0.Union(slot1)
 	base_2d = base_2d.Cut(slots)
-	base_3d := solid.Extrude(base_2d, base_h)
+	base_3d := base_2d.Extrude(base_h)
 
 	hole_h := 0.75
 	block_radius := 1.0
@@ -40,7 +40,7 @@ func cc16a() *solid.Solid {
 
 	block_2d := shape.Line(block_l, block_radius)
 	block_2d = block_2d.CutLine(v2.XY(0, 0), v2.XY(0, 1))
-	block_3d := solid.Extrude(block_2d, block_w)
+	block_3d := block_2d.Extrude(block_w)
 
 	cb_3d := obj.CounterBoredHole3D(block_w, hole_radius, cb_radius, cb_depth).Translate(v3.XYZ(block_l/2, 0, 0))
 	block_3d = block_3d.Cut(cb_3d)
@@ -76,7 +76,7 @@ func cc16b() *solid.Solid {
 	slot_2d := shape.Line(slot_l, slot_r).Rotate(90).Translate(v2.XY(0, slot_l/2))
 	base_2d = base_2d.Cut(slot_2d)
 
-	base_3d := solid.Extrude(base_2d, base_h)
+	base_3d := base_2d.Extrude(base_h)
 
 	// rails
 	rail_w := 15.0
@@ -92,7 +92,7 @@ func cc16b() *solid.Solid {
 	recess_zofs := (base_h / 2.0) - recess_h
 	recess := []v2.Vec{v2.XY(0, 0), v2.XY(recess_w, 0), v2.XY(recess_w+recess_h, recess_h), v2.XY(0, recess_h)}
 	recess_2d := shape.Polygon(recess)
-	recess_3d := solid.Extrude(recess_2d, base_w).
+	recess_3d := recess_2d.Extrude(base_w).
 		RotateX(90).
 		RotateZ(-90).
 		Translate(v3.XYZ(0, recess_w, recess_zofs))
@@ -116,7 +116,7 @@ func cc16b() *solid.Solid {
 	support.Add(-base_w/2, 0)
 	support.Add(-base_w/2, -1)
 	support_2d := support.Build()
-	support_3d := solid.Extrude(support_2d, support_w)
+	support_3d := support_2d.Extrude(support_w)
 
 	// chamfered hole
 	hole_h := 84.0 - base_h
@@ -153,7 +153,7 @@ func cc16b() *solid.Solid {
 	gusset.Add(-gusset_l, 0)
 	gusset_2d := gusset.Build()
 
-	gusset_3d := solid.Extrude(gusset_2d, gusset_w).
+	gusset_3d := gusset_2d.Extrude(gusset_w).
 		RotateX(90).
 		RotateZ(90).
 		Translate(v3.XYZ(0, -gusset_yofs, base_h/2))

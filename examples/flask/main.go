@@ -175,7 +175,7 @@ func pullHoles(width float64) *solid.Solid {
 }
 
 func flaskHalf(width, height float64) *solid.Solid {
-	return solid.Extrude(flaskSideProfile(width), height)
+	return flaskSideProfile(width).Extrude(height)
 }
 
 func flaskSide(width, height float64) *solid.Solid {
@@ -188,7 +188,7 @@ func flaskSide(width, height float64) *solid.Solid {
 	key := sandKey(v3.XYZ(w, height*keyRatio, keyDepth)).RotateX(-90)
 
 	sd := sideDraftProfile(height)
-	sideDraft3D := solid.Extrude(sd, w).RotateY(90)
+	sideDraft3D := sd.Extrude(w).RotateY(90)
 
 	aHoles := alignmentHoles().RotateX(90)
 	pHoles := pullHoles(width).RotateX(90)

@@ -33,17 +33,17 @@ var speaker_yofs = -46.0
 var wall_t = 3.0
 
 func phone_body() *solid.Solid {
-	return solid.Extrude(shape.Rect(v2.XY(phone_w, phone_h), phone_r), phone_t).
+	return shape.Rect(v2.XY(phone_w, phone_h), phone_r).Extrude(phone_t).
 		Translate(v3.Z(wall_t / 2.0))
 }
 
 func camera_hole() *solid.Solid {
-	return solid.Extrude(shape.Rect(v2.XY(camera_w, camera_h), camera_r), wall_t+phone_t).
+	return shape.Rect(v2.XY(camera_w, camera_h), camera_r).Extrude(wall_t + phone_t).
 		Translate(v3.XY(camera_xofs, camera_yofs))
 }
 
 func speaker_hole() *solid.Solid {
-	return solid.Extrude(shape.Rect(v2.XY(speaker_w, speaker_h), speaker_r), wall_t+phone_t).
+	return shape.Rect(v2.XY(speaker_w, speaker_h), speaker_r).Extrude(wall_t + phone_t).
 		Translate(v3.XY(speaker_xofs, speaker_yofs))
 }
 
@@ -55,7 +55,7 @@ func hole_left(length, yofs, zofs float64) *solid.Solid {
 	xofs := -(phone_w + wall_t) / 2.0
 	yofs = (phone_h-length)/2.0 - yofs
 	zofs = phone_t + ((phone_t + wall_t) / 2.0) - zofs
-	return solid.Extrude(shape.Rect(v2.XY(w, length), hole_r), wall_t).
+	return shape.Rect(v2.XY(w, length), hole_r).Extrude(wall_t).
 		RotateY(90).
 		Translate(v3.XYZ(xofs, yofs, zofs))
 }
@@ -65,7 +65,7 @@ func hole_right(length, yofs, zofs float64) *solid.Solid {
 	xofs := (phone_w + wall_t) / 2.0
 	yofs = (phone_h-length)/2.0 - yofs
 	zofs = phone_t + ((phone_t + wall_t) / 2.0) - zofs
-	return solid.Extrude(shape.Rect(v2.XY(w, length), hole_r), wall_t).
+	return shape.Rect(v2.XY(w, length), hole_r).Extrude(wall_t).
 		RotateY(90).
 		Translate(v3.XYZ(xofs, yofs, zofs))
 }
@@ -75,7 +75,7 @@ func hole_top(length, xofs, zofs float64) *solid.Solid {
 	xofs = -(phone_w-length)/2.0 + xofs
 	yofs := (phone_h + wall_t) / 2.0
 	zofs = phone_t + ((phone_t + wall_t) / 2.0) - zofs
-	return solid.Extrude(shape.Rect(v2.XY(length, w), hole_r), wall_t).
+	return shape.Rect(v2.XY(length, w), hole_r).Extrude(wall_t).
 		RotateX(90).
 		Translate(v3.XYZ(xofs, yofs, zofs))
 }
@@ -85,7 +85,7 @@ func hole_bottom(length, xofs, zofs float64) *solid.Solid {
 	xofs = -(phone_w-length)/2.0 + xofs
 	yofs := -(phone_h + wall_t) / 2.0
 	zofs = phone_t + ((phone_t + wall_t) / 2.0) - zofs
-	return solid.Extrude(shape.Rect(v2.XY(length, w), hole_r), wall_t).
+	return shape.Rect(v2.XY(length, w), hole_r).Extrude(wall_t).
 		RotateX(90).
 		Translate(v3.XYZ(xofs, yofs, zofs))
 }
@@ -95,7 +95,7 @@ func outer_shell() *solid.Solid {
 	h := phone_h + (2.0 * wall_t)
 	r := phone_r + wall_t
 	t := phone_t + wall_t
-	return solid.Extrude(shape.Rect(v2.XY(w, h), r), t)
+	return shape.Rect(v2.XY(w, h), r).Extrude(t)
 }
 
 func clip() *solid.Solid {
@@ -116,7 +116,7 @@ func clip() *solid.Solid {
 	p.Add(13.2, (90.0-theta)*math.Pi/180).Polar().Rel()
 	p.Add(16.5, 0).Rel()
 	p.Close()
-	return solid.Extrude(p.Build(), 8.0)
+	return p.Build().Extrude(8.0)
 }
 
 func additive() *solid.Solid {

@@ -17,7 +17,7 @@ func (s *Shape) ToSVG(path string, meshCells int) {
 // ToPNG rasterizes the shape to a PNG file of the given pixel dimensions,
 // centered on the shape's bounding box.
 func (s *Shape) ToPNG(path string, width, height int) {
-	flrender.ToPNG(s, path, s.BoundingBox(), width, height)
+	flrender.ToPNG(s, path, s.Bounds(), width, height)
 }
 
 // ToPNGBox rasterizes the shape to a PNG file for the given bounding box and pixel dimensions.

@@ -23,7 +23,7 @@ func upperArm() *solid.Solid {
 	const gussetThickness = 0.5
 
 	// body
-	body := solid.Extrude(shape.FlatFlankCam(upperArmLength, upperArmRadius0, upperArmRadius1), upperArmThickness)
+	body := shape.FlatFlankCam(upperArmLength, upperArmRadius0, upperArmRadius1).Extrude(upperArmThickness)
 
 	// end cylinder
 	c0 := solid.Cylinder(upperArmWidth*2.0, upperArmRadius1, 0).Translate(v3.Y(upperArmLength))
@@ -38,17 +38,17 @@ func upperArm() *solid.Solid {
 	g.Add(-dx, dy)
 	g.Add(dx, dy)
 	g.Add(0, 0)
-	gusset := solid.Extrude(g.Build(), upperArmThickness*gussetThickness).
+	gusset := g.Build().Extrude(upperArmThickness * gussetThickness).
 		RotateY(90).
 		Translate(v3.Y(upperArmLength - dy))
 
 	// servo mounting
-	horn := solid.Extrude(obj.ServoHorn(obj.ServoHornParms{
+	horn := obj.ServoHorn(obj.ServoHornParms{
 		CenterRadius: 3,
 		NumHoles:     4,
 		CircleRadius: 14 * 0.5,
 		HoleRadius:   1.9,
-	}), upperArmThickness)
+	}).Extrude(upperArmThickness)
 
 	const hornRadius = 10
 	const hornThickness = 2.3
@@ -88,14 +88,14 @@ func servoMount() *solid.Solid {
 	m.Add(servoMountBaseLength, servoMountThickness)
 	m.Add(servoMountThickness, servoMountUprightLength)
 	m.Add(0, servoMountUprightLength)
-	mount := solid.Extrude(m.Build(), servoMountWidth)
+	mount := m.Build().Extrude(servoMountWidth)
 
 	// cavity
 	c := shape.NewPoly()
 	c.Add(servoMountThickness, servoMountThickness)
 	c.Add(servoMountBaseLength, servoMountThickness)
 	c.Add(servoMountThickness, servoMountUprightLength)
-	cavity := solid.Extrude(c.Build(), servoMountWidth-2*servoMountThickness)
+	cavity := c.Build().Extrude(servoMountWidth - 2*servoMountThickness)
 
 	mountSolid := mount.Cut(cavity).RotateX(90)
 
@@ -106,7 +106,7 @@ func servoMount() *solid.Solid {
 
 	// servo
 	k := obj.ServoLookup("annimos_ds3218")
-	servo := solid.Extrude(obj.Servo2D(*k, 2.1), servoMountThickness).
+	servo := obj.Servo2D(*k, 2.1).Extrude(servoMountThickness).
 		RotateY(90).
 		Translate(v3.XZ(servoMountThickness*0.5, servoOffset))
 
@@ -202,7 +202,7 @@ func platform() *solid.Solid {
 	pp.Add(c0.X, c0.Y)
 	pp.Add(c1.X, c1.Y)
 	pp.Add(c2.X, c2.Y)
-	platform := solid.Extrude(pp.Build(), platformThickness)
+	platform := pp.Build().Extrude(platformThickness)
 
 	// connection arms
 	arm0 := obj.Pipe3D(platformThickness*0.5, upperArmRadius2, upperArmWidth).RotateY(90).Translate(c0)

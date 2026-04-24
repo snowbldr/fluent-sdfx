@@ -8,6 +8,7 @@ import (
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/units"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
 
 func testBezier() *shape.Bezier {
@@ -66,10 +67,10 @@ func test1() error {
 	d := render.NewDXF("test.dxf")
 	var ePoints []v2.Vec
 
-	bb := s0.BoundingBox()
+	bb := s0.Bounds()
 	for _, p := range bb.RandomSet(100000) {
-		d0 := s0.Evaluate(p)
-		d1 := s1.Evaluate(p)
+		d0 := s0.Evaluate(v2sdf.Vec(p))
+		d1 := s1.Evaluate(v2sdf.Vec(p))
 		if !units.EqualFloat64(d0, d1, 1e-12) {
 			ePoints = append(ePoints, p)
 		}

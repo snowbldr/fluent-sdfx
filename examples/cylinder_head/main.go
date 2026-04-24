@@ -51,7 +51,7 @@ func exhaust_boss(mode string, x_ofs float64) *solid.Solid {
 		panic("bad mode")
 	}
 
-	s1 := solid.Extrude(s0, eb_height)
+	s1 := s0.Extrude(eb_height)
 	// original: rotateZ(90) then rotateY(90), then translate
 	return s1.RotateZ(90).RotateY(90).Translate(v3.XYZ(x_ofs, eb_y_offset, eb_z_offset))
 }
@@ -109,7 +109,7 @@ func sparkplug(mode string, x_ofs float64) *solid.Solid {
 	default:
 		panic("bad mode")
 	}
-	s := solid.Revolve(profile)
+	s := profile.Revolve()
 	// original: rotateX(Pi/2 - sp_theta), then translate
 	// use radians -> degrees
 	angleDeg := (math.Pi/2 - sp_theta) * 180 / math.Pi
@@ -229,7 +229,7 @@ var stud_locations = []v2.Vec{
 
 func head_stud_holes() *solid.Solid {
 	c := shape.Circle(stud_hole_radius).Multi(stud_locations)
-	return solid.Extrude(c, head_height)
+	return c.Extrude(head_height)
 }
 
 // head walls
@@ -254,12 +254,12 @@ func head_wall_inner_2d() *shape.Shape {
 
 func head_envelope() *solid.Solid {
 	s0 := shape.Rect(v2.XY(head_length+2*eb_height1, head_width), 0)
-	return solid.Extrude(s0, head_height)
+	return s0.Extrude(head_height)
 }
 
 func head_wall() *solid.Solid {
 	s := head_wall_outer_2d().Cut(head_wall_inner_2d())
-	return solid.Extrude(s, head_height)
+	return s.Extrude(head_height)
 }
 
 // manifolds

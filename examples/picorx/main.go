@@ -215,7 +215,7 @@ func sideMount(thickness float64, lhs bool) *solid.Solid {
 	p.Add(0, bh-d).Rel()
 	p.Add(-d, d).Rel()
 	b0 := p.Build()
-	box := solid.Extrude(b0, bw)
+	box := b0.Extrude(bw)
 
 	inner := box.Offset(mRound0)
 	outer := box.Offset(mRound2)

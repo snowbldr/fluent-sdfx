@@ -49,7 +49,7 @@ func blockOffPlate() *solid.Solid {
 	}
 	holes := hole.Multi(posn)
 
-	return solid.Extrude(plate.Cut(holes), plateZ)
+	return plate.Cut(holes).Extrude(plateZ)
 }
 
 func main() {

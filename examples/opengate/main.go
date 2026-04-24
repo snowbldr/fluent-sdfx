@@ -56,7 +56,7 @@ func mainBoard() *solid.Solid {
 	// extrude the base, add the standoffs with polymin fillet
 	return solid.SmoothUnion(
 		solid.PolyMin(3.0),
-		solid.Extrude(baseShape.Cut(cutoutShape), baseThickness),
+		baseShape.Cut(cutoutShape).Extrude(baseThickness),
 		standoffs(),
 	)
 }

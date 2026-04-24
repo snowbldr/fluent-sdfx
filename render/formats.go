@@ -5,12 +5,10 @@ import (
 
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	"github.com/snowbldr/fluent-sdfx/vec/v2i"
-	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 	"github.com/snowbldr/sdfx/render"
 	"github.com/snowbldr/sdfx/sdf"
 	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 	v2isdf "github.com/snowbldr/sdfx/vec/v2i"
-	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 )
 
 // Render3 is the sdfx 3D renderer interface. Use it for custom lower-level rendering.
@@ -20,26 +18,10 @@ type Render3 = render.Render3
 type Render2 = render.Render2
 
 // SDF2 is a 2D signed distance function. *shape.Shape satisfies this interface.
-type SDF2 interface {
-	Evaluate(p v2.Vec) float64
-	BoundingBox() v2.Box
-}
+type SDF2 = sdf.SDF2
 
 // SDF3 is a 3D signed distance function. *solid.Solid satisfies this interface.
-type SDF3 interface {
-	Evaluate(p v3.Vec) float64
-	BoundingBox() v3.Box
-}
-
-type sdf2Adapter struct{ s SDF2 }
-
-func (a sdf2Adapter) Evaluate(p v2sdf.Vec) float64 { return a.s.Evaluate(v2.Vec(p)) }
-func (a sdf2Adapter) BoundingBox() sdf.Box2        { return a.s.BoundingBox().SDF() }
-
-type sdf3Adapter struct{ s SDF3 }
-
-func (a sdf3Adapter) Evaluate(p v3sdf.Vec) float64 { return a.s.Evaluate(v3.Vec(p)) }
-func (a sdf3Adapter) BoundingBox() sdf.Box3        { return a.s.BoundingBox().SDF() }
+type SDF3 = sdf.SDF3
 
 // PNG is a PNG drawing target.
 type PNG struct {
@@ -66,11 +48,11 @@ func NewDXF(name string) *DXF {
 }
 
 // RenderSDF2 renders a Shape to the PNG.
-func (d *PNG) RenderSDF2(s SDF2) { d.p.RenderSDF2(sdf2Adapter{s}) }
+func (d *PNG) RenderSDF2(s SDF2) { d.p.RenderSDF2(s) }
 
 // RenderSDF2MinMax renders a Shape with explicit min/max distance thresholds.
 func (d *PNG) RenderSDF2MinMax(s SDF2, dmin, dmax float64) {
-	d.p.RenderSDF2MinMax(sdf2Adapter{s}, dmin, dmax)
+	d.p.RenderSDF2MinMax(s, dmin, dmax)
 }
 
 // Line draws a line from p0 to p1.
@@ -145,40 +127,35 @@ func NewDualContouring2D(meshCells int) Render2 {
 
 // To3MF renders an SDF3 to a 3MF file using the parallel octree renderer.
 func To3MF(s SDF3, path string, meshCells int) {
-	a := sdf3Adapter{s}
 	r := render.NewMarchingCubesOctreeParallel(meshCells)
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
-	render.To3MF(a, path, r)
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	render.To3MF(s, path, r)
 }
 
 // ToDXF renders an SDF2 to a DXF file using the quadtree marching-squares renderer.
 func ToDXF(s SDF2, path string, meshCells int) {
-	a := sdf2Adapter{s}
 	r := render.NewMarchingSquaresQuadtree(meshCells)
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
-	render.ToDXF(a, path, r)
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	render.ToDXF(s, path, r)
 }
 
 // ToDXFWith renders an SDF2 to a DXF file using the given 2D renderer.
 func ToDXFWith(s SDF2, path string, r Render2) {
-	a := sdf2Adapter{s}
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
-	render.ToDXF(a, path, r)
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	render.ToDXF(s, path, r)
 }
 
 // ToSVG renders an SDF2 to an SVG file using the quadtree marching-squares renderer.
 func ToSVG(s SDF2, path string, meshCells int) {
-	a := sdf2Adapter{s}
 	r := render.NewMarchingSquaresQuadtree(meshCells)
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
-	render.ToSVG(a, path, r)
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	render.ToSVG(s, path, r)
 }
 
 // ToSVGWith renders an SDF2 to an SVG file using the given 2D renderer.
 func ToSVGWith(s SDF2, path string, r Render2) {
-	a := sdf2Adapter{s}
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
-	render.ToSVG(a, path, r)
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	render.ToSVG(s, path, r)
 }
 
 // ToPNG renders an SDF2 to a PNG file sized to the given bounding box and pixel dimensions.
@@ -187,7 +164,7 @@ func ToPNG(s SDF2, path string, bb v2.Box, width, height int) {
 	if err != nil {
 		panic(err)
 	}
-	p.RenderSDF2(sdf2Adapter{s})
+	p.RenderSDF2(s)
 	if err := p.Save(); err != nil {
 		panic(err)
 	}

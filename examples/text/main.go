@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/snowbldr/fluent-sdfx/shape"
-	"github.com/snowbldr/fluent-sdfx/solid"
 )
 
 func main() {
@@ -16,5 +15,5 @@ func main() {
 	cached.ToDXF("shape.dxf", 600)
 	cached.ToSVG("shape.svg", 600)
 
-	solid.ExtrudeRounded(cached, 1.0, 0.2).STL("shape.stl", 6.0)
+	cached.ExtrudeRounded(1.0, 0.2).STL("shape.stl", 6.0)
 }

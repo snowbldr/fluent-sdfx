@@ -73,6 +73,21 @@ func main() {
 
 **Transforms:** `Translate`, `Rotate`, `Scale`, `MirrorX`, `MirrorY`, `ScaleUniform`, `Center`, `CenterAndScale`, `Transform`
 
+**2D → 3D:** each returns a `*solid.Solid`. Package-level constructors with the same names remain available in `solid` for callers that already hold a raw `sdf.SDF2`.
+
+| Method | Description |
+|---|---|
+| `Extrude(height)` | Linear extrusion |
+| `ExtrudeRounded(height, round)` | Extrusion with rounded top/bottom edges |
+| `TwistExtrude(height, twist)` | Extrude while rotating about Z (radians) |
+| `ScaleExtrude(height, scale)` | Extrude while scaling the profile |
+| `ScaleTwistExtrude(height, twist, scale)` | Scaled + twisted extrusion |
+| `Revolve()` | Full revolution around the Y axis |
+| `RevolveAngle(angleDeg)` | Partial revolution |
+| `Screw(height, start, pitch, n)` | Helical screw thread |
+| `SweepHelix(radius, turns, height, flatEnds)` | Sweep along a helix path |
+| `LoftTo(top, height, round)` | Transition from this profile to another |
+
 **Booleans:** `Union`, `Cut`, `Intersect`
 
 **Smooth blends:** `SmoothUnion`, `SmoothCut`, `SmoothIntersect` (pair with min/max funcs from `solid`)
@@ -120,9 +135,15 @@ func main() {
 
 **Cross-section:**
 
-| Function | Description |
+Methods on `*Solid` return raw `sdf.SDF2`; helpers in the `shape` package wrap the result as `*Shape` so you can chain `.ToDXF / .ToSVG / .ToPNG` and further 2D ops.
+
+| API | Description |
 |---|---|
-| `Slice(solid, origin, dir)` | Cut a 2D cross-section, returns `*shape.Shape` |
+| `s.Slice2D(origin, normal)` | Cross-section through a solid (method on `*Solid`) |
+| `s.SliceAt(plane.Plane)` | Cross-section at a `plane.Plane` (method on `*Solid`) |
+| `solid.Slice(s, origin, normal)` | Package-level form, same as `s.Slice2D` |
+| `shape.SliceOf(s, origin, normal)` | Slice and wrap as `*Shape` |
+| `shape.SliceAt(s, plane.Plane)` | Slice at a plane and wrap as `*Shape` |
 
 **Transforms:** `Translate`, `RotateX`, `RotateY`, `RotateZ`, `RotateAxis`, `Scale`, `ScaleUniform`, `Transform`, `ZeroZ`, `Center`, `RotateToVector`
 
@@ -230,6 +251,21 @@ v3.Zero          // Vec{}
 ```
 
 `v2`/`v3` provide `X`, `Y`, `Z`, `XY`, `XZ`, `YZ`, `XYZ`, `Zero` (float64). `v2i`/`v3i` provide integer-component variants. `p2.R(r)`, `p2.T(theta)`, `p2.RT(r, theta)` build polar vectors. `conv` provides `V2ToV3`, `P2ToV2`, `V2ToV2i`, and the other cross-type conversions.
+
+`*Shape` and `*Solid` satisfy `sdf.SDF2` / `sdf.SDF3` directly — their `BoundingBox()` and `Evaluate()` return the underlying sdfx types. Use `s.Bounds()` when you want the fluent `v2.Box` / `v3.Box` wrappers with chainable methods like `ScaleAboutCenter`, `RandomSet`, `Include`.
+
+### `plane` — Slice Plane Helpers
+
+Axis normals and plane constructors for cross-sections:
+
+```go
+plane.X, plane.Y, plane.Z       // unit normals
+plane.XY, plane.XZ, plane.YZ    // planes through the origin
+plane.AtX(5), plane.AtY(0), plane.AtZ(10)  // axis-aligned at offset
+plane.At(origin, normal)        // arbitrary
+```
+
+Pair with `s.SliceAt(plane.AtZ(10))` or `shape.SliceAt(s, plane.XY)`.
 
 ## Dev loop: `stldev`
 

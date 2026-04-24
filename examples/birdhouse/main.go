@@ -38,7 +38,7 @@ func frame() *solid.Solid {
 	sOuter := s.Offset(2 * thickness)
 	sInner := s.Offset(thickness)
 	f2d := sOuter.Cut(sInner)
-	return solid.Extrude(f2d, width*1.1).RotateX(90)
+	return f2d.Extrude(width * 1.1).RotateX(90)
 }
 
 func hole() *solid.Solid {

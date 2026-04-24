@@ -27,14 +27,14 @@ func holder() *solid.Solid {
 	bodySize := v2.XY(xLoadcell+2.0*outerMargin, yLoadCell+2.0*outerMargin)
 	bodyRadius := rLoadCell + outerMargin
 	body2d := shape.Rect(bodySize, bodyRadius)
-	body3d := solid.ExtrudeRounded(body2d, bodyHeight, 2.0)
+	body3d := body2d.ExtrudeRounded(bodyHeight, 2.0)
 
 	// tabs
 	tabX := 15.0
 	tabSize := v2.XY(bodySize.X+2.0*tabX, 0.5*bodySize.Y)
 	tabHeight := bodyHeight * 0.75
 	tab2d := shape.Rect(tabSize, bodyRadius*0.25)
-	tab3d := solid.ExtrudeRounded(tab2d, tabHeight, 2.0)
+	tab3d := tab2d.ExtrudeRounded(tabHeight, 2.0)
 
 	// screw holes
 	screw0 := obj.CounterSunkHole3D(tabHeight, 2.0)
@@ -46,11 +46,11 @@ func holder() *solid.Solid {
 	// inner hole
 	holeSize := v2.XY(xLoadcell-2.0*innerMargin, yLoadCell-2.0*innerMargin)
 	holeRadius := rLoadCell - innerMargin
-	hole3d := solid.Extrude(shape.Rect(holeSize, holeRadius), bodyHeight)
+	hole3d := shape.Rect(holeSize, holeRadius).Extrude(bodyHeight)
 
 	// recess
 	recessSize := v2.XY(xLoadcell, yLoadCell)
-	recess3d := solid.Extrude(shape.Rect(recessSize, rLoadCell), zLoadCell)
+	recess3d := shape.Rect(recessSize, rLoadCell).Extrude(zLoadCell)
 	zOfs := 0.5 * (bodyHeight - zLoadCell)
 	recess3d = recess3d.Translate(v3.Z(zOfs))
 

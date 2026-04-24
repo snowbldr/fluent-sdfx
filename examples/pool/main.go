@@ -24,7 +24,7 @@ func pool() *solid.Solid {
 	p.Add(0, 0)
 	p.AddV2Set(poolDepth)
 	p.Add(poolLength, 0)
-	return solid.Extrude(p.Build(), poolWidth)
+	return p.Build().Extrude(poolWidth)
 }
 
 func main() {

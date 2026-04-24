@@ -68,7 +68,7 @@ func body1() (*solid.Solid, error) {
 
 	// body
 	f := flower(n, r0, r1, r2)
-	s1 := solid.ExtrudeRounded(f, t, t/4.0)
+	s1 := f.ExtrudeRounded(t, t/4.0)
 
 	// periphery holes
 	s2 := obj.BoltCircle3D(t, r+clearance, r1, n)
@@ -89,7 +89,7 @@ func body2() (*solid.Solid, error) {
 	p.Add(r0, t/2)
 	p.Add(r, t/2)
 	armShape := shape.Polygon(p.Vertices())
-	arm := solid.RevolveAngle(armShape, 270).
+	arm := armShape.RevolveAngle(270).
 		Translate(v3.X(-1.5 * r0))
 
 	// create 6 arms
@@ -122,7 +122,7 @@ func spincap(pinR, pinL float64) *solid.Solid {
 	p.Add(pinR, pinL)
 	p.Add(0, pinL)
 
-	return solid.Revolve(shape.Polygon(p.Vertices()))
+	return shape.Polygon(p.Vertices()).Revolve()
 }
 
 // Push to fit spincap for single spinner.
@@ -144,14 +144,14 @@ func spincapDouble(male bool) (*solid.Solid, error) {
 	if male {
 		// Add an external screw thread.
 		t := shape.ISOThread(threadR-threadTolerance, threadPitch, true)
-		screw := solid.Screw(t, bearingThickness, 0, threadPitch, 1)
+		screw := t.Screw(bearingThickness, 0, threadPitch, 1)
 		screwC := obj.ChamferedCylinder(screw, 0, 0.5).Translate(v3.Z(1.5 * l))
 		sc := spincap(r, l+0.5)
 		return sc.Union(screwC), nil
 	}
 	// Add an internal screw thread.
 	t := shape.ISOThread(threadR, threadPitch, false)
-	screw := solid.Screw(t, bearingThickness, 0, threadPitch, 1).
+	screw := t.Screw(bearingThickness, 0, threadPitch, 1).
 		Translate(v3.Z(l * 0.5))
 	sc := spincap(r, l-0.5)
 	return sc.Cut(screw), nil

@@ -20,8 +20,8 @@ func box1(upper bool) *solid.Solid {
 	iSize := oSize.SubScalar(2.0 * wallThickness)
 
 	// build the box
-	outer := solid.Extrude(shape.Rect(v2.XY(oSize.X, oSize.Y), round), oSize.Z)
-	inner := solid.Extrude(shape.Rect(v2.XY(iSize.X, iSize.Y), round), iSize.Z)
+	outer := shape.Rect(v2.XY(oSize.X, oSize.Y), round).Extrude(oSize.Z)
+	inner := shape.Rect(v2.XY(iSize.X, iSize.Y), round).Extrude(iSize.Z)
 	box := outer.Cut(inner)
 
 	// add some internal walls

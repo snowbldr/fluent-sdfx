@@ -36,7 +36,7 @@ func main() {
 	baseRadius := 1.5 * k.DriverRadius // radius of base for driver wheel
 
 	// extrude the driver wheel, add base, drill center hole
-	driver := solid.Extrude(sDriver, wheelHeight).
+	driver := sDriver.Extrude(wheelHeight).
 		Translate(v3.Z(wheelHeight / 2))
 	base := solid.Cylinder(wheelHeight, baseRadius, 0).
 		Translate(v3.Z(-wheelHeight / 2))
@@ -45,7 +45,7 @@ func main() {
 	driver = driver.Cut(hole)
 
 	// extrude the driven wheel, add hub, drill center hole
-	driven := solid.Extrude(sDriven, wheelHeight).
+	driven := sDriven.Extrude(wheelHeight).
 		Translate(v3.Z(-wheelHeight / 2))
 	hub := solid.Cylinder(wheelHeight, hubRadius, 0).
 		Translate(v3.Z(wheelHeight / 2))

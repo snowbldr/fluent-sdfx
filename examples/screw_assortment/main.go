@@ -42,7 +42,7 @@ func makeThread(c config) *shape.Shape {
 func buildScrew(c config) *solid.Solid {
 	thread := makeThread(c)
 	taperRad := c.taperDeg * math.Pi / 180
-	return solid.Screw(thread, c.length, taperRad, c.pitch, c.starts)
+	return thread.Screw(c.length, taperRad, c.pitch, c.starts)
 }
 
 func allConfigs() []config {

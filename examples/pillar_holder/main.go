@@ -21,12 +21,12 @@ func base() *solid.Solid {
 	h := pillarWidth + 2.0*wallThickness
 	r := pillarRadius + wallThickness
 	base2d := shape.Rect(v2.XY(w, h), r)
-	return solid.Extrude(base2d, baseThickness)
+	return base2d.Extrude(baseThickness)
 }
 
 func wall(w, r float64) *solid.Solid {
 	base := shape.Rect(v2.XY(w, w), r)
-	s := solid.Extrude(base, wallHeight)
+	s := base.Extrude(wallHeight)
 	ofs := 0.5 * (wallHeight - baseThickness)
 	return s.Translate(v3.XYZ(0, 0, ofs))
 }

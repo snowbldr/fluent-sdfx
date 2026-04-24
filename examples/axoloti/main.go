@@ -69,7 +69,7 @@ func base() *solid.Solid {
 
 	xOfs := 0.5 * pcbLength
 	yOfs := pcbWidth - (0.5 * baseWidth)
-	s2 := solid.Extrude(base2d.Cut(cutout), baseThickness).Translate(v3.XY(xOfs, yOfs))
+	s2 := base2d.Cut(cutout).Extrude(baseThickness).Translate(v3.XY(xOfs, yOfs))
 
 	// standoffs + body blended with fillet
 	return solid.SmoothUnion(solid.PolyMin(3.0), s2, standoffs())
@@ -144,7 +144,7 @@ func frontPanel() *solid.Solid {
 	bHeight := 4.0
 	b := solid.Cylinder(bHeight, 1.4, 0)
 
-	return solid.Extrude(panel2d.Cut(panelCutouts()), frontPanelThickness).Union(
+	return panel2d.Cut(panelCutouts()).Extrude(frontPanelThickness).Union(
 		b.Translate(pb0.ToV3(-0.5*bHeight)),
 		b.Translate(pb1.ToV3(-0.5*bHeight)),
 	)

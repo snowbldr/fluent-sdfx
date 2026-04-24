@@ -35,7 +35,7 @@ func buttonCavity() *solid.Solid {
 	p.Add(bR1-bR0, 0).Rel()
 	p.Add(0, bH1).Rel()
 	p.Add(-bR1, 0).Rel()
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 func buttons() *solid.Solid {
@@ -86,13 +86,13 @@ func panel() *solid.Solid {
 	sx := (float64(buttonsH-1)*bDeltaH + vx) * 1.5
 	sy := vy * 1.9
 
-	return solid.Extrude(obj.Panel2D(obj.PanelParms{
+	return obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(sx, sy),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.0,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"xx", "x", "xx", "x"},
-	}), 2.0*(bH0+bH1))
+	}).Extrude(2.0 * (bH0 + bH1))
 }
 
 func main() {

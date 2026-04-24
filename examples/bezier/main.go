@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/snowbldr/fluent-sdfx/shape"
-	"github.com/snowbldr/fluent-sdfx/solid"
 )
 
 func bowlingPin() {
@@ -15,7 +14,7 @@ func bowlingPin() {
 	b.Add(0, 15).HandleRev(0, 1)
 	b.Close()
 
-	solid.Revolve(b.Build()).STL("bowlingpin.stl", 3.0)
+	b.Build().Revolve().STL("bowlingpin.stl", 3.0)
 }
 
 func egg1() {
@@ -24,7 +23,7 @@ func egg1() {
 	b.Add(0, 16).HandleRev(0, 5)
 	b.Close()
 
-	solid.Revolve(b.Build()).STL("egg1.stl", 3.0)
+	b.Build().Revolve().STL("egg1.stl", 3.0)
 }
 
 func egg2() {
@@ -37,7 +36,7 @@ func egg2() {
 	b.Add(0, h).HandleRev(0, r/3)
 	b.Close()
 
-	solid.Revolve(b.Build()).STL("egg2.stl", 3.0)
+	b.Build().Revolve().STL("egg2.stl", 3.0)
 }
 
 func bowl() {
@@ -72,7 +71,7 @@ func bowl() {
 	b.Add(0.000000, 101.890120)
 	b.Close()
 
-	solid.RevolveAngle(b.Build(), 270).STL("bowl.stl", 3.0)
+	b.Build().RevolveAngle(270).STL("bowl.stl", 3.0)
 }
 
 func vase() {
@@ -105,7 +104,7 @@ func vase() {
 	b.Add(0.000000, 98.928570)
 	b.Close()
 
-	solid.Revolve(b.Build()).STL("vase.stl", 3.0)
+	b.Build().Revolve().STL("vase.stl", 3.0)
 }
 
 func shapeFn() {
@@ -235,8 +234,7 @@ func shapeFn() {
 	b.Close()
 	s5 := b.Build()
 
-	s2d := s0.Cut(s1.Union(s2, s3, s4, s5))
-	solid.ExtrudeRounded(s2d, 200, 20).STL("shape.stl", 3.0)
+	s0.Cut(s1.Union(s2, s3, s4, s5)).ExtrudeRounded(200, 20).STL("shape.stl", 3.0)
 }
 
 func main() {

@@ -24,7 +24,7 @@ func boltContainer() *solid.Solid {
 	r := screwRadius - tolerance
 	l := screwLength
 	thread := shape.ISOThread(r, threadPitch, true)
-	screw := solid.Screw(thread, l, 0, threadPitch, 1)
+	screw := thread.Screw(l, 0, threadPitch, 1)
 
 	// chamfer the thread
 	screwShape := obj.ChamferedCylinder(screw, 0, 0.25).Translate(v3.Z(l / 2))

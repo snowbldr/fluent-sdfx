@@ -100,9 +100,9 @@ func shaft() *solid.Solid {
 }
 
 func part() *solid.Solid {
-	side3d := solid.Extrude(sideView(), radiusOuterBig*2.0)
+	side3d := sideView().Extrude(radiusOuterBig * 2.0)
 
-	plan3d := solid.Extrude(planView(), overallHeight).
+	plan3d := planView().Extrude(overallHeight).
 		RotateZ(180).
 		Translate(v3.XYZ(0, centerToCenter+radiusOuterSmall, 0)).
 		RotateY(90)

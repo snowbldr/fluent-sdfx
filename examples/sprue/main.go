@@ -26,7 +26,7 @@ func sprue(r, l, k float64) *solid.Solid {
 	}
 	p.Add(0, l)
 
-	return solid.Revolve(p.Build())
+	return p.Build().Revolve()
 }
 
 func main() {

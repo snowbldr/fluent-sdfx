@@ -33,7 +33,7 @@ func wheelRetainer() *solid.Solid {
 	hole := shape.Circle(holeRadius).Translate(v2.XY(0, 0.25*size.Y))
 	s2d = s2d.Cut(hole)
 
-	s3d := solid.Extrude(s2d, size.Z).Translate(v3.XYZ(0, wheelRadius, 0))
+	s3d := s2d.Extrude(size.Z).Translate(v3.XYZ(0, wheelRadius, 0))
 
 	t := wheelThickness * 0.9
 	ofs := 0.5 * (t - size.Z)
@@ -46,7 +46,7 @@ func wheelRetainer() *solid.Solid {
 func entrance0(size v3.Vec) *solid.Solid {
 	r := size.Y * 0.5
 	s0 := shape.Line(size.X-(2*r), r)
-	return solid.Extrude(s0, size.Z)
+	return s0.Extrude(size.Z)
 }
 
 // entrance1 returns a vent entrance
@@ -76,7 +76,7 @@ func entrance1(size v3.Vec) *solid.Solid {
 	}
 	s := hole.Multi(positions)
 
-	return solid.Extrude(s, size.Z)
+	return s.Extrude(size.Z)
 }
 
 // entranceWheel returns a rotating entrance for a swarm trap.
@@ -132,7 +132,7 @@ func entranceReducer() *solid.Solid {
 	p1 := v2.XY(xOfs+holeRadius+gap, yOfs)
 	hole = hole.LineOf(p0, p1, holePattern(n))
 
-	return solid.Extrude(s.Cut(hole), zSize)
+	return s.Cut(hole).Extrude(zSize)
 }
 
 func angleHole() *solid.Solid {

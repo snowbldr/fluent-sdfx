@@ -87,7 +87,7 @@ func bezel() *solid.Solid {
 	c2 := speakerHoles(speakerDiameter, speakerOfs)
 
 	// extrude the bezel
-	s0 := solid.Extrude(b0.Cut(l0.Union(c0, c1, c2)), baseThickness)
+	s0 := b0.Cut(l0.Union(c0, c1, c2)).Extrude(baseThickness)
 
 	// add the board standoffs
 	s0 = s0.Union(boardStandoffs())

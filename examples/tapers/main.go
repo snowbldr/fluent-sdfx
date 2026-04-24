@@ -15,8 +15,8 @@ func taper1() *solid.Solid {
 
 	isoThread := shape.ISOThread(radius, pitch, true)
 
-	s0 := solid.Screw(isoThread, length, taper, pitch, 7)
-	s1 := solid.Screw(isoThread, length, taper, pitch, -7)
+	s0 := isoThread.Screw(length, taper, pitch, 7)
+	s1 := isoThread.Screw(length, taper, pitch, -7)
 
 	return s0.Union(s1)
 }
@@ -28,7 +28,7 @@ func taper2() *solid.Solid {
 	taper := 3.0 * math.Pi / 180
 
 	isoThread := shape.ISOThread(radius, pitch, true)
-	return solid.Screw(isoThread, length, taper, pitch, 1)
+	return isoThread.Screw(length, taper, pitch, 1)
 }
 
 func main() {

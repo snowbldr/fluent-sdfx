@@ -14,10 +14,9 @@ import (
 // Optional decimate (0-1) is the fraction of triangles to remove:
 // 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%). 0 disables decimation.
 func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
-	a := sdf3Adapter{s}
-	fmt.Printf("rendering %s (%s)\n", path, r.Info(a))
+	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
 
-	mesh := render.ToTriangles(a, r)
+	mesh := render.ToTriangles(s, r)
 	fmt.Printf("  %d triangles", len(mesh))
 
 	removeRatio := 0.0
