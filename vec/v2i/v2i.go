@@ -17,6 +17,9 @@ func Y(y int) Vec { return Vec{Y: y} }
 // XY returns Vec{X: x, Y: y}.
 func XY(x, y int) Vec { return Vec{X: x, Y: y} }
 
+// Raw returns the underlying sdfx v2i.Vec.
+func (a Vec) Raw() v2isdf.Vec { return v2isdf.Vec(a) }
+
 // Add returns a + b.
 func (a Vec) Add(b Vec) Vec { return Vec(v2isdf.Vec(a).Add(v2isdf.Vec(b))) }
 

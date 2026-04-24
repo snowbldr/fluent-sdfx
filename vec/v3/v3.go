@@ -44,6 +44,10 @@ func XYZ(x, y, z float64) Vec { return Vec{X: x, Y: y, Z: z} }
 // Zero is the zero vector.
 var Zero = Vec{}
 
+// Raw returns the underlying sdfx v3.Vec.
+// Useful when passing directly into raw sdf.SDF3 methods like Evaluate.
+func (a Vec) Raw() v3sdf.Vec { return v3sdf.Vec(a) }
+
 // Abs returns the component-wise absolute value.
 func (a Vec) Abs() Vec { return Vec(v3sdf.Vec(a).Abs()) }
 

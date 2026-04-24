@@ -29,6 +29,9 @@ func YZ(y, z int) Vec { return Vec{Y: y, Z: z} }
 // XYZ returns Vec{X: x, Y: y, Z: z}.
 func XYZ(x, y, z int) Vec { return Vec{X: x, Y: y, Z: z} }
 
+// Raw returns the underlying sdfx v3i.Vec.
+func (a Vec) Raw() v3isdf.Vec { return v3isdf.Vec(a) }
+
 // Add returns a + b.
 func (a Vec) Add(b Vec) Vec { return Vec(v3isdf.Vec(a).Add(v3isdf.Vec(b))) }
 

@@ -16,3 +16,6 @@ func T(t float64) Vec { return Vec{Theta: t} }
 
 // RT returns Vec{R: r, Theta: t}.
 func RT(r, t float64) Vec { return Vec{R: r, Theta: t} }
+
+// Raw returns the underlying sdfx p2.Vec.
+func (a Vec) Raw() p2sdf.Vec { return p2sdf.Vec(a) }
