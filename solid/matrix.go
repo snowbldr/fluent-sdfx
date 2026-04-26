@@ -76,5 +76,5 @@ func (a M44) MulPosition(v v3.Vec) v3.Vec {
 
 // MulBox transforms a bounding box.
 func (a M44) MulBox(box Box3) Box3 {
-	return v3.FromSDF(sdf.M44(a).MulBox(box.SDF()))
+	return wrapBox3(v3.FromSDF(sdf.M44(a).MulBox(box.SDF())))
 }

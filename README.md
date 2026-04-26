@@ -92,7 +92,7 @@ func main() {
 
 **Smooth blends:** `SmoothUnion`, `SmoothCut`, `SmoothIntersect` (pair with min/max funcs from `solid`)
 
-**Modifiers:** `Offset`, `CutLine`, `Elongate`, `Cache`
+**Modifiers:** `Offset`, `CutLine`, `Split`, `Elongate`, `Cache`
 
 **Patterns:** `Array`, `SmoothArray`, `RotateCopy`, `RotateUnion`, `SmoothRotateUnion`, `Multi`, `LineOf`
 
@@ -155,7 +155,7 @@ Methods on `*Solid` return raw `sdf.SDF2`; helpers in the `shape` package wrap t
 
 **Mesh / voxel:** `Mesh(triangles)`, `MeshSlow(triangles)`, `.Voxel(cells, progress)`
 
-**Modifiers:** `Shrink`, `Grow`, `Correct`, `Shell`, `CutPlane`, `Elongate`, `Offset`
+**Modifiers:** `Shrink`, `Grow`, `Correct`, `Shell`, `CutPlane`, `Split`, `Elongate`, `Offset`
 
 **Patterns:** `Array`, `SmoothArray`, `RotateCopyZ`, `RotateUnionZ`, `SmoothRotateUnionZ`, `Multi`, `LineOf`, `Orient`
 

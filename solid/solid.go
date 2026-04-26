@@ -40,7 +40,7 @@ func Wrap(sdf sdf.SDF3) *Solid {
 // Use this instead of BoundingBox when you want the fluent box API
 // (BoundingBox returns sdfx's raw sdf.Box3).
 func (s *Solid) Bounds() Box3 {
-	return v3.FromSDF(s.SDF3.BoundingBox())
+	return wrapBox3(v3.FromSDF(s.SDF3.BoundingBox()))
 }
 
 // --- Constructors ---

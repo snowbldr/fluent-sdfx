@@ -51,6 +51,13 @@ func (s *Shape) CutLine(a, dir v2.Vec) *Shape {
 	return &Shape{sdf.Cut2D(s.SDF2, v2sdf.Vec(a), v2sdf.Vec(dir))}
 }
 
+// Split cuts the shape along a line through point a in direction dir
+// and returns both halves. The first result is the half to the right
+// of the directed line; the second is the half to the left.
+func (s *Shape) Split(a, dir v2.Vec) (*Shape, *Shape) {
+	return s.CutLine(a, dir), s.CutLine(a, dir.Neg())
+}
+
 // Elongate stretches the shape by the given amounts along each axis.
 func (s *Shape) Elongate(h v2.Vec) *Shape {
 	return &Shape{sdf.Elongate2D(s.SDF2, v2sdf.Vec(h))}

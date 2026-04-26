@@ -3,6 +3,7 @@ package solid
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/plane"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 	"github.com/snowbldr/sdfx/sdf"
@@ -80,6 +81,13 @@ func (s *Solid) MirrorYZ() *Solid {
 // CutPlane cuts the solid along a plane. The solid on the normal side remains.
 func (s *Solid) CutPlane(point, normal v3.Vec) *Solid {
 	return &Solid{sdf.Cut3D(s.SDF3, v3sdf.Vec(point), v3sdf.Vec(normal))}
+}
+
+// Split cuts the solid along a plane and returns both halves.
+// The first result is the half on the plane's normal side; the second
+// is the opposite side.
+func (s *Solid) Split(p plane.Plane) (*Solid, *Solid) {
+	return s.CutPlane(p.Origin, p.Normal), s.CutPlane(p.Origin, p.Normal.Neg())
 }
 
 // Elongate stretches the solid by the given amounts along each axis.
