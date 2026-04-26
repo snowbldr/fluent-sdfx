@@ -17,10 +17,7 @@ go get github.com/snowbldr/fluent-sdfx
 ```go
 package main
 
-import (
-    v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
-    "github.com/snowbldr/fluent-sdfx/solid"
-)
+import "github.com/snowbldr/fluent-sdfx/solid"
 
 func main() {
     // A cylinder with 4 holes drilled through it
@@ -28,10 +25,10 @@ func main() {
     hole := solid.Cylinder(25, 2, 0)
 
     part := body.Cut(
-        hole.Translate(v3.X(5)),
-        hole.Translate(v3.X(-5)),
-        hole.Translate(v3.Y(5)),
-        hole.Translate(v3.Y(-5)),
+        hole.TranslateX(5),
+        hole.TranslateX(-5),
+        hole.TranslateY(5),
+        hole.TranslateY(-5),
     )
 
     part.STL("part.stl", 3.0)
@@ -71,7 +68,7 @@ func main() {
 | `NewBezier()` | Fluent bezier builder with slope handles |
 | `Wrap2D(sdf2)` | Wrap a raw `sdf.SDF2` |
 
-**Transforms:** `Translate`, `Rotate`, `Scale`, `MirrorX`, `MirrorY`, `ScaleUniform`, `Center`, `CenterAndScale`, `Transform`
+**Transforms:** `Translate`, `TranslateX`, `TranslateY`, `TranslateXY`, `Rotate`, `Scale`, `MirrorX`, `MirrorY`, `ScaleUniform`, `Center`, `CenterAndScale`, `Transform`
 
 **2D → 3D:** each returns a `*solid.Solid`. Package-level constructors with the same names remain available in `solid` for callers that already hold a raw `sdf.SDF2`.
 
@@ -88,17 +85,17 @@ func main() {
 | `SweepHelix(radius, turns, height, flatEnds)` | Sweep along a helix path |
 | `LoftTo(top, height, round)` | Transition from this profile to another |
 
-**Booleans:** `Union`, `Cut`, `Intersect`
+**Booleans:** `Union` / `Add`, `Cut` / `Difference`, `Intersect`
 
-**Smooth blends:** `SmoothUnion`, `SmoothCut`, `SmoothIntersect` (pair with min/max funcs from `solid`)
+**Smooth blends:** `SmoothUnion` / `SmoothAdd`, `SmoothCut` / `SmoothDifference`, `SmoothIntersect` (pair with min/max funcs from `solid`)
 
 **Modifiers:** `Offset`, `CutLine`, `Split`, `Elongate`, `Cache`
 
 **Patterns:** `Array`, `SmoothArray`, `RotateCopy`, `RotateUnion`, `SmoothRotateUnion`, `Multi`, `LineOf`
 
-**Bench / inspect:** `.Benchmark(description)` reports SDF2 evaluation speed; `.MeshBoxes()` returns the acceleration-structure boxes of a mesh-backed shape.
+**Inspect / sample:** `.Benchmark(description)` reports SDF2 evaluation speed. `.Normal(p, eps)` returns the surface normal at p (finite differences with step eps). `.Raycast(from, dir, ...)` sphere-traces a ray and returns the hit point, distance, and step count. `.GenerateMesh(grid)` samples interior points on an integer grid. `.MeshBoxes()` returns the acceleration-structure boxes of a mesh-backed shape.
 
-**Bounding boxes:** `Box2` type alias + `NewBox2(center, size)` for creating 2D AABBs (e.g., for random point sampling).
+**Bounding boxes:** `Box2` type alias + `NewBox2(center, size)` for creating 2D AABBs (e.g., for random point sampling). `s.Bounds()` returns the AABB with promoted methods like `Center`, `Size`, `Vertices`, `ScaleAboutCenter`, `RandomSet`.
 
 **Mesh-from-lines:** `Mesh2D(segments)` / `Mesh2DSlow(segments)` build a `*Shape` from `[]*Line2`.
 
@@ -145,13 +142,13 @@ Methods on `*Solid` return raw `sdf.SDF2`; helpers in the `shape` package wrap t
 | `shape.SliceOf(s, origin, normal)` | Slice and wrap as `*Shape` |
 | `shape.SliceAt(s, plane.Plane)` | Slice at a plane and wrap as `*Shape` |
 
-**Transforms:** `Translate`, `RotateX`, `RotateY`, `RotateZ`, `RotateAxis`, `Scale`, `ScaleUniform`, `Transform`, `ZeroZ`, `Center`, `RotateToVector`
+**Transforms:** `Translate`, `TranslateX`, `TranslateY`, `TranslateZ`, `TranslateXY`, `TranslateXZ`, `TranslateYZ`, `TranslateXYZ`, `RotateX`, `RotateY`, `RotateZ`, `RotateAxis`, `Scale`, `ScaleUniform`, `Transform`, `ZeroZ`, `Center`, `RotateToVector`
 
 **Mirrors:** `MirrorXY`, `MirrorXZ`, `MirrorYZ`, `MirrorXeqY`
 
-**Booleans:** `Union`, `UnionAll`, `Cut`, `Intersect`
+**Booleans:** `Union` / `Add`, `UnionAll`, `Cut` / `Difference`, `Intersect`
 
-**Smooth blends:** `SmoothUnion`, `SmoothDifference`, `SmoothIntersection` with `RoundMin`, `ChamferMin`, `ExpMin`, `PowMin`, `PolyMin`, `PolyMax`
+**Smooth blends:** `SmoothUnion` / `SmoothAdd`, `SmoothCut` / `SmoothDifference`, `SmoothIntersect` paired with `RoundMin`, `ChamferMin`, `ExpMin`, `PowMin`, `PolyMin`, `PolyMax`
 
 **Mesh / voxel:** `Mesh(triangles)`, `MeshSlow(triangles)`, `.Voxel(cells, progress)`
 
@@ -159,9 +156,9 @@ Methods on `*Solid` return raw `sdf.SDF2`; helpers in the `shape` package wrap t
 
 **Patterns:** `Array`, `SmoothArray`, `RotateCopyZ`, `RotateUnionZ`, `SmoothRotateUnionZ`, `Multi`, `LineOf`, `Orient`
 
-**Bench:** `.Benchmark(description)` reports SDF3 evaluation speed.
+**Inspect / sample:** `.Benchmark(description)` reports SDF3 evaluation speed. `.Normal(p, eps)` returns the surface normal at p. `.Raycast(from, dir, ...)` sphere-traces a ray and returns the hit point, distance, and step count.
 
-**Bounding boxes:** `Box3` type alias + `NewBox3(center, size)` for creating 3D AABBs.
+**Bounding boxes:** `Box3` type alias + `NewBox3(center, size)` for creating 3D AABBs. `s.Bounds()` returns the AABB with promoted methods (`Center`, `Size`, `ScaleAboutCenter`, etc.) plus `.Solid()` to convert the box back into a `*Solid` (e.g., `s.Bounds().ScaleAboutCenter(0.9).Solid()`).
 
 ### `obj` — Parametric Helpers
 

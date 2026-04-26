@@ -1,8 +1,6 @@
 package shape
 
 import (
-	"fmt"
-
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	"github.com/snowbldr/sdfx/sdf"
 )
@@ -35,19 +33,4 @@ func Mesh2DSlow(m []*Line2) *Shape {
 		panic(err)
 	}
 	return &Shape{s}
-}
-
-// MeshBoxes returns the acceleration-structure boxes of a mesh-backed Shape.
-// Panics if the Shape wasn't constructed from Mesh2D / Mesh2DSlow.
-func (s *Shape) MeshBoxes() []Box2 {
-	ms, ok := s.SDF2.(*sdf.MeshSDF2)
-	if !ok {
-		panic(fmt.Sprintf("MeshBoxes: shape is %T, not a mesh SDF", s.SDF2))
-	}
-	boxes := ms.Boxes()
-	out := make([]Box2, len(boxes))
-	for i, b := range boxes {
-		out[i] = v2.FromSDF(*b)
-	}
-	return out
 }

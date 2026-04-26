@@ -9,6 +9,7 @@ import (
 	"github.com/snowbldr/sdfx/render"
 	"github.com/snowbldr/sdfx/sdf"
 	v3sdf "github.com/snowbldr/sdfx/vec/v3"
+	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
 type Solid struct {
@@ -34,13 +35,6 @@ func New(sdf sdf.SDF3, err error) *Solid {
 // Wrap wraps a raw SDF3 into a Solid (no error).
 func Wrap(sdf sdf.SDF3) *Solid {
 	return &Solid{sdf}
-}
-
-// Bounds returns the solid's 3D axis-aligned bounding box as a fluent v3.Box.
-// Use this instead of BoundingBox when you want the fluent box API
-// (BoundingBox returns sdfx's raw sdf.Box3).
-func (s *Solid) Bounds() Box3 {
-	return wrapBox3(v3.FromSDF(s.SDF3.BoundingBox()))
 }
 
 // --- Constructors ---
@@ -85,6 +79,22 @@ func Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid {
 	return New(sdf.Screw3D(profile, height, start, pitch, num))
 }
 
+// UnionAll combines multiple solids into one.
+func UnionAll(solids ...*Solid) *Solid {
+	sdf3s := make([]sdf.SDF3, len(solids))
+	for i, s := range solids {
+		sdf3s[i] = s.SDF3
+	}
+	return &Solid{sdf.Union3D(sdf3s...)}
+}
+
+// Bounds returns the solid's 3D axis-aligned bounding box as a fluent v3.Box.
+// Use this instead of BoundingBox when you want the fluent box API
+// (BoundingBox returns sdfx's raw sdf.Box3).
+func (s *Solid) Bounds() Box3 {
+	return wrapBox3(v3.FromSDF(s.SDF3.BoundingBox()))
+}
+
 // --- Transform methods ---
 
 func (s *Solid) ZeroZ() *Solid {
@@ -94,6 +104,14 @@ func (s *Solid) ZeroZ() *Solid {
 func (s *Solid) Translate(v v3.Vec) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec(v)))}
 }
+
+func (s *Solid) TranslateX(x float64) *Solid         { return s.Translate(v3.X(x)) }
+func (s *Solid) TranslateY(y float64) *Solid         { return s.Translate(v3.Y(y)) }
+func (s *Solid) TranslateZ(z float64) *Solid         { return s.Translate(v3.Z(z)) }
+func (s *Solid) TranslateXY(x, y float64) *Solid     { return s.Translate(v3.XY(x, y)) }
+func (s *Solid) TranslateXZ(x, z float64) *Solid     { return s.Translate(v3.XZ(x, z)) }
+func (s *Solid) TranslateYZ(y, z float64) *Solid     { return s.Translate(v3.YZ(y, z)) }
+func (s *Solid) TranslateXYZ(x, y, z float64) *Solid { return s.Translate(v3.XYZ(x, y, z)) }
 
 func (s *Solid) RotateX(angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateX(angleDeg*math.Pi/180))}
@@ -111,24 +129,52 @@ func (s *Solid) RotateAxis(axis v3.Vec, angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Rotate3d(v3sdf.Vec(axis), angleDeg*math.Pi/180))}
 }
 
+// RotateToVector rotates the solid so that the 'from' direction aligns with the 'to' direction.
+func (s *Solid) RotateToVector(from, to v3.Vec) *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateToVector(v3sdf.Vec(from), v3sdf.Vec(to)))}
+}
+
 func (s *Solid) Scale(v v3.Vec) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Scale3d(v3sdf.Vec(v)))}
+}
+
+// ScaleUniform scales uniformly on all axes. Unlike Scale, distance is preserved.
+func (s *Solid) ScaleUniform(k float64) *Solid {
+	return &Solid{sdf.ScaleUniform3D(s.SDF3, k)}
 }
 
 func (s *Solid) Transform(m M44) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.M44(m))}
 }
 
-// --- Boolean methods ---
-
-// UnionAll combines multiple solids into one.
-func UnionAll(solids ...*Solid) *Solid {
-	sdf3s := make([]sdf.SDF3, len(solids))
-	for i, s := range solids {
-		sdf3s[i] = s.SDF3
-	}
-	return &Solid{sdf.Union3D(sdf3s...)}
+// MirrorXY mirrors across the XY plane (negates Z).
+func (s *Solid) MirrorXY() *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.MirrorXY())}
 }
+
+// MirrorXZ mirrors across the XZ plane (negates Y).
+func (s *Solid) MirrorXZ() *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.MirrorXZ())}
+}
+
+// MirrorYZ mirrors across the YZ plane (negates X).
+func (s *Solid) MirrorYZ() *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.MirrorYZ())}
+}
+
+// MirrorXeqY mirrors across the X==Y plane (swaps X and Y).
+func (s *Solid) MirrorXeqY() *Solid {
+	return &Solid{sdf.Transform3D(s.SDF3, sdf.MirrorXeqY())}
+}
+
+// Center translates the solid so its bounding box center is at the origin.
+func (s *Solid) Center() *Solid {
+	bb := s.Bounds()
+	center := bb.Center()
+	return s.Translate(center.Neg())
+}
+
+// --- Boolean methods ---
 
 func (s *Solid) Union(other ...*Solid) *Solid {
 	sdf3s := make([]sdf.SDF3, len(other)+1)
@@ -160,6 +206,36 @@ func (s *Solid) Cut(other ...*Solid) *Solid {
 // Difference is an alias for Cut.
 func (s *Solid) Difference(other ...*Solid) *Solid {
 	return s.Cut(other...)
+}
+
+// --- Smooth boolean methods ---
+
+// SmoothUnion blends s with other solids using the given MinFunc.
+func (s *Solid) SmoothUnion(min MinFunc, other ...*Solid) *Solid {
+	all := make([]*Solid, 0, len(other)+1)
+	all = append(all, s)
+	all = append(all, other...)
+	return SmoothUnion(min, all...)
+}
+
+// SmoothAdd is an alias for SmoothUnion.
+func (s *Solid) SmoothAdd(min MinFunc, other ...*Solid) *Solid {
+	return s.SmoothUnion(min, other...)
+}
+
+// SmoothCut subtracts tool from s blended with the given MaxFunc.
+func (s *Solid) SmoothCut(max MaxFunc, tool *Solid) *Solid {
+	return SmoothDifference(max, s, tool)
+}
+
+// SmoothDifference is an alias for SmoothCut.
+func (s *Solid) SmoothDifference(max MaxFunc, tool *Solid) *Solid {
+	return SmoothDifference(max, s, tool)
+}
+
+// SmoothIntersect intersects s with other blended with the given MaxFunc.
+func (s *Solid) SmoothIntersect(max MaxFunc, other *Solid) *Solid {
+	return SmoothIntersection(max, s, other)
 }
 
 // --- 3D → 2D cross-section methods ---
@@ -195,6 +271,116 @@ func (s *Solid) Grow(amount float64) *Solid {
 func (s *Solid) Correct(factor float64) *Solid {
 	return &Solid{&correctedSDF3{s.SDF3, factor}}
 }
+
+// CutPlane cuts the solid along a plane. The solid on the normal side remains.
+func (s *Solid) CutPlane(point, normal v3.Vec) *Solid {
+	return &Solid{sdf.Cut3D(s.SDF3, v3sdf.Vec(point), v3sdf.Vec(normal))}
+}
+
+// Split cuts the solid along a plane and returns both halves.
+// The first result is the half on the plane's normal side; the second
+// is the opposite side.
+func (s *Solid) Split(p plane.Plane) (*Solid, *Solid) {
+	return s.CutPlane(p.Origin, p.Normal), s.CutPlane(p.Origin, p.Normal.Neg())
+}
+
+// Elongate stretches the solid by the given amounts along each axis.
+func (s *Solid) Elongate(h v3.Vec) *Solid {
+	return &Solid{sdf.Elongate3D(s.SDF3, v3sdf.Vec(h))}
+}
+
+// Shell hollows out the solid, leaving a shell of the given thickness.
+func (s *Solid) Shell(thickness float64) *Solid {
+	return New(sdf.Shell3D(s.SDF3, thickness))
+}
+
+// Offset expands (positive) or contracts (negative) the solid by the given
+// distance along its surface normal.
+func (s *Solid) Offset(distance float64) *Solid {
+	return Wrap(sdf.Offset3D(s.SDF3, distance))
+}
+
+// --- Pattern/array methods ---
+
+// Array creates an XYZ grid array of the solid.
+func (s *Solid) Array(numX, numY, numZ int, step v3.Vec) *Solid {
+	return &Solid{sdf.Array3D(s.SDF3, v3isdf.Vec{X: numX, Y: numY, Z: numZ}, v3sdf.Vec(step))}
+}
+
+// SmoothArray creates an XYZ grid array using min for blending adjacent copies.
+// Pair with PolyMin / RoundMin etc.
+func (s *Solid) SmoothArray(numX, numY, numZ int, step v3.Vec, min sdf.MinFunc) *Solid {
+	arr := sdf.Array3D(s.SDF3, v3isdf.Vec{X: numX, Y: numY, Z: numZ}, v3sdf.Vec(step))
+	arr.(*sdf.ArraySDF3).SetMin(min)
+	return &Solid{arr}
+}
+
+// RotateCopyZ creates N copies of the solid evenly spaced around the Z axis.
+func (s *Solid) RotateCopyZ(n int) *Solid {
+	return &Solid{sdf.RotateCopy3D(s.SDF3, n)}
+}
+
+// RotateUnionZ creates a union of the solid rotated N times by the given step matrix.
+// Useful for creating patterns with custom rotation + translation per step.
+func (s *Solid) RotateUnionZ(n int, step M44) *Solid {
+	return &Solid{sdf.RotateUnion3D(s.SDF3, n, sdf.M44(step))}
+}
+
+// SmoothRotateUnionZ creates N rotated copies blended with min.
+func (s *Solid) SmoothRotateUnionZ(n int, step M44, min sdf.MinFunc) *Solid {
+	ru := sdf.RotateUnion3D(s.SDF3, n, sdf.M44(step))
+	ru.(*sdf.RotateUnionSDF3).SetMin(min)
+	return &Solid{ru}
+}
+
+// Multi creates a union of the solid at the given positions.
+func (s *Solid) Multi(positions []v3.Vec) *Solid {
+	return &Solid{sdf.Multi3D(s.SDF3, v3Slice(positions))}
+}
+
+// LineOf creates a union of the solid along a line from p0 to p1.
+// The pattern string controls placement: 'x' places a copy, any other char skips.
+func (s *Solid) LineOf(p0, p1 v3.Vec, pattern string) *Solid {
+	return &Solid{sdf.LineOf3D(s.SDF3, v3sdf.Vec(p0), v3sdf.Vec(p1), pattern)}
+}
+
+// Orient creates a union of the solid oriented along each direction vector.
+// base is the original orientation vector of the solid.
+func (s *Solid) Orient(base v3.Vec, directions []v3.Vec) *Solid {
+	return &Solid{sdf.Orient3D(s.SDF3, v3sdf.Vec(base), v3Slice(directions))}
+}
+
+// --- Sampling methods ---
+
+// Voxel samples the solid into a voxel grid and returns an SDF3 that trilinearly interpolates it.
+// meshCells is the resolution on the longest axis; progress receives 0-1 sampling progress (may be nil).
+func (s *Solid) Voxel(meshCells int, progress chan float64) *Solid {
+	return &Solid{sdf.NewVoxelSDF3(s.SDF3, meshCells, progress)}
+}
+
+// Benchmark reports the evaluation speed of the solid's SDF3.
+func (s *Solid) Benchmark(description string) {
+	sdf.BenchmarkSDF3(description, s.SDF3)
+}
+
+// Normal returns the surface normal at point p, computed via finite
+// differences with sample step eps. p does not need to lie on the surface.
+func (s *Solid) Normal(p v3.Vec, eps float64) v3.Vec {
+	return v3.Vec(sdf.Normal3(s.SDF3, v3sdf.Vec(p), eps))
+}
+
+// Raycast sphere-traces a ray from `from` in direction `dir` until it hits
+// the solid's surface. scaleAndSigmoid > 0 enables sigmoid scaling for
+// non-Lipschitz SDFs, stepScale < 1 trades evaluations for precision,
+// epsilon is the surface-hit threshold, maxDist caps the trace length, and
+// maxSteps caps iteration count. Returns the collision point, the distance
+// traveled (negative if no hit), and the number of steps taken.
+func (s *Solid) Raycast(from, dir v3.Vec, scaleAndSigmoid, stepScale, epsilon, maxDist float64, maxSteps int) (v3.Vec, float64, int) {
+	hit, t, steps := sdf.Raycast3(s.SDF3, v3sdf.Vec(from), v3sdf.Vec(dir), scaleAndSigmoid, stepScale, epsilon, maxDist, maxSteps)
+	return v3.Vec(hit), t, steps
+}
+
+// --- Render methods ---
 
 // MinCells is the floor applied by CellsFor so sub-mm parts (e.g. a 1 mm
 // sphere at 3 cells/mm, which would otherwise give 3 cells and render as

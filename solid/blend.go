@@ -46,6 +46,16 @@ func SmoothDifference(max MaxFunc, s *Solid, tool *Solid) *Solid {
 	return &Solid{d}
 }
 
+// SmoothCut is an alias for SmoothDifference.
+func SmoothCut(max MaxFunc, s *Solid, tool *Solid) *Solid {
+	return SmoothDifference(max, s, tool)
+}
+
+// SmoothAdd is an alias for SmoothUnion.
+func SmoothAdd(min MinFunc, solids ...*Solid) *Solid {
+	return SmoothUnion(min, solids...)
+}
+
 // SmoothIntersection intersects a and b blended with the given MaxFunc.
 func SmoothIntersection(max MaxFunc, a, b *Solid) *Solid {
 	i := sdf.Intersect3D(a.SDF3, b.SDF3)

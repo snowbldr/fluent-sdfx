@@ -31,9 +31,3 @@ func MeshSlow(triangles []*v3.Triangle3) *Solid {
 	}
 	return &Solid{s}
 }
-
-// Voxel samples the solid into a voxel grid and returns an SDF3 that trilinearly interpolates it.
-// meshCells is the resolution on the longest axis; progress receives 0-1 sampling progress (may be nil).
-func (s *Solid) Voxel(meshCells int, progress chan float64) *Solid {
-	return &Solid{sdf.NewVoxelSDF3(s.SDF3, meshCells, progress)}
-}

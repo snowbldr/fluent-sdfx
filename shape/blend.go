@@ -13,6 +13,11 @@ func SmoothUnion(min sdf.MinFunc, shapes ...*Shape) *Shape {
 	return &Shape{u}
 }
 
+// SmoothAdd is an alias for SmoothUnion.
+func SmoothAdd(min sdf.MinFunc, shapes ...*Shape) *Shape {
+	return SmoothUnion(min, shapes...)
+}
+
 // SmoothCut returns a - b blended with a smooth max function.
 func SmoothCut(max sdf.MaxFunc, a, b *Shape) *Shape {
 	d := sdf.Difference2D(a.SDF2, b.SDF2)
