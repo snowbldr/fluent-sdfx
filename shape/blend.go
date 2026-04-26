@@ -18,16 +18,24 @@ func SmoothAdd(min sdf.MinFunc, shapes ...*Shape) *Shape {
 	return SmoothUnion(min, shapes...)
 }
 
-// SmoothCut returns a - b blended with a smooth max function.
-func SmoothCut(max sdf.MaxFunc, a, b *Shape) *Shape {
-	d := sdf.Difference2D(a.SDF2, b.SDF2)
+// SmoothCut subtracts the union of tools from s, blended with a smooth max function.
+func SmoothCut(max sdf.MaxFunc, s *Shape, tools ...*Shape) *Shape {
+	sdf2s := make([]sdf.SDF2, len(tools))
+	for i, t := range tools {
+		sdf2s[i] = t.SDF2
+	}
+	d := sdf.Difference2D(s.SDF2, sdf.Union2D(sdf2s...))
 	d.(*sdf.DifferenceSDF2).SetMax(max)
 	return &Shape{d}
 }
 
-// SmoothIntersect returns a ∩ b blended with a smooth max function.
-func SmoothIntersect(max sdf.MaxFunc, a, b *Shape) *Shape {
-	i := sdf.Intersect2D(a.SDF2, b.SDF2)
+// SmoothIntersect intersects s with the union of others, blended with a smooth max function.
+func SmoothIntersect(max sdf.MaxFunc, s *Shape, others ...*Shape) *Shape {
+	sdf2s := make([]sdf.SDF2, len(others))
+	for i, o := range others {
+		sdf2s[i] = o.SDF2
+	}
+	i := sdf.Intersect2D(s.SDF2, sdf.Union2D(sdf2s...))
 	i.(*sdf.IntersectionSDF2).SetMax(max)
 	return &Shape{i}
 }

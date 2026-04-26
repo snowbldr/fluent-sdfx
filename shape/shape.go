@@ -136,17 +136,25 @@ func (s *Shape) Add(other ...*Shape) *Shape {
 	return s.Union(other...)
 }
 
-func (s *Shape) Cut(other *Shape) *Shape {
-	return &Shape{sdf.Difference2D(s.SDF2, other.SDF2)}
+func (s *Shape) Cut(other ...*Shape) *Shape {
+	sdf2s := make([]sdf.SDF2, len(other))
+	for i, o := range other {
+		sdf2s[i] = o.SDF2
+	}
+	return &Shape{sdf.Difference2D(s.SDF2, sdf.Union2D(sdf2s...))}
 }
 
 // Difference is an alias for Cut.
-func (s *Shape) Difference(other *Shape) *Shape {
-	return s.Cut(other)
+func (s *Shape) Difference(other ...*Shape) *Shape {
+	return s.Cut(other...)
 }
 
-func (s *Shape) Intersect(other *Shape) *Shape {
-	return &Shape{sdf.Intersect2D(s.SDF2, other.SDF2)}
+func (s *Shape) Intersect(other ...*Shape) *Shape {
+	sdf2s := make([]sdf.SDF2, len(other))
+	for i, o := range other {
+		sdf2s[i] = o.SDF2
+	}
+	return &Shape{sdf.Intersect2D(s.SDF2, sdf.Union2D(sdf2s...))}
 }
 
 // --- Smooth boolean methods ---
@@ -164,19 +172,19 @@ func (s *Shape) SmoothAdd(min sdf.MinFunc, other ...*Shape) *Shape {
 	return s.SmoothUnion(min, other...)
 }
 
-// SmoothCut returns s minus tool blended with a smooth max function.
-func (s *Shape) SmoothCut(max sdf.MaxFunc, tool *Shape) *Shape {
-	return SmoothCut(max, s, tool)
+// SmoothCut subtracts the union of tools from s, blended with a smooth max function.
+func (s *Shape) SmoothCut(max sdf.MaxFunc, tools ...*Shape) *Shape {
+	return SmoothCut(max, s, tools...)
 }
 
 // SmoothDifference is an alias for SmoothCut.
-func (s *Shape) SmoothDifference(max sdf.MaxFunc, tool *Shape) *Shape {
-	return SmoothCut(max, s, tool)
+func (s *Shape) SmoothDifference(max sdf.MaxFunc, tools ...*Shape) *Shape {
+	return SmoothCut(max, s, tools...)
 }
 
-// SmoothIntersect intersects s with other blended with a smooth max function.
-func (s *Shape) SmoothIntersect(max sdf.MaxFunc, other *Shape) *Shape {
-	return SmoothIntersect(max, s, other)
+// SmoothIntersect intersects s with the union of others, blended with a smooth max function.
+func (s *Shape) SmoothIntersect(max sdf.MaxFunc, other ...*Shape) *Shape {
+	return SmoothIntersect(max, s, other...)
 }
 
 // --- Modification methods ---

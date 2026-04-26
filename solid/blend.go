@@ -39,16 +39,20 @@ func SmoothUnion(min MinFunc, solids ...*Solid) *Solid {
 	return &Solid{u}
 }
 
-// SmoothDifference subtracts tool from s blended with the given MaxFunc.
-func SmoothDifference(max MaxFunc, s *Solid, tool *Solid) *Solid {
-	d := sdf.Difference3D(s.SDF3, tool.SDF3)
+// SmoothDifference subtracts the union of tools from s, blended with the given MaxFunc.
+func SmoothDifference(max MaxFunc, s *Solid, tools ...*Solid) *Solid {
+	sdf3s := make([]sdf.SDF3, len(tools))
+	for i, t := range tools {
+		sdf3s[i] = t.SDF3
+	}
+	d := sdf.Difference3D(s.SDF3, sdf.Union3D(sdf3s...))
 	d.(*sdf.DifferenceSDF3).SetMax(max)
 	return &Solid{d}
 }
 
 // SmoothCut is an alias for SmoothDifference.
-func SmoothCut(max MaxFunc, s *Solid, tool *Solid) *Solid {
-	return SmoothDifference(max, s, tool)
+func SmoothCut(max MaxFunc, s *Solid, tools ...*Solid) *Solid {
+	return SmoothDifference(max, s, tools...)
 }
 
 // SmoothAdd is an alias for SmoothUnion.
@@ -56,9 +60,13 @@ func SmoothAdd(min MinFunc, solids ...*Solid) *Solid {
 	return SmoothUnion(min, solids...)
 }
 
-// SmoothIntersection intersects a and b blended with the given MaxFunc.
-func SmoothIntersection(max MaxFunc, a, b *Solid) *Solid {
-	i := sdf.Intersect3D(a.SDF3, b.SDF3)
+// SmoothIntersection intersects s with the union of others, blended with the given MaxFunc.
+func SmoothIntersection(max MaxFunc, s *Solid, others ...*Solid) *Solid {
+	sdf3s := make([]sdf.SDF3, len(others))
+	for i, o := range others {
+		sdf3s[i] = o.SDF3
+	}
+	i := sdf.Intersect3D(s.SDF3, sdf.Union3D(sdf3s...))
 	i.(*sdf.IntersectionSDF3).SetMax(max)
 	return &Solid{i}
 }
