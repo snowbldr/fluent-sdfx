@@ -172,7 +172,11 @@ The canonical way to place parts. See [/positioning](/positioning/) for the full
 - Absolute (return `*Solid`): `At(v3.Vec)`, `AtX`, `AtY`, `AtZ`
 - Anchor tweaks (return `AnchoredSolid`): `ShiftX`, `ShiftY`, `ShiftZ`
 
-**`Placement` finalizers:** `.Union()`, `.Cut()`, `.Intersect()`, `.Solid()`
+**`Placement` finalizers** (boolean partner is the target's owner):
+
+- Plain: `.Union()` / `.Add()`, `.Cut()` / `.Difference()`, `.Intersect()`
+- Smooth: `.SmoothUnion(min)` / `.SmoothAdd(min)`, `.SmoothCut(max)` / `.SmoothDifference(max)`, `.SmoothIntersect(max)`
+- Escape: `.Solid()` returns the moved solid alone, no boolean
 
 **Sugar verbs on `*Solid`** (relative; return `Placement`):
 

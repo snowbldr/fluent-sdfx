@@ -1,5 +1,7 @@
 .idea/
 .vscode/
 *.stl
+# Exception: docs viewer STLs need to be tracked so GitHub Pages serves them.
+!docs/stl/*.stl
 *.test
 *.out

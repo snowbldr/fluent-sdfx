@@ -135,7 +135,10 @@ s.AnchorAt(x, y, z int)                                                // arbitr
 // Relative placement (anchor → anchor) — returns Placement
 cap.Bottom().On(body.Top()).Union()         // stack flush, then union
 hole.Bottom().Above(body.Top(), 2).Cut()    // 2mm gap, then subtract
+pocket.Top().On(body.Top()).Cut()           // align tops, then subtract
+cap.OnTopOf(lantern.Top()).Union()          // sugar: cap above lantern's top, then union
 m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
+boss.OnTopOf(plate.Top()).SmoothUnion(solid.RoundMin(2)) // smooth fillet at the seam
 
 // Sugar on *Solid (same chains, fewer anchors)
 s.OnTopOf(t.Top())          // == s.Bottom().Above(t.Top())
@@ -157,8 +160,14 @@ s.CenterAt(v3.XYZ(0, 0, 25))
 // ShiftX/Y/Z move the anchor point without moving the solid yet
 s.OnTopOf(plate.Top().ShiftY(-4))            // stack on top, but 4mm forward of center
 
-// Placement finalizers
-.Union() .Cut() .Intersect() .Solid()        // last is escape — moved part alone
+// Placement finalizers — boolean partner is the target's owner
+.Union()  .Add()                                  // unions the moved into the base
+.Cut()    .Difference()                           // subtracts the moved from the base
+.Intersect()                                      // intersect base with moved
+.SmoothUnion(min)  .SmoothAdd(min)                // smooth-blended union with a MinFunc
+.SmoothCut(max)    .SmoothDifference(max)         // smooth-blended cut with a MaxFunc
+.SmoothIntersect(max)                             // smooth-blended intersect with a MaxFunc
+.Solid()                                          // escape — moved part alone, no boolean
 
 // 2D mirror (Shape) — same names, halved anchor set
 s.Top() s.Bottom() s.Right() s.Left()
@@ -345,4 +354,5 @@ func main() {
 - [/cookbook-bolt](/cookbook-bolt/) — bolt + nut + washer assembly.
 - [/cookbook-enclosure](/cookbook-enclosure/) — printable enclosure.
 - [/cookbook-gear](/cookbook-gear/) — gear with hub, shaft bore, set-screw.
+- [/cookbook-lantern](/cookbook-lantern/) — tea-light lantern showcasing the positioning verbs end-to-end.
 - [/api-reference](/api-reference/) — flat reference of every type and method.
