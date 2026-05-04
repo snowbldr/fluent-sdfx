@@ -93,6 +93,9 @@ Three idioms worth noticing:
 - `p2.RT(11, theta)` — a polar (radius, theta) position for each peg. `theta` is in radians; `units.DtoR(deg)` converts from degrees.
 - `v2.FromP2(...).ToV3(2)` — convert polar to cartesian, then promote to 3D by attaching a Z.
 
+> [!TIP]
+> The peg loop above is showing off `p2.RT` and the v2/v3 conversions on purpose. In real code you'd reach for [`layout.Polar`](/positioning/) plus `.Multi(...)` instead — `peg.BottomAt(2).Multi(layout.Polar(11, 3)...)` gives you the same three pegs in one expression with no sin/cos and no manual radians.
+
 ## Vector arithmetic
 
 Each vec type carries a small toolbox: `.Add(b)`, `.Sub(b)`, `.Scale(k)`, `.Length()`, `.Normalize()`, `.Dot(b)`, `.Cross(b)`, etc. Useful for mid-build calculations:
