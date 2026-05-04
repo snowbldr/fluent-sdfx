@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>fluent-sdfx</title>
+  <!--
+    GitHub Pages SPA deep-link recovery. GH Pages serves this file for any
+    unknown path; we stash the requested URL and meta-refresh to the app
+    root. main.mjs reads the stash on boot and goTo()'s the right place.
+
+    The base detection here mirrors constants.mjs but can't use ES-module
+    import.meta.url (this script runs before any module loads). We derive
+    the base by walking up the path until we'd hit a sane root segment;
+    KNOWN_PREFIXES short-circuits with the canonical deploy locations.
+
+    Add your prefix here if you fork the repo to a different name.
+  -->
+  <script>
+    var KNOWN_PREFIXES = ['/fluent-sdfx/docs/', '/fluent-sdfx/']
+    var base = '/'
+    for (var i = 0; i < KNOWN_PREFIXES.length; i++) {
+      if (location.pathname.indexOf(KNOWN_PREFIXES[i]) === 0) {
+        base = KNOWN_PREFIXES[i]
+        break
+      }
+    }
+    sessionStorage.redirect = location.pathname + location.search + location.hash
+    location.replace(base)
+  </script>
+</head>
+<body>
+  <p>redirecting…</p>
+</body>
+</html>

@@ -1,0 +1,25 @@
+#!/bin/sh
+# Pre-commit: keep the docs in sync with tutorial code.
+#
+#   1. Run `make build` — re-inlines tutorial Go source into the markdown
+#      code blocks, then runs go vet and go test.
+#   2. Stage any files the build modified so the commit includes them.
+#
+# Bail out (and abort the commit) if the build fails. Tests block commits
+# on purpose: it's easier to fix a broken tree before it lands.
+
+set -e
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+# Run the build. Output goes through unmodified so you see what happened.
+make build
+
+# Re-stage anything `make build` changed under docs/.
+changed=$(git diff --name-only docs/ 2>/dev/null || true)
+if [ -n "$changed" ]; then
+	echo "pre-commit: re-staging:"
+	echo "$changed" | sed 's/^/  /'
+	echo "$changed" | xargs git add
+fi

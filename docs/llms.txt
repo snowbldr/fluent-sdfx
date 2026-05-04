@@ -1,0 +1,348 @@
+# fluent-sdfx
+
+> A fluent, chainable Go API over [sdfx](https://github.com/snowbldr/sdfx), a signed-distance-function CAD kernel. Build 3D parts by composing primitives, transforms, and booleans on two immutable types: `*shape.Shape` (2D) and `*solid.Solid` (3D). All angles are in degrees, all constructors panic on invalid input.
+
+This file is the agent-oriented reference for fluent-sdfx. If you take away one thing: **a fluent-sdfx program is a single expression that describes the part.** Every operation returns a new value, so chaining is the natural style — `solid.Cylinder(20, 10, 1).Cut(...).RotateZ(45).STL("out.stl", 5)`. Don't write a sequence of statements that mutate a builder; you'll be fighting the API.
+
+## Mental model
+
+- **Two core types.** `*shape.Shape` wraps `sdf.SDF2` (2D); `*solid.Solid` wraps `sdf.SDF3` (3D). Both are immutable: every method returns a new value. The receiver is never modified.
+- **Degrees everywhere — with one exception.** All angle parameters are in degrees, converted to radians internally. The exceptions are `TwistExtrude`, `ScaleTwistExtrude`, and `InvoluteGearParms.PressureAngle`, which take **radians**. Use `units.DtoR(deg)` to convert.
+- **Constructors panic on invalid input.** No `(*Shape, error)` return tuples. CAD-geometry errors are programming bugs, so you chain without `if err != nil` interruptions.
+- **Z is up.** Cylinders, screws, sweeps, and the `RotateCopyZ` pattern all use Z as the axial direction — *except* `Revolve()` and `RevolveAngle()`, which revolve around the Y axis (an sdfx convention). For Z-axis revolutions, rotate the result 90° around X.
+- **The 2D ↔ 3D direction.** `*shape.Shape` becomes `*solid.Solid` via `.Extrude`, `.Revolve`, `.LoftTo`, `.SweepHelix`, `.Screw`. `*solid.Solid` becomes `*shape.Shape` via `.SliceAt(plane.Plane)` (cross-section).
+- **No build tool, no DSL.** Just Go. Each part is a `package main` with a `func main()` that calls `.STL(path, cellsPerMM)` at the end.
+
+## Packages
+
+- `solid/` — 3D primitives (`Box`, `Cylinder`, `Sphere`, `Cone`, `Capsule`, `Torus`, `Gyroid`), transforms, booleans, blends, patterns, modifiers.
+- `shape/` — 2D primitives (`Rect`, `Circle`, `Polygon`, `Hexagon`, `Star`, `Cross`, `Triangle`, `Text`, `NewPoly()`, `NewBezier()`, threads, cams, gear racks), transforms, booleans, 2D→3D extrusion methods, `.ToDXF`, `.ToSVG`, `.ToPNG`.
+- `obj/` — parametric helpers wrapping sdfx/obj (`Bolt`, `Nut`, `Washer3D`, `Panel3D`, `EuroRackPanel3D`, `PanelBox3D`, `Standoff3D`, `InvoluteGear`, `Servo3D`, `Spring3D`, `GfBase`/`GfBody` for Gridfinity, etc.). All take a parameter struct.
+- `vec/{v2,v3,v2i,v3i,p2}` — vector types with named constructors: `v3.X(5)`, `v3.YZ(2, 3)`, `v3.XYZ(1, 2, 3)`, `v3.Zero`. `p2.RT(r, theta)` for polar.
+- `plane/` — slice-plane helpers: `plane.AtZ(10)`, `plane.At(origin, normal)`, plus `plane.XY`, `plane.XZ`, `plane.YZ`.
+- `units/` — constants and converters: `Pi`, `MillimetresPerInch`, `DtoR(deg)`, `RtoD(rad)`.
+- `render/` — lower-level `ToSTL`, `To3MF`, `ToDXF`, `ToSVG`, `ToPNG` plus renderer constructors.
+- `mesh/` — direct triangle-mesh utilities (bypass the SDF pipeline).
+
+Install: `go get github.com/snowbldr/fluent-sdfx`.
+
+## Constructor cheat-sheet
+
+```go
+// 3D primitives
+solid.Box(v3.XYZ(20, 16, 10), 1.5)         // size, edge round
+solid.Cylinder(20, 10, 1)                   // height, radius, edge round (axis: Z)
+solid.Sphere(12)
+solid.Cone(18, 10, 4, 0.5)                  // height, r0 (bottom), r1 (top), round
+solid.Capsule(20, 6)                        // axial body length, radius
+solid.Torus(12, 3)                          // major, minor
+
+// 2D primitives
+shape.Rect(v2.XY(30, 20), 3)                // size, corner round
+shape.Circle(15)
+shape.Polygon([]v2.Vec{...})
+shape.Hexagon(12)
+shape.Star(15, 7, 5)                        // outer, inner, points
+shape.Text(font, "hello", 10)               // requires shape.LoadFont(path)
+
+// Polygon / bezier builders
+p := shape.NewPoly()
+p.Add(0, 0)
+p.Add(10, 0).Smooth(2, 6)                   // fillet this corner
+p.Add(10, 5).Chamfer(1)
+p.Close()
+profile := p.Build()                         // returns *shape.Shape
+
+// 2D → 3D
+shape.Rect(...).Extrude(8)
+shape.Rect(...).ExtrudeRounded(8, 1.5)       // top/bottom edge fillet
+shape.Star(...).TwistExtrude(20, units.DtoR(90))   // twist in RADIANS
+shape.Rect(...).ScaleExtrude(20, v2.XY(0.4, 0.4))  // tapered
+profile.Revolve()                            // around Y axis
+profile.RevolveAngle(270)                    // partial, in degrees
+bottom.LoftTo(top, height, round)            // morph between profiles
+profile.SweepHelix(radius, turns, height, flatEnds)
+profile.Screw(height, start, pitch, num)     // num = parallel starts (1 = normal screw)
+
+// Vectors
+v3.XYZ(1, 2, 3)
+v3.X(5)        // {5, 0, 0}
+v2.XY(10, 20)
+p2.RT(r, theta)  // theta in RADIANS
+```
+
+## Boolean cheat-sheet
+
+```go
+a.Union(b, c, d)                  // variadic; same as Add
+a.Cut(tool1, tool2, tool3)        // variadic; same as Difference
+a.Intersect(b)
+solid.UnionAll(s1, s2, s3, ...)   // package-level when there's no obvious receiver
+
+// Smooth variants (filleted/chamfered seams)
+a.SmoothUnion(solid.RoundMin(2.5), b)         // RoundMin = circular fillet
+a.SmoothUnion(solid.ChamferMin(2.5), b)       // ChamferMin = 45° chamfer
+a.SmoothCut(solid.PolyMax(2.0), pocket)       // smooth-max for cuts/intersects
+a.SmoothIntersect(solid.PolyMax(k), b)
+```
+
+Cut is **always** variadic in one call — `body.Cut(t1, t2, t3)` — never chain `.Cut(t1).Cut(t2).Cut(t3)`. The variadic form is faster (the SDF is sampled once) and cleaner.
+
+## Transforms cheat-sheet
+
+```go
+// Translate
+s.Translate(v3.XYZ(1, 2, 3))
+s.TranslateX(5)
+s.TranslateXY(2, 3)
+s.TranslateXYZ(1, 2, 3)
+
+// Rotate (DEGREES)
+s.RotateX(90)
+s.RotateZ(45)
+s.RotateAxis(v3.XYZ(1, 1, 0).Normalize(), 30)
+s.RotateToVector(v3.X(1), v3.Z(1))   // rotate so X axis aligns with Z
+
+// Scale
+s.Scale(v3.XYZ(1, 0.5, 1.5))         // per-axis
+s.ScaleUniform(1 / 0.999)            // shrinkage compensation
+
+// Mirror
+s.MirrorXY()    // flip Z
+s.MirrorXZ()    // flip Y
+s.MirrorYZ()    // flip X
+
+// Position helpers
+s.Center()      // centre bounding box on origin
+s.ZeroZ()       // move min-Z to 0 ("sitting on the build plate")
+```
+
+## Positioning cheat-sheet
+
+The canonical way to place parts. Every solid has 27 named anchors on
+its bounding box; align them to other anchors or to absolute
+coordinates without writing bbox math by hand.
+
+```go
+import "github.com/snowbldr/fluent-sdfx/layout"
+
+// Anchor selectors (return AnchoredSolid)
+s.Top() s.Bottom() s.Right() s.Left() s.Back() s.Front()              // 6 faces
+s.TopRight() s.BottomFront() s.FrontLeft() ...                         // 12 edges
+s.TopFrontRight() s.BottomBackLeft() ...                               // 8 corners
+s.AnchorAt(x, y, z int)                                                // arbitrary; each in {-1,0,+1}
+
+// Relative placement (anchor → anchor) — returns Placement
+cap.Bottom().On(body.Top()).Union()         // stack flush, then union
+hole.Bottom().Above(body.Top(), 2).Cut()    // 2mm gap, then subtract
+m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
+
+// Sugar on *Solid (same chains, fewer anchors)
+s.OnTopOf(t.Top())          // == s.Bottom().Above(t.Top())
+s.UnderneathOf(t.Bottom())  // == s.Top().Below(t.Bottom())
+s.RightOf(t.Right())        // == s.Left().RightOf(t.Right())
+s.LeftOf(t.Left())          // == s.Right().LeftOf(t.Left())
+s.InFrontOf(t.Front())      // == s.Back().InFrontOf(t.Front())
+s.BehindOf(t.Back())        // == s.Front().Behind(t.Back())
+s.Inside(t)                 // bbox center on bbox center
+
+// Absolute (return *Solid directly)
+s.AnchorAt(0,0,1).At(v3.XYZ(0, 0, 50))      // land an anchor on a literal point
+s.Top().AtZ(50)                              // only Z; X/Y unchanged
+s.BottomAt(0)  s.TopAt(50)
+s.LeftAt(-20) s.RightAt(20)
+s.FrontAt(-10) s.BackAt(10)
+s.CenterAt(v3.XYZ(0, 0, 25))
+
+// ShiftX/Y/Z move the anchor point without moving the solid yet
+s.OnTopOf(plate.Top().ShiftY(-4))            // stack on top, but 4mm forward of center
+
+// Placement finalizers
+.Union() .Cut() .Intersect() .Solid()        // last is escape — moved part alone
+
+// 2D mirror (Shape) — same names, halved anchor set
+s.Top() s.Bottom() s.Right() s.Left()
+s.TopRight() s.BottomLeft() ...              // 4 corners
+s.AnchorAt(x, y int)                         // 2D follows screen convention: +Y is up
+```
+
+### Layouts (positions for `.Multi(...)`)
+
+```go
+peg.Multi(layout.Polar(20, 6)...)            // 6 on a circle
+peg.Multi(layout.PolarArc(20, 5, 0, 90)...)  // 5 spanning a 90° arc
+hole.Multi(layout.Grid(10, 10, 4, 4)...)     // nx*ny grid centered on origin
+post.Multi(layout.RectCorners(80, 50)...)    // 4 panel corners
+peg.Multi(layout.BoxCorners(v3.XYZ(20, 10, 5))...) // 8 box corners
+post.Multi(layout.Line(v3.X(0), v3.X(60), 4)...)   // n equally spaced
+// 2D variants: layout.Polar2, layout.Grid2
+```
+
+### Reach-for guide
+
+- `.Translate(v)` — literal vector, unrelated to other geometry.
+- `anchor.At(p)` — land a specific edge/corner on a literal point.
+- `anchor.On(target)` / sugar verbs (`OnTopOf`, ...) — relative to another part.
+- `BottomAt(z)` / `LeftAt(x)` / ... — flush a face against an axis plane.
+- `layout.X` + `.Multi(...)` — repeated copies in a regular pattern.
+
+## Modifiers cheat-sheet
+
+```go
+s.Shell(thickness)           // hollow out — closed on all sides; Cut a face to open
+s.Offset(distance)           // every surface along its normal (positive = outward)
+s.Shrink(amount)             // uniform inset, faster than Offset
+s.Grow(amount)               // uniform expansion (good for clearance fits)
+s.Elongate(v3.X(10))         // insert a flat-walled extrusion between two halves
+s.Cache()                    // pre-sample distance grid (huge speedup for text/complex polygons)
+```
+
+Shell is closed on every face. To make a *cup* or *open box*, Shell first then Cut away the side you want open: `solid.Cylinder(20, 12, 1).Shell(1.5).Cut(solid.Cylinder(4, 13, 0).TranslateZ(9))`.
+
+## Patterns cheat-sheet
+
+```go
+s.Array(nx, ny, nz, v3.XYZ(stepX, stepY, stepZ))    // regular grid
+s.RotateCopyZ(n)                                     // n copies around Z, evenly spaced
+s.LineOf(p0, p1, "xxx.xxx")                          // along a line; 'x' = copy, '.' = skip
+s.Multi([]v3.Vec{...})                               // explicit positions
+s.Orient(base, []v3.Vec{...})                        // copies aligned to direction vectors
+
+// Smooth-blended versions: SmoothArray, SmoothRotateUnionZ
+```
+
+`RotateCopyZ` orbits *the receiver as-is* around Z. Position the source off-axis (e.g. `.TranslateX(10)`) to get evenly-spaced copies; otherwise all copies overlap at the centre.
+
+## Cross-sections (3D → 2D)
+
+```go
+import "github.com/snowbldr/fluent-sdfx/plane"
+
+slice := shape.SliceAt(solid3d, plane.AtZ(0))   // returns *shape.Shape
+slice.ToSVG("section.svg", 200)                 // export for laser cutting
+slice.ToDXF("section.dxf", 200)
+slice.Extrude(1).STL("section.stl", 8)          // re-extrude the slice for visualisation
+
+plane.At(origin, normal)                         // arbitrary plane
+```
+
+## Output: cellsPerMM and decimation
+
+```go
+part.STL("part.stl", 5.0)            // mesh density in cells per real millimetre
+part.STL("part.stl", 5.0, 0.5)       // optional decimation: keep 50% of triangles
+part.ThreeMF("part.3mf", 5.0)        // 3MF (modern alternative; aliased as MF3)
+
+shape.ToDXF(path, meshCells)         // 2D DXF
+shape.ToSVG(path, meshCells)         // 2D SVG
+shape.ToPNG(path, w, h)              // 2D PNG (renders the SDF as a heatmap, not a clean outline)
+```
+
+`cellsPerMM` is independent of part size — the same density gives the same visual quality on a 1mm gear and a 500mm enclosure. Render time scales as cells³, so halving density is an 8× speedup.
+
+| Scenario | `cellsPerMM` |
+|---|---|
+| Iteration / preview | `1.0`–`2.0` |
+| Final 50mm bracket | `5.0` |
+| Final 10mm gear | `15`–`20` |
+
+Tiny parts hit `solid.MinCells` (default 32) so a 1mm sphere at low density still produces a usable mesh.
+
+## Parametric helpers (`obj` package)
+
+Common helpers — all take a parameter struct, all panic on invalid input:
+
+```go
+obj.Bolt(obj.BoltParms{Thread: "M8x1.25", Style: "hex", TotalLength: 30, ShankLength: 6})
+obj.Nut(obj.NutParms{Thread: "M8x1.25", Style: "hex", Tolerance: 0.1})
+obj.Washer3D(obj.WasherParms{Thickness: 1.5, InnerRadius: 4.5, OuterRadius: 8.5})
+obj.Panel3D(obj.PanelParms{
+    Size: v2.XY(80, 50), CornerRadius: 4, HoleDiameter: 3.2,
+    HoleMargin: [4]float64{6, 6, 6, 6},
+    HolePattern: [4]string{"x.x", "x", "x.x", "x"},   // [top, right, bottom, left]
+    Thickness: 3,
+})
+obj.Standoff3D(obj.StandoffParms{
+    PillarHeight: 12, PillarDiameter: 6,
+    HoleDepth: 8, HoleDiameter: 2.5,         // HoleDepth > 0 = tapped hole; < 0 = support stub
+    NumberWebs: 4, WebHeight: 4, WebDiameter: 10, WebWidth: 1,
+})
+obj.InvoluteGear(obj.InvoluteGearParms{
+    NumberTeeth: 24, Module: 2,              // pitch diameter = NumberTeeth × Module
+    PressureAngle: units.DtoR(20),           // RADIANS — use DtoR
+    Backlash: 0.05, Clearance: 0.2,
+    RingWidth: 6, Facets: 16,
+})
+obj.GfBase(obj.GfBaseParms{Size: v2i.XY(2, 1), Magnet: true, Hole: true})  // Gridfinity
+obj.PanelBox3D(obj.PanelBoxParms{...})       // returns []*solid.Solid
+```
+
+`Thread` strings are sdfx thread-table names: `"M8x1.25"`, `"M5x0.8"`, `"unc_1/4"`, `"unc_5/8"`, etc. Use `shape.ThreadLookup(name)` to inspect dimensions.
+
+Other helpers in `obj`: `Hex2D/3D`, `HexHead3D`, `ChamferedCylinder`, `CounterBoredHole3D`, `ChamferedHole3D`, `CounterSunkHole3D`, `BoltCircle2D/3D`, `CircleGrille2D/3D`, `KeyedHole2D/3D`, `Keyway2D/3D`, `Knurl3D`, `KnurledHead3D`, `EuroRackPanel2D/3D`, `Pipe3D`, `StdPipe3D`, `Servo3D`, `ServoLookup`, `Spring2D/3D`, `Geneva2D` (returns driver and driven), `FlatFlankCam`, `ThreeArcCam`, `GearRack`, `Angle3D` (L-bracket), `TruncRectPyramid3D`, `Display`, `DroneMotorArm`, `DrainCover`, `Arrow3D`, `Axes3D` (debugging), `ImportSTL`, `ImportTriMesh`.
+
+## Common idioms
+
+- **Always make cutting tools longer/larger than the body.** A hole that's exactly as tall as the body leaves a single layer of mesh that may or may not survive marching cubes. Pad by 1–2mm.
+- **`Cache()` text shapes** before further use. `shape.Text` re-samples glyph outlines at every distance evaluation; caching pays off as soon as you generate the geometry twice (e.g. once for DXF, once for STL).
+- **Print-shrinkage compensation:** `part.ScaleUniform(1.0 / 0.999)` ≈ 0.1% (PLA). Apply at the very end, just before `STL`.
+- **Mating gears must share `Module` and `PressureAngle`.** Centre distance is `(N1 + N2) × Module / 2`.
+- **Variadic Cut is faster** than chained Cut. `body.Cut(t1, t2, t3)`, never `.Cut(t1).Cut(t2).Cut(t3)`.
+- **Smooth blends propagate `k`.** A large `k` near a thin feature can deform that feature visibly. Match `k` to the smallest local feature you don't want disturbed.
+- **For shells with an opening** (cup, box, tray), `s.Shell(t).Cut(openingTool)`. Shell on its own is closed on every face.
+
+## A complete example
+
+```go
+package main
+
+import (
+    "github.com/snowbldr/fluent-sdfx/obj"
+    "github.com/snowbldr/fluent-sdfx/solid"
+    "github.com/snowbldr/fluent-sdfx/units"
+    v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
+)
+
+const shrink = 1.0 / 0.999 // PLA
+
+func main() {
+    gear := obj.InvoluteGear(obj.InvoluteGearParms{
+        NumberTeeth: 24, Module: 2,
+        PressureAngle: units.DtoR(20),
+        Backlash: 0.05, Clearance: 0.2,
+        RingWidth: 6, Facets: 16,
+    }).ExtrudeRounded(4, 0.4)
+
+    hub := solid.Cylinder(8, 8, 0.5).TranslateZ(2)
+    shaft := solid.Cylinder(20, 3, 0)
+    setScrew := solid.Cylinder(20, 1.25, 0).RotateY(90).TranslateZ(4)
+
+    part := gear.Union(hub).Cut(shaft, setScrew).ScaleUniform(shrink)
+    part.STL("gear.stl", 6.0, 0.5)
+}
+```
+
+## Doc pages (deeper detail)
+
+- [/install](/install/) — Go, fluent-sdfx, f3d.
+- [/project-setup](/project-setup/) — scaffolding a Go module, picking a layout for assemblies.
+- [/dev-loop](/dev-loop/) — `stldev` watch-rebuild-preview loop.
+- [/quickstart](/quickstart/) — five-step incremental walkthrough.
+- [/vectors-types](/vectors-types/) — v2, v3, p2, the conversion helpers.
+- [/shapes-2d](/shapes-2d/) — every 2D primitive, the polygon and bezier builders.
+- [/solids-3d](/solids-3d/) — every 3D primitive.
+- [/booleans](/booleans/) — Union, Cut, Intersect.
+- [/transforms](/transforms/) — Translate, Rotate, Scale, Mirror.
+- [/positioning](/positioning/) — anchors (Top, BottomFrontRight, ...), placement verbs (On, Above, OnTopOf, Inside, BottomAt, ...), and `layout` helpers (Polar, Grid, RectCorners). The canonical way to place parts.
+- [/2d-to-3d](/2d-to-3d/) — Extrude, Revolve, Loft, SweepHelix, Screw.
+- [/smooth-blends](/smooth-blends/) — RoundMin, ChamferMin, PolyMax, etc.
+- [/modifiers](/modifiers/) — Shell, Offset, Shrink, Grow, Elongate.
+- [/patterns](/patterns/) — Array, RotateCopyZ, LineOf, Multi, Orient.
+- [/cross-sections](/cross-sections/) — slicing 3D solids back to 2D.
+- [/text-2d-output](/text-2d-output/) — Text rendering, DXF/SVG/PNG.
+- [/obj-overview](/obj-overview/) — tour of the parametric helpers.
+- [/output-resolution](/output-resolution/) — cellsPerMM, decimation, 3MF.
+- [/cookbook-bolt](/cookbook-bolt/) — bolt + nut + washer assembly.
+- [/cookbook-enclosure](/cookbook-enclosure/) — printable enclosure.
+- [/cookbook-gear](/cookbook-gear/) — gear with hub, shaft bore, set-screw.
+- [/api-reference](/api-reference/) — flat reference of every type and method.

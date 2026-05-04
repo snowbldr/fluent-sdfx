@@ -1,0 +1,987 @@
+/* ─────────────────────────────────────────────────────────────────
+   fluent-sdfx docs — design tokens, layout, markdown, code.
+   Dark by default, light by data-theme="light" on <html>.
+   ───────────────────────────────────────────────────────────────── */
+
+:root[data-theme='dark'] {
+  --bg: #0a0b0f;
+  --bg-elev: #11131a;
+  --bg-code: #0d0e14;
+  --fg: #e6e7ee;
+  --fg-strong: #ffffff;
+  --fg-muted: #8d90a0;
+  --fg-faint: #5a5d6c;
+  --accent: #7c9bff;
+  --accent-glow: rgba(124, 155, 255, 0.18);
+  --accent-line: rgba(124, 155, 255, 0.35);
+  --border: #1d2030;
+  --border-strong: #2a2e44;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --tip: #6dd6a3;
+  --warn: #ffb86b;
+  --note: #7c9bff;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #fafbfc;
+  --bg-elev: #ffffff;
+  --bg-code: #f1f3f7;
+  --fg: #1a1d27;
+  --fg-strong: #0a0c12;
+  --fg-muted: #5a5e6e;
+  --fg-faint: #8e93a3;
+  --accent: #4a64d6;
+  --accent-glow: rgba(74, 100, 214, 0.12);
+  --accent-line: rgba(74, 100, 214, 0.35);
+  --border: #e4e7ee;
+  --border-strong: #c8cdd8;
+  --shadow: 0 1px 2px rgba(20, 24, 36, 0.04), 0 8px 24px rgba(20, 24, 36, 0.08);
+  --tip: #2c8c5b;
+  --warn: #b8741a;
+  --note: #4a64d6;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 100ms ease;
+}
+
+a:hover {
+  border-bottom-color: var(--accent-line);
+}
+
+::selection {
+  background: var(--accent-glow);
+}
+
+/* ── App shell ─────────────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-columns: 296px 1fr;
+  min-height: 100vh;
+}
+
+.main-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 36px;
+  background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.topbar-spacer {
+  flex: 1;
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 120ms ease;
+}
+
+.theme-toggle:hover {
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 28px 22px;
+}
+
+.sidebar-brand {
+  margin-bottom: 32px;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  margin: -6px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: none !important;
+  color: var(--fg);
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent), white 30%));
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.brand-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--fg-strong);
+  letter-spacing: -0.01em;
+}
+
+.brand-tag {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-top: 1px;
+}
+
+.nav-section {
+  margin-bottom: 22px;
+}
+
+.nav-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-faint);
+  padding: 0 10px;
+  margin: 0 0 8px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nav-link {
+  display: block;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: var(--fg-muted);
+  text-decoration: none;
+  border-radius: 6px;
+  border: none !important;
+  transition: all 100ms ease;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--accent), transparent 92%);
+}
+
+.nav-link.active {
+  color: var(--fg-strong);
+  background: var(--accent-glow);
+  font-weight: 500;
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* ── Page content ──────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 36px 80px;
+}
+
+.page {
+  width: 100%;
+  max-width: 760px;
+}
+
+.page-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin: 24px 0 10px;
+}
+
+.page-missing {
+  padding: 80px 0;
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+.md-loading,
+.md-error {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+/* ── Markdown body ─────────────────────────────────────────────── */
+
+.markdown {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+/* The markdown's first <h1> is the page title — sized to match the old
+   page-title element so the header still feels like a header. */
+.markdown > h1:first-child {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg-strong);
+  margin: 0 0 14px;
+  line-height: 1.1;
+  padding-bottom: 0;
+}
+
+/* The first paragraph after the title is the lede. */
+.markdown > h1:first-child + p {
+  font-size: 18px;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  margin: 0 0 36px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown h2 {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--fg-strong);
+  margin: 56px 0 16px;
+  scroll-margin-top: 80px;
+}
+
+.markdown h3 {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  margin: 36px 0 12px;
+  scroll-margin-top: 80px;
+}
+
+.markdown h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  margin: 24px 0 8px;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0 0 16px;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 26px;
+}
+
+.markdown li {
+  margin: 4px 0;
+}
+
+.markdown li > p {
+  margin: 0 0 6px;
+}
+
+.markdown strong {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+
+.markdown blockquote {
+  border-left: 2px solid var(--accent-line);
+  padding: 6px 0 6px 18px;
+  margin: 18px 0;
+  color: var(--fg-muted);
+}
+
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 36px 0;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+.markdown th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--fg-strong);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.markdown td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown img {
+  max-width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: 24px auto;
+}
+
+.markdown :not(pre) > code {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 0.9em;
+  color: var(--fg-strong);
+}
+
+/* ── Code blocks (Prism) ───────────────────────────────────────── */
+
+.markdown pre[class*='language-'],
+.markdown pre {
+  margin: 24px 0;
+  background: var(--bg-code) !important;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  padding: 18px 20px !important;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.markdown pre code {
+  font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace !important;
+  background: transparent !important;
+  text-shadow: none !important;
+  font-size: inherit;
+}
+
+/* Light-mode prism overrides — Prism's tomorrow theme is dark; flip
+   text tone so it reads on the light --bg-code. */
+:root[data-theme='light'] .markdown pre,
+:root[data-theme='light'] .markdown pre code {
+  color: #2c2e36 !important;
+}
+:root[data-theme='light'] .markdown .token.comment {
+  color: #7c8089 !important;
+}
+:root[data-theme='light'] .markdown .token.string {
+  color: #2e7d3a !important;
+}
+:root[data-theme='light'] .markdown .token.keyword,
+:root[data-theme='light'] .markdown .token.builtin {
+  color: #c0345a !important;
+}
+:root[data-theme='light'] .markdown .token.function {
+  color: #5d4ec2 !important;
+}
+:root[data-theme='light'] .markdown .token.number {
+  color: #1664c0 !important;
+}
+
+/* The `<!-- src: ... -->` HTML comment that precedes each tutorial-fed
+   code block isn't rendered by marked, but if any author leaves a stray
+   .md-* helper class on a pre, this is where to style it. */
+
+/* ── Figures ───────────────────────────────────────────────────── */
+
+.markdown figure {
+  margin: 28px 0;
+  padding: 0;
+  background: linear-gradient(135deg, var(--bg-elev), color-mix(in oklab, var(--bg-elev), var(--accent) 4%));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.markdown figure img {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+.markdown figure figcaption {
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+
+/* "View in 3D" toggle injected into figures with a matching viewer STL.
+   Floats over the bottom-right of the image; on hover it picks up the
+   accent so it reads as a tappable affordance. */
+.markdown figure {
+  position: relative;
+}
+
+.stl-viewer-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 56px;            /* clear the figcaption */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: color-mix(in oklab, var(--bg-elev), transparent 8%);
+  color: var(--fg-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font: 500 12px/1 -apple-system, system-ui, sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  transition: all 130ms ease;
+}
+
+.stl-viewer-toggle:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.stl-viewer-toggle:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.stl-viewer-toggle span {
+  font-size: 14px;
+}
+
+/* Live three.js canvas wrapper. Sized by the JS to maintain aspect ratio. */
+.stl-viewer-stage {
+  display: block;
+  width: 100%;
+  background: var(--bg-elev);
+  cursor: grab;
+}
+
+.stl-viewer-stage:active {
+  cursor: grabbing;
+}
+
+.stl-viewer-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Tab gallery (.tab-gallery): a header strip of tab buttons over a
+   stack of panes; only the active pane displays. Used on the
+   positioning page to flip between dozens of anchor / verb visuals
+   without scrolling. */
+
+.markdown .tab-gallery {
+  margin: 28px 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.markdown .tab-gallery .tab-gallery-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  background: color-mix(in oklab, var(--bg-elev), transparent 30%);
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown .tab-gallery button[data-tab] {
+  padding: 6px 12px;
+  font: 500 12px/1 -apple-system, system-ui, sans-serif;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 130ms ease, border-color 130ms ease, background 130ms ease;
+}
+
+.markdown .tab-gallery button[data-tab]:hover {
+  color: var(--fg-strong);
+  border-color: var(--border-strong);
+}
+
+.markdown .tab-gallery button[data-tab].active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.markdown .tab-gallery [data-pane] {
+  display: none;
+}
+
+.markdown .tab-gallery [data-pane].active {
+  display: block;
+}
+
+.markdown .tab-gallery [data-pane] img {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Each pane optionally wraps its image in a <figure> so the existing
+   "View in 3D" toggle (attached by Markdown.mjs based on the STL manifest)
+   can light up. Strip the default figure chrome so it sits flush inside
+   the pane like a bare <img> would. */
+
+.markdown .tab-gallery [data-pane] figure {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+  overflow: visible;
+}
+
+.markdown .tab-gallery [data-pane] figure img {
+  border-radius: 0;
+}
+
+.markdown .tab-gallery [data-pane] figure .stl-viewer-toggle {
+  bottom: 12px; /* No figcaption inside a pane figure — drop to bottom edge. */
+}
+
+.markdown .tab-gallery [data-pane] pre {
+  margin: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+}
+
+.markdown .tab-gallery [data-pane] .tab-caption {
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+
+.callout {
+  margin: 24px 0;
+  padding: 14px 18px;
+  display: flex;
+  gap: 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 10px;
+}
+
+.callout-icon {
+  flex: 0 0 auto;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.callout-body > :first-child {
+  margin-top: 0;
+}
+
+.callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+.callout-tip {
+  border-left-color: var(--tip);
+}
+
+.callout-tip .callout-icon {
+  color: var(--tip);
+}
+
+.callout-warning {
+  border-left-color: var(--warn);
+}
+
+.callout-warning .callout-icon {
+  color: var(--warn);
+}
+
+.callout-note {
+  border-left-color: var(--note);
+}
+
+.callout-note .callout-icon {
+  color: var(--note);
+}
+
+/* ── Page footer (prev/next) ───────────────────────────────────── */
+
+.page-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.page-nav {
+  display: block;
+  padding: 16px 18px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--fg);
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  transition: all 120ms ease;
+}
+
+.page-nav:hover {
+  border-color: var(--accent-line) !important;
+  transform: translateY(-1px);
+}
+
+.page-nav.next {
+  text-align: right;
+}
+
+.page-nav-label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+}
+
+.page-nav-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+
+.page-nav-spacer {
+  /* keeps the grid balanced when prev/next is missing */
+}
+
+.inline-link {
+  cursor: pointer;
+}
+
+/* ── Landing page hero ─────────────────────────────────────────── */
+
+.page-index .markdown {
+  max-width: 760px;
+}
+
+.hero {
+  margin: 0 -36px;
+  padding: 56px 36px 24px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 280px at 12% 10%, var(--accent-glow) 0%, transparent 70%),
+    radial-gradient(700px 240px at 92% 30%, color-mix(in oklab, var(--accent), white 20%) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  margin-bottom: 56px;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 18px;
+  font-family: ui-monospace, monospace;
+}
+
+.hero-title {
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--fg-strong);
+  margin: 0 0 22px;
+}
+
+.hero-accent {
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent), white 25%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-lede {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  margin: 0 0 28px;
+}
+
+.hero-inline {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 0.92em;
+  font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+  color: var(--fg-strong);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cta {
+  display: inline-block;
+  padding: 11px 22px;
+  border-radius: 9px;
+  font-weight: 500;
+  font-size: 14.5px;
+  text-decoration: none;
+  border: 1px solid transparent !important;
+  transition: all 120ms ease;
+  cursor: pointer;
+}
+
+.cta-primary {
+  background: var(--accent);
+  color: white !important;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.cta-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.cta-ghost {
+  background: var(--bg-elev);
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+
+.cta-ghost:hover {
+  border-color: var(--accent-line) !important;
+}
+
+.hero-code {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+}
+
+.hero-code-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: color-mix(in oklab, var(--bg-code), var(--fg-strong) 4%);
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-code-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  display: inline-block;
+}
+
+.hero-code-name {
+  margin-left: 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.hero-code-body {
+  margin: 0;
+  padding: 18px 22px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fg);
+  overflow-x: auto;
+  background: transparent;
+}
+
+.hero-code-result {
+  padding: 10px 22px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg-code), var(--accent) 4%);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.hero-code-prompt {
+  color: var(--accent);
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.hero-code-out {
+  color: var(--fg-strong);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 0 16px;
+}
+
+.feature {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 18px 16px;
+  transition: border-color 150ms ease;
+}
+
+.feature:hover {
+  border-color: var(--accent-line);
+}
+
+.feature-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fg-strong);
+  margin-bottom: 6px;
+}
+
+.feature-body {
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 20px 18px;
+  }
+
+  .content {
+    padding: 0 20px 60px;
+  }
+
+  .page-title {
+    font-size: 30px;
+  }
+
+  .hero {
+    margin: 0 -20px;
+    padding: 36px 20px 16px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+}
