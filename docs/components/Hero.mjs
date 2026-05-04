@@ -2,18 +2,18 @@ import { div, h1, p, span, a, section, code, pre } from '@srfnstack/fntags'
 import { fnlink } from '@srfnstack/fntags/src/fnroute.mjs'
 
 const HERO_CODE = `solid.Cylinder(20, 10, 1).
-    Cut(
-        solid.Cylinder(25, 2, 0).TranslateX(5),
-        solid.Cylinder(25, 2, 0).TranslateX(-5),
-        solid.Cylinder(25, 2, 0).TranslateY(5),
-        solid.Cylinder(25, 2, 0).TranslateY(-5),
-    ).
-    STL("part.stl", 3.0)`
+  Cut(solid.Cylinder(25, 2, 0).
+    Multi(layout.RectCorners(10, 10)...)).
+  STL("part.stl", 3.0)`
 
 const FEATURES = [
   {
     title: 'Chainable',
     body: 'Every transform and boolean returns a new value. The whole part is one expression.'
+  },
+  {
+    title: 'Anchor positioning',
+    body: '27 anchors per part plus On / Above / Inside verbs. No bounding-box math.'
   },
   {
     title: 'Degrees by default',
@@ -22,10 +22,6 @@ const FEATURES = [
   {
     title: 'No error returns',
     body: 'CAD-geometry errors are programming bugs. Constructors panic; you chain.'
-  },
-  {
-    title: 'Real renderer',
-    body: 'STL, 3MF, DXF, SVG, PNG. Parallel marching cubes, optional decimation.'
   }
 ]
 

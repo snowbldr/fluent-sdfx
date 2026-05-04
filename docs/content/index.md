@@ -31,12 +31,14 @@ That's the part you'll build by the end of the [quickstart](/quickstart/): a rou
 - **Chainable** — every transform and boolean returns a new object, so building a part is a single expression.
 - **Degrees everywhere** — angles never need a manual `* math.Pi / 180`.
 - **No error returns** — constructors panic on invalid input, so you can chain without `if err != nil` interruptions. CAD geometry errors are programming bugs, not runtime conditions.
+- **Anchor-based positioning** — say `lid.OnTopOf(box.Top())` instead of doing bounding-box math. 27 anchors per part (faces, edges, corners) plus layout helpers for polar, grid, and rect-corner patterns.
 - **Real renderer** — outputs STL (parallel marching cubes), 3MF, DXF, SVG, PNG.
 
 ## What's in the box
 
 - **`shape`** — 2D primitives, booleans, transforms, polygon and bezier builders, text, threads, cams, gears.
 - **`solid`** — 3D primitives, booleans, transforms, smooth blends, shells, sweeps, screws, lofts.
+- **Positioning** — anchor selectors (`Top`, `BottomLeft`, …) and placement verbs (`On`, `Above`, `Inside`, …) on every Solid, plus a [`layout`](/positioning/) package of helpers (`Polar`, `Grid`, `RectCorners`, …) for spreading parts via `.Multi(...)`.
 - **`obj`** — parametric helpers: bolts, nuts, washers, panels, eurorack, standoffs, pipes, servos, gridfinity, gears.
 - **`vec/{v2,v3,p2}`** — vector types with named constructors so you can skip `Vec{X: ..., Y: ...}` boilerplate.
 - **`render`** — output helpers and lower-level renderer constructors.

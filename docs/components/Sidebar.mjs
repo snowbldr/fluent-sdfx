@@ -1,11 +1,11 @@
-import { aside, nav, div, h2, ul, li } from '@srfnstack/fntags'
+import { aside, nav, div, h2, ul, li, img } from '@srfnstack/fntags'
 import { fnlink, pathState } from '@srfnstack/fntags/src/fnroute.mjs'
 import { sections, pageBySlug } from '../nav.mjs'
 
 const Brand = () =>
   div({ class: 'sidebar-brand' },
     fnlink({ to: '/', class: 'brand-link' },
-      div({ class: 'brand-mark' }, '⌬'),
+      img({ class: 'brand-mark', src: './public/logo/logo-128.webp', alt: '', width: '72', height: '72' }),
       div({ class: 'brand-text' },
         div({ class: 'brand-title' }, 'fluent-sdfx'),
         div({ class: 'brand-tag' }, 'fluent SDF CAD for Go')

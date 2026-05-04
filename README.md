@@ -1,8 +1,10 @@
-# fluent-sdfx
+<p align="center">
+  <img src="fluent-sdfx_logo_header.webp" alt="fluent-sdfx — fluent SDF CAD for Go" width="640">
+</p>
 
 A fluent, chainable API for [sdfx](https://github.com/snowbldr/sdfx) — Go's signed distance function CAD library.
 
-fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid`, giving you a chainable API that reads like a description of the part you're building. All angles are in degrees. All constructors handle errors internally so you can chain without interruption.
+fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid`, giving you a chainable API that reads like a description of the part you're building. All angles are in degrees. All constructors handle errors internally so you can chain without interruption. An anchor-based [positioning API](https://snowbldr.github.io/fluent-sdfx/positioning/) (`Top`, `OnTopOf`, `Inside`, …) and a `layout` package of pattern helpers (`Polar`, `Grid`, `RectCorners`, …) let you place parts without bounding-box math.
 
 📚 **[Read the docs](https://snowbldr.github.io/fluent-sdfx/)** — install, project setup, the dev loop, foundations, operations, cookbook recipes, and the full API reference.
 
@@ -20,15 +22,16 @@ go get github.com/snowbldr/fluent-sdfx
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/solid"
-	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 func main() {
-    // A cylinder with 4 holes drilled through it
-	solid.Cylinder(20, 10, 1).Cut(
-		solid.Cylinder(25, 2, 0).Multi(v3.X(5), v3.X(-5), v3.Y(5), v3.Y(-5)),
-    ).STL("part.stl", 3.0)
+	// A cylinder with 4 holes drilled through it at the corners of a 10x10 square.
+	solid.Cylinder(20, 10, 1).
+		Cut(solid.Cylinder(25, 2, 0).
+			Multi(layout.RectCorners(10, 10)...)).
+		STL("part.stl", 3.0)
 }
 ```
 
@@ -40,7 +43,7 @@ The [quickstart](https://snowbldr.github.io/fluent-sdfx/quickstart/) walks throu
 - [**Project setup**](https://snowbldr.github.io/fluent-sdfx/project-setup/) — scaffold a Go module and produce your first STL.
 - [**Dev loop with stldev**](https://snowbldr.github.io/fluent-sdfx/dev-loop/) — watch-rebuild-preview iteration cycle.
 - [**Quickstart**](https://snowbldr.github.io/fluent-sdfx/quickstart/) — five steps to a non-trivial part.
-- **Foundations** — vectors, 2D shapes, 3D solids, booleans, transforms.
+- **Foundations** — vectors, 2D shapes, 3D solids, booleans, transforms, [positioning](https://snowbldr.github.io/fluent-sdfx/positioning/).
 - **Operations** — extrude/revolve/loft/sweep, smooth blends, modifiers, patterns, cross-sections, text, output resolution, parametric helpers.
 - **Cookbook** — bolt assembly, enclosure, gear.
 - [**API reference**](https://snowbldr.github.io/fluent-sdfx/api-reference/) — every type and method, package by package.
@@ -50,7 +53,8 @@ The [quickstart](https://snowbldr.github.io/fluent-sdfx/quickstart/) walks throu
 ```
 fluent-sdfx/
 ├── shape/      2D primitives, builders, transforms, booleans
-├── solid/      3D primitives, transforms, booleans, modifiers
+├── solid/      3D primitives, transforms, booleans, modifiers, anchor positioning
+├── layout/     Pattern helpers (Polar, Grid, RectCorners, …) for .Multi(...)
 ├── obj/        Parametric helpers (bolts, panels, gears, …)
 ├── render/     Output formats (STL, 3MF, DXF, SVG, PNG)
 ├── mesh/       Triangle-mesh utilities
