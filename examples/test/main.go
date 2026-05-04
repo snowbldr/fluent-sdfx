@@ -232,7 +232,7 @@ func test27() error {
 	r := 5.0
 	posn := v3.VecSet{v3.XYZ(2*r, 2*r, 0), v3.XYZ(-r, r, 0), v3.XYZ(r, -r, 0), v3.XYZ(-r, -r, 0), v3.XYZ(0, 0, 0)}
 	cyl := solid.Cylinder(3, 1, 0)
-	s := cyl.Multi(posn)
+	s := cyl.Multi(posn...)
 	s.STL("test27.stl", 2.0)
 	return nil
 }

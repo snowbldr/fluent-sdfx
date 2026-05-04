@@ -43,7 +43,7 @@ func bushing() *solid.Solid {
 func plateHoles2D() *shape.Shape {
 	d := 17.0
 	h := shape.Circle(1.2)
-	return h.Multi([]v2.Vec{v2.XY(d, d), v2.XY(-d, -d), v2.XY(-d, d), v2.XY(d, -d)})
+	return h.Multi(v2.XY(d, d), v2.XY(-d, -d), v2.XY(-d, d), v2.XY(d, -d))
 }
 
 const rod_r = (1.0 / 16.0) * units.MillimetresPerInch * 1.10

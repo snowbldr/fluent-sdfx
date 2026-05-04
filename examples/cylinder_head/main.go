@@ -228,7 +228,7 @@ var stud_locations = []v2.Vec{
 }
 
 func head_stud_holes() *solid.Solid {
-	c := shape.Circle(stud_hole_radius).Multi(stud_locations)
+	c := shape.Circle(stud_hole_radius).Multi(stud_locations...)
 	return c.Extrude(head_height)
 }
 
@@ -248,7 +248,7 @@ func head_wall_inner_2d() *shape.Shape {
 	l := head_length - (2 * head_wall_thickness)
 	w := head_width - (2 * head_wall_thickness)
 	s0 := shape.Rect(v2.XY(l, w), 0)
-	s1 := shape.Circle(stud_boss_radius).Multi(stud_locations)
+	s1 := shape.Circle(stud_boss_radius).Multi(stud_locations...)
 	return shape.SmoothCut(solid.PolyMax(general_round), s0, s1)
 }
 

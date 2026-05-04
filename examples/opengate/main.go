@@ -34,7 +34,7 @@ func standoffs() *solid.Solid {
 	yOfs := -0.5 * pcbY
 	zOfs := 0.5 * (pillarHeight + baseThickness)
 
-	return s.Multi(positions0).Translate(v3.XYZ(xOfs, yOfs, zOfs))
+	return s.Multi(positions0...).Translate(v3.XYZ(xOfs, yOfs, zOfs))
 }
 
 func mainBoard() *solid.Solid {

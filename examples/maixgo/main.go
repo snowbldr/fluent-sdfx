@@ -29,7 +29,7 @@ func boardStandoffs() *solid.Solid {
 		WebHeight:      10,
 		WebDiameter:    12,
 		WebWidth:       3.5,
-	}).Multi([]v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)})
+	}).Multi(v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs))
 }
 
 func bezelStandoffs() *solid.Solid {
@@ -44,7 +44,7 @@ func bezelStandoffs() *solid.Solid {
 		PillarDiameter: 6.0,
 		HoleDepth:      11.0,
 		HoleDiameter:   2.4,
-	}).Multi([]v3.Vec{v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs)})
+	}).Multi(v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs))
 }
 
 func speakerHoles(d float64, ofs v2.Vec) *shape.Shape {

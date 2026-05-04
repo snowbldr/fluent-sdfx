@@ -92,7 +92,7 @@ func picoCncStandoffs() *solid.Solid {
 		PillarDiameter: 6.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4, // #4 screw
-	}).Multi(v3.VecSet{v3.XYZ(0, 0, zOfs), v3.XYZ(dx, 0, zOfs), v3.XYZ(0, dy, zOfs), v3.XYZ(dx, dy, zOfs)})
+	}).Multi(v3.XYZ(0, 0, zOfs), v3.XYZ(dx, 0, zOfs), v3.XYZ(0, dy, zOfs), v3.XYZ(dx, dy, zOfs))
 }
 
 func picoCnc() *solid.Solid {

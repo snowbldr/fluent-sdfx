@@ -67,7 +67,7 @@ func cc16b() *solid.Solid {
 	base_hole_xofs := (base_w / 2.0) - 25.0
 	holes := []v2.Vec{v2.XY(base_hole_xofs, base_hole_yofs), v2.XY(-base_hole_xofs, base_hole_yofs)}
 	c := shape.Circle(base_hole_r)
-	holes_2d := c.Multi(holes)
+	holes_2d := c.Multi(holes...)
 	base_2d = base_2d.Cut(holes_2d)
 
 	// slotted hole

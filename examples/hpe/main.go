@@ -44,7 +44,7 @@ func ap723hStandoffs() *solid.Solid {
 	}))
 
 	zOfs := 0.5 * (pillarHeight + baseThickness)
-	return s.Multi([]v3.Vec{v3.XYZ(0, 0, zOfs), v3.XYZ(103.0, 0, zOfs), v3.XYZ(103.0, 152.0, zOfs), v3.XYZ(0, 152.0, zOfs)})
+	return s.Multi(v3.XYZ(0, 0, zOfs), v3.XYZ(103.0, 0, zOfs), v3.XYZ(103.0, 152.0, zOfs), v3.XYZ(0, 152.0, zOfs))
 }
 
 func ap723hMount() *solid.Solid {
@@ -86,14 +86,12 @@ func ap725Standoffs() *solid.Solid {
 		PillarDiameter: 138.0 * units.Mil * 2.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}).Multi([]v3.Vec{
-		v3.XYZ(0, 0, zOfs),
+	}).Multi(v3.XYZ(0, 0, zOfs),
 		v3.XYZ(5984.255*units.Mil, 0, zOfs),
 		v3.XYZ(5551.185*units.Mil, 4704.72*units.Mil, zOfs),
 		v3.XYZ(433.071*units.Mil, 4704.72*units.Mil, zOfs),
 		v3.XYZ(2700.795*units.Mil, 5389.76*units.Mil, zOfs),
-		v3.XYZ(3714.565*units.Mil, 1708.66*units.Mil, zOfs),
-	})
+		v3.XYZ(3714.565*units.Mil, 1708.66*units.Mil, zOfs))
 }
 
 func ap725Mount() *solid.Solid {
@@ -137,16 +135,14 @@ func ap745Standoffs() *solid.Solid {
 		PillarDiameter: 138.0 * units.Mil * 2.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}).Multi([]v3.Vec{
-		v3.XYZ(0, holeSquare, zOfs),
+	}).Multi(v3.XYZ(0, holeSquare, zOfs),
 		v3.XYZ(0, 0, zOfs),
 		v3.XYZ(holeSquare, holeSquare, zOfs),
 		v3.XYZ(holeSquare, 0, zOfs),
 		v3.XYZ(3937.01*units.Mil, 7047.24*units.Mil, zOfs),
 		v3.XYZ(1240.16*units.Mil, 5570.87*units.Mil, zOfs),
 		v3.XYZ(2648.46*units.Mil, 3485.15*units.Mil, zOfs),
-		v3.XYZ(3693.46*units.Mil, 610.15*units.Mil, zOfs),
-	})
+		v3.XYZ(3693.46*units.Mil, 610.15*units.Mil, zOfs))
 }
 
 func ap745Mount() *solid.Solid {

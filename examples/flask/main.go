@@ -39,7 +39,7 @@ func alignmentHoles() *solid.Solid {
 	h := (lugBaseThickness + padThickness + wallThickness + cornerLength) * 2.0
 	xofs := w * 0.8 * 0.5
 	cylinder := solid.Cylinder(h, holeRadius, 0)
-	return cylinder.Multi([]v3.Vec{v3.XYZ(xofs, 0, 0), v3.XYZ(-xofs, 0, 0)})
+	return cylinder.Multi(v3.XYZ(xofs, 0, 0), v3.XYZ(-xofs, 0, 0))
 }
 
 // pinLug returns a single pin lug.
@@ -105,7 +105,7 @@ func oddSide(height float64) *solid.Solid {
 	h := 3.0 * d
 	yofs := (height*1.1 - cornerThickness) * 0.5
 	hole := solid.Cylinder(h, holeRadius, 0)
-	holes := hole.Multi([]v3.Vec{v3.XYZ(0, yofs, 0), v3.XYZ(0, -yofs, 0)})
+	holes := hole.Multi(v3.XYZ(0, yofs, 0), v3.XYZ(0, -yofs, 0))
 
 	// hook into internal sand key
 	sx2 := 0.8 * sx
@@ -171,7 +171,7 @@ func pullHoles(width float64) *solid.Solid {
 	h := (wallThickness + keyDepth) * 2.0
 	xofs := width * 0.9 * 0.5
 	hole := solid.Cylinder(h, holeRadius, 0)
-	return hole.Multi([]v3.Vec{v3.XYZ(xofs, 0, 0), v3.XYZ(-xofs, 0, 0)})
+	return hole.Multi(v3.XYZ(xofs, 0, 0), v3.XYZ(-xofs, 0, 0))
 }
 
 func flaskHalf(width, height float64) *solid.Solid {

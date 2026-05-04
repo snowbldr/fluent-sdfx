@@ -75,14 +75,12 @@ func screwHole() *solid.Solid {
 
 func screwHoles() *solid.Solid {
 	s := screwHole()
-	return s.Multi([]v3.Vec{
-		v3.XYZ(screwX, screwY, 0),
+	return s.Multi(v3.XYZ(screwX, screwY, 0),
 		v3.XYZ(-screwX, screwY, 0),
 		v3.XYZ(screwX, -screwY, 0),
 		v3.XYZ(-screwX, -screwY, 0),
 		v3.XYZ(screwX, 0, 0),
-		v3.XYZ(-screwX, 0, 0),
-	})
+		v3.XYZ(-screwX, 0, 0))
 }
 
 func tool() *solid.Solid {

@@ -34,12 +34,12 @@ func nRF52dkStandoffs() *solid.Solid {
 		v3.XYZ(2600.0*units.Mil, 500.0*units.Mil, zOfs),
 		v3.XYZ(3800.0*units.Mil, 300.0*units.Mil, zOfs),
 	}
-	s0 := obj.Standoff3D(k).Multi(positions0)
+	s0 := obj.Standoff3D(k).Multi(positions0...)
 
 	// standoffs with support stubs
 	k.HoleDepth = -2.0
 	positions1 := []v3.Vec{v3.XYZ(600.0*units.Mil, 2200.0*units.Mil, zOfs)}
-	s1 := obj.Standoff3D(k).Multi(positions1)
+	s1 := obj.Standoff3D(k).Multi(positions1...)
 
 	return s0.Union(s1)
 }
@@ -85,7 +85,7 @@ func nRF52833dkStandoffs() *solid.Solid {
 		v3.XYZ(2600.0*units.Mil, 1600.0*units.Mil, zOfs),
 		v3.XYZ(5050.0*units.Mil, 1825.0*units.Mil, zOfs),
 	}
-	s0 := obj.Standoff3D(k).Multi(positions0)
+	s0 := obj.Standoff3D(k).Multi(positions0...)
 
 	k.HoleDepth = -2.0
 	positions1 := []v3.Vec{
@@ -93,7 +93,7 @@ func nRF52833dkStandoffs() *solid.Solid {
 		v3.XYZ(3550.0*units.Mil, 2200.0*units.Mil, zOfs),
 		v3.XYZ(3800.0*units.Mil, 300.0*units.Mil, zOfs),
 	}
-	s1 := obj.Standoff3D(k).Multi(positions1)
+	s1 := obj.Standoff3D(k).Multi(positions1...)
 
 	return s0.Union(s1)
 }

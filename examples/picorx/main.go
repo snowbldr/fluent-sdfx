@@ -33,7 +33,7 @@ func pam8302(thickness float64) *solid.Solid {
 		PillarDiameter: 4.5,
 		HoleDepth:      pillarHeight,
 		HoleDiameter:   2.0,
-	}).Multi([]v3.Vec{v3.XYZ(xOfs, 0, zOfs), v3.XYZ(-xOfs, 0, zOfs)})
+	}).Multi(v3.XYZ(xOfs, 0, zOfs), v3.XYZ(-xOfs, 0, zOfs))
 }
 
 func display0(thickness float64, negative bool) *solid.Solid {
@@ -109,7 +109,7 @@ func pcbMount0() *solid.Solid {
 		PillarDiameter: 8,
 		HoleDepth:      height,
 		HoleDiameter:   2.4,
-	}).Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
+	}).Multi(v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs))
 
 	return panel.Union(standoffs)
 }
@@ -139,7 +139,7 @@ func pcbMount1() *solid.Solid {
 		PillarDiameter: 8,
 		HoleDepth:      height,
 		HoleDiameter:   2.4,
-	}).Multi([]v3.Vec{v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs)})
+	}).Multi(v3.XYZ(0, -yOfs, zOfs), v3.XYZ(0, yOfs, zOfs))
 
 	return panel.Union(standoffs)
 }

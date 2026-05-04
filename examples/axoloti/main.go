@@ -48,7 +48,7 @@ func standoffs() *solid.Solid {
 		PillarDiameter: 6.0,
 		HoleDepth:      10.0,
 		HoleDiameter:   2.4,
-	}).Multi(positions)
+	}).Multi(positions...)
 }
 
 // base returns the base mount.

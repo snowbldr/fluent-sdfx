@@ -47,7 +47,7 @@ func blockOffPlate() *solid.Solid {
 		v2.XY(dX, dY0), v2.XY(-dX, -dY0), v2.XY(dX, -dY0), v2.XY(-dX, dY0),
 		v2.XY(dX, dY1), v2.XY(-dX, -dY1), v2.XY(dX, -dY1), v2.XY(-dX, dY1),
 	}
-	holes := hole.Multi(posn)
+	holes := hole.Multi(posn...)
 
 	return plate.Cut(holes).Extrude(plateZ)
 }

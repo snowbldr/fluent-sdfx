@@ -111,7 +111,7 @@ func baseHoles() *solid.Solid {
 	dx := 0.5 * baseHolePosn.X * baseWidth
 	dy := 0.5 * baseHolePosn.Y * baseLength
 
-	holes := s.Multi([]v3.Vec{v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0)})
+	holes := s.Multi(v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0))
 	return holes.RotateX(-90).Translate(v3.XYZ(0.5*baseWidth, 0, 0))
 }
 
@@ -121,7 +121,7 @@ func displayHoles() *solid.Solid {
 	dx := 0.5 * displayW
 	dy := 0.5 * displayH
 
-	holes := s.Multi([]v3.Vec{v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0)})
+	holes := s.Multi(v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0))
 	holes = holes.RotateY(90).RotateZ(15)
 
 	yOfs := displayPosn * supportHeight

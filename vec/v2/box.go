@@ -29,6 +29,16 @@ func NewBox(center, size Vec) Box {
 	return fromSDFBox(sdf.NewBox2(v2sdf.Vec(center), v2sdf.Vec(size)))
 }
 
+// Anchor returns the world-space point on this box for the given unit-square
+// position. Each component is interpreted at min when -1, center when 0,
+// and max when +1. (0,0) is the bbox centre; (0,1) is the top edge midpoint;
+// (1,1) is the +X+Y corner. Values outside [-1,+1] are accepted and
+// extrapolate linearly.
+func (a Box) Anchor(x, y int) Vec {
+	half := a.Size().MulScalar(0.5)
+	return a.Center().Add(XY(float64(x), float64(y)).Mul(half))
+}
+
 // Center returns the center of the box.
 func (a Box) Center() Vec { return Vec(a.SDF().Center()) }
 

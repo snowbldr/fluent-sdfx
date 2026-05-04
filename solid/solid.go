@@ -337,8 +337,10 @@ func (s *Solid) SmoothRotateUnionZ(n int, step M44, min sdf.MinFunc) *Solid {
 	return &Solid{ru}
 }
 
-// Multi creates a union of the solid at the given positions.
-func (s *Solid) Multi(positions []v3.Vec) *Solid {
+// Multi creates a union of the solid at the given positions. Variadic so
+// you can write `hole.Multi(v3.X(5), v3.X(-5))` directly; pass a slice
+// with `hole.Multi(positions...)`.
+func (s *Solid) Multi(positions ...v3.Vec) *Solid {
 	return &Solid{sdf.Multi3D(s.SDF3, v3Slice(positions))}
 }
 
@@ -412,7 +414,7 @@ var MinCells = 32
 // Optional decimate (0-1) is the fraction of triangles to remove:
 // 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%). 0 disables decimation.
 func (s *Solid) STL(path string, cellsPerMM float64, decimate ...float64) {
-	flrender.ToSTL(s, path, render.NewMarchingCubesOctreeParallel(CellsFor(s, cellsPerMM)), decimate...)
+	flrender.ToSTL(s, path, render.NewMarchingCubesOctree(CellsFor(s, cellsPerMM)), decimate...)
 }
 
 // ThreeMF renders the solid to a 3MF file using the parallel octree renderer.

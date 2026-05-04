@@ -18,10 +18,8 @@ func servoControllerMount() *solid.Solid {
 		PillarDiameter: 5,
 		HoleDepth:      10,
 		HoleDiameter:   2.4, // #4 screw
-	}).Multi([]v3.Vec{
-		v3.XYZ(-0.45, -0.8, 0.25).MulScalar(units.MillimetresPerInch),
-		v3.XYZ(0.05, 0.8, 0.25).MulScalar(units.MillimetresPerInch),
-	})
+	}).Multi(v3.XYZ(-0.45, -0.8, 0.25).MulScalar(units.MillimetresPerInch),
+		v3.XYZ(0.05, 0.8, 0.25).MulScalar(units.MillimetresPerInch))
 
 	// base
 	return obj.Panel3D(obj.PanelParms{

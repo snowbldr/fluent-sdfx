@@ -143,7 +143,7 @@ func boltLugs() *solid.Solid {
 	dy0 := 0.75
 	dx0 := -math.Sqrt(r*r - dy0*dy0)
 
-	return lug.Multi([]v3.Vec{v3.XYZ(dx0, dy0, 0), v3.XYZ(1.0, 13.0/16.0, 0), v3.XYZ(-d, -d, 0), v3.XYZ(d, -d, 0)})
+	return lug.Multi(v3.XYZ(dx0, dy0, 0), v3.XYZ(1.0, 13.0/16.0, 0), v3.XYZ(-d, -d, 0), v3.XYZ(d, -d, 0))
 }
 
 func basePattern() *solid.Solid {

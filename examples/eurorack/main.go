@@ -27,7 +27,7 @@ func standoff(h float64) *solid.Solid {
 func halfBreadBoardStandoffs(h float64) *solid.Solid {
 	s := standoff(h)
 	positions := []v3.Vec{v3.XYZ(0, -1450*units.Mil, 0), v3.XYZ(0, 1450*units.Mil, 0)}
-	return s.Multi(positions)
+	return s.Multi(positions...)
 }
 
 // pot0 returns the panel hole/indent for a potentiometer
@@ -98,7 +98,7 @@ func powerBoardMount() *solid.Solid {
 		v3.XYZ(1.5*xSpace, -0.5*ySpace, zOfs),
 		v3.XYZ(1.5*xSpace, 0.5*ySpace, zOfs),
 	}
-	s1 := s0.Multi(positions)
+	s1 := s0.Multi(positions...)
 
 	// base
 	const baseX = (4 - 0.1) * xSpace

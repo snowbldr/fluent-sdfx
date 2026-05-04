@@ -74,7 +74,7 @@ func entrance1(size v3.Vec) *solid.Solid {
 		}
 		x += dx
 	}
-	s := hole.Multi(positions)
+	s := hole.Multi(positions...)
 
 	return s.Extrude(size.Z)
 }

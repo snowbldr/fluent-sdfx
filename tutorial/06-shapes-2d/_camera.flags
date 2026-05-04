@@ -1,0 +1,1 @@
+--no-config --up=+Z --no-background=1 --camera-elevation-angle 70 --camera-azimuth-angle 0 --anti-aliasing ssaa --ambient-occlusion --tone-mapping --resolution 1200,900

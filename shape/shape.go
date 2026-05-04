@@ -245,8 +245,10 @@ func (s *Shape) SmoothRotateUnion(n int, step M33, min sdf.MinFunc) *Shape {
 	return &Shape{ru}
 }
 
-// Multi creates a union of the shape at the given positions.
-func (s *Shape) Multi(positions []v2.Vec) *Shape {
+// Multi creates a union of the shape at the given positions. Variadic so
+// you can write `hole.Multi(v2.XY(5, 0), v2.XY(-5, 0))` directly; pass a
+// slice with `hole.Multi(positions...)`.
+func (s *Shape) Multi(positions ...v2.Vec) *Shape {
 	return &Shape{sdf.Multi2D(s.SDF2, v2Slice(positions))}
 }
 

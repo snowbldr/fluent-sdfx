@@ -111,8 +111,12 @@ func (d *DXF) Triangle(t v2.Triangle2) { d.d.Triangle(t.SDF()) }
 func (d *DXF) Save() error { return d.d.Save() }
 
 // NewMarchingCubesOctreeParallel returns the default parallel octree renderer for 3D.
+//
+// sdfx ≥ v0.0.8 renamed the constructor to NewMarchingCubesOctree (parallel
+// is the default; a NewMarchingCubesOctreeSingle exists for single-threaded
+// rendering). This wrapper keeps the longer name as a stable alias.
 func NewMarchingCubesOctreeParallel(meshCells int) Render3 {
-	return render.NewMarchingCubesOctreeParallel(meshCells)
+	return render.NewMarchingCubesOctree(meshCells)
 }
 
 // NewMarchingSquaresQuadtree returns the default quadtree renderer for 2D.
@@ -127,7 +131,7 @@ func NewDualContouring2D(meshCells int) Render2 {
 
 // To3MF renders an SDF3 to a 3MF file using the parallel octree renderer.
 func To3MF(s SDF3, path string, meshCells int) {
-	r := render.NewMarchingCubesOctreeParallel(meshCells)
+	r := render.NewMarchingCubesOctree(meshCells)
 	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
 	render.To3MF(s, path, r)
 }
