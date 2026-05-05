@@ -399,10 +399,12 @@ func main() {
 
 ## Doc pages (deeper detail)
 
+- [/gallery](/gallery/) — eight finished parts (lantern, gear, bolt assembly, enclosure, …) linking to their cookbook source.
 - [/install](/install/) — Go, fluent-sdfx, f3d.
 - [/project-setup](/project-setup/) — scaffolding a Go module, picking a layout for assemblies.
 - [/dev-loop](/dev-loop/) — `stldev` watch-rebuild-preview loop.
 - [/quickstart](/quickstart/) — five-step incremental walkthrough.
+- [/comparison](/comparison/) — coming from OpenSCAD / CadQuery / Build123d / sdfx? mapping table and trade-offs.
 - [/vectors-types](/vectors-types/) — v2, v3, p2, the conversion helpers.
 - [/shapes-2d](/shapes-2d/) — every 2D primitive, the polygon and bezier builders.
 - [/solids-3d](/solids-3d/) — every 3D primitive.

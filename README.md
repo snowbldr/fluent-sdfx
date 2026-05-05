@@ -2,6 +2,13 @@
   <img src="fluent-sdfx_logo_header.webp" alt="fluent-sdfx — fluent SDF CAD for Go" width="640">
 </p>
 
+<p align="center">
+  <a href="https://pkg.go.dev/github.com/snowbldr/fluent-sdfx"><img src="https://pkg.go.dev/badge/github.com/snowbldr/fluent-sdfx.svg" alt="Go Reference"></a>
+  <a href="https://goreportcard.com/report/github.com/snowbldr/fluent-sdfx"><img src="https://goreportcard.com/badge/github.com/snowbldr/fluent-sdfx" alt="Go Report Card"></a>
+  <a href="https://github.com/snowbldr/fluent-sdfx/actions/workflows/build.yml"><img src="https://github.com/snowbldr/fluent-sdfx/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/snowbldr/fluent-sdfx" alt="License"></a>
+</p>
+
 A fluent, chainable API for [sdfx](https://github.com/snowbldr/sdfx) — Go's signed distance function CAD library.
 
 fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid`, giving you a chainable API that reads like a description of the part you're building. All angles are in degrees. All constructors handle errors internally so you can chain without interruption. An anchor-based [positioning API](https://snowbldr.github.io/fluent-sdfx/positioning/) (`Top`, `OnTopOf`, `Inside`, …) and a `layout` package of pattern helpers (`Polar`, `Grid`, `RectCorners`, …) let you place parts without bounding-box math.
@@ -45,6 +52,8 @@ For multi-part assemblies, fluent-sdfx is meant to be written as **ingredients a
 
 - [**Install**](https://snowbldr.github.io/fluent-sdfx/install/) — Go, fluent-sdfx, f3d.
 - [**Project setup**](https://snowbldr.github.io/fluent-sdfx/project-setup/) — scaffold a Go module and produce your first STL.
+- [**Gallery**](https://snowbldr.github.io/fluent-sdfx/gallery/) — eight finished parts at a glance, each linking to its cookbook source.
+- [**Coming from another CAD library**](https://snowbldr.github.io/fluent-sdfx/comparison/) — mapping table for OpenSCAD / CadQuery / Build123d / sdfx users.
 - [**Dev loop with stldev**](https://snowbldr.github.io/fluent-sdfx/dev-loop/) — watch-rebuild-preview iteration cycle.
 - [**Quickstart**](https://snowbldr.github.io/fluent-sdfx/quickstart/) — five steps to a non-trivial part.
 - **Foundations** — vectors, 2D shapes, 3D solids, booleans, transforms, [positioning](https://snowbldr.github.io/fluent-sdfx/positioning/).

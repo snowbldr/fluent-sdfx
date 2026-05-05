@@ -1,6 +1,7 @@
 import { aside, nav, div, h2, ul, li, img, a, span, svg, path } from '@srfnstack/fntags'
 import { fnlink, pathState } from '@srfnstack/fntags/src/fnroute.mjs'
 import { sections, pageBySlug } from '../nav.mjs'
+import { Search } from './Search.mjs'
 
 const GITHUB_URL = 'https://github.com/snowbldr/fluent-sdfx'
 
@@ -71,6 +72,7 @@ const Section = (s) => {
 export const Sidebar = () =>
   aside({ class: 'sidebar' },
     Brand(),
+    Search(),
     nav({ class: 'nav', 'aria-label': 'Documentation' },
       ...sections.map(Section)
     ),

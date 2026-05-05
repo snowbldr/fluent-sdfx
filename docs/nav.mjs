@@ -9,10 +9,12 @@ export const sections = [
     title: 'Getting started',
     pages: [
       { slug: 'index', title: 'Introduction', path: '/' },
+      { slug: 'gallery', title: 'Gallery' },
       { slug: 'install', title: 'Install' },
       { slug: 'project-setup', title: 'Project setup' },
       { slug: 'dev-loop', title: 'Dev loop with stldev' },
-      { slug: 'quickstart', title: 'Quickstart' }
+      { slug: 'quickstart', title: 'Quickstart' },
+      { slug: 'comparison', title: 'Coming from another CAD library' }
     ]
   },
   {

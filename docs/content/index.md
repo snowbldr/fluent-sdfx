@@ -46,4 +46,6 @@ That's the part you'll build by the end of the [quickstart](/quickstart/): a rou
 
 ## Where to next
 
-Start with [installing](/install/) the library and tooling, set up a [project](/project-setup/), then build something in the [quickstart](/quickstart/).
+- **See it first** — [Gallery](/gallery/) for finished parts at a glance.
+- **Try it** — [install](/install/) the library, set up a [project](/project-setup/), then build something in the [quickstart](/quickstart/).
+- **Coming from another CAD tool?** [Comparison](/comparison/) maps OpenSCAD / CadQuery / Build123d / sdfx idioms to fluent-sdfx.

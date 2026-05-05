@@ -215,6 +215,121 @@ a:hover {
   margin-top: 1px;
 }
 
+/* ── Search (.search): input above the nav with a popover dropdown for
+   results. Loads page bodies on first focus and indexes them client-side. */
+
+.search {
+  position: relative;
+  margin: 0 0 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.search-input::placeholder {
+  color: var(--fg-faint);
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  max-height: min(60vh, 480px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.search-results[hidden] {
+  display: none;
+}
+
+.search-result {
+  margin: 0;
+  padding: 0;
+}
+
+.search-result-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  padding: 9px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background 0.1s;
+}
+
+.search-result-btn:hover,
+.search-result.active .search-result-btn {
+  background: color-mix(in oklab, var(--bg-elev), var(--accent) 12%);
+}
+
+.search-result-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  line-height: 1.3;
+}
+
+.search-result-heading {
+  font-size: 12px;
+  color: var(--accent);
+  line-height: 1.3;
+}
+
+.search-result-excerpt {
+  font-size: 12px;
+  color: var(--fg-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-result-section {
+  font-size: 10px;
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.search-results mark {
+  background: color-mix(in oklab, var(--bg-elev), var(--accent) 35%);
+  color: var(--fg-strong);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
 .nav-section {
   margin-bottom: 22px;
 }
@@ -558,6 +673,68 @@ a:hover {
   display: block;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* ── Gallery grid (.gallery / .gallery-item): the home-page-y showcase
+   of finished cookbook parts. Each item is an anchor wrapping a render
+   and a caption; hovers raise and tint. */
+
+.markdown .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+
+.markdown .gallery-item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  overflow: hidden;
+  text-decoration: none !important;
+  color: var(--fg);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.markdown .gallery-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.markdown .gallery-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: color-mix(in oklab, var(--bg-elev), var(--fg-strong) 4%);
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+
+.markdown .gallery-caption {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.markdown .gallery-caption strong {
+  font-size: 14px;
+  color: var(--fg-strong);
+  letter-spacing: -0.01em;
+}
+
+.markdown .gallery-caption span {
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.4;
+}
+
+.markdown .gallery-caption code {
+  font-size: 12px;
 }
 
 /* ── Tab gallery (.tab-gallery): a header strip of tab buttons over a
