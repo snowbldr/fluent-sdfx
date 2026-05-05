@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -37,14 +38,12 @@ func bezelStandoffs() *solid.Solid {
 	zOfs := 0.5 * (pillarHeight + baseThickness)
 	x := 140.0
 	y := 55.0
-	x0 := -0.5 * x
-	y0 := -0.5 * y
 	return obj.Standoff3D(obj.StandoffParms{
 		PillarHeight:   pillarHeight,
 		PillarDiameter: 6.0,
 		HoleDepth:      11.0,
 		HoleDiameter:   2.4,
-	}).Multi(v3.XYZ(x0, y0, zOfs), v3.XYZ(x0+x, y0, zOfs), v3.XYZ(x0, y0+y, zOfs), v3.XYZ(x0+x, y0+y, zOfs))
+	}).Multi(layout.RectCorners(x, y)...).TranslateZ(zOfs)
 }
 
 func speakerHoles(d float64, ofs v2.Vec) *shape.Shape {

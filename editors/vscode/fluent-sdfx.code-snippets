@@ -1,0 +1,109 @@
+{
+  "fluent-sdfx main.go scaffold": {
+    "scope": "go",
+    "prefix": "fsdfxmain",
+    "description": "fluent-sdfx main with STL output",
+    "body": [
+      "package main",
+      "",
+      "import (",
+      "\t\"github.com/snowbldr/fluent-sdfx/solid\"",
+      "\tv3 \"github.com/snowbldr/fluent-sdfx/vec/v3\"",
+      ")",
+      "",
+      "func main() {",
+      "\t${1:part} := solid.${2:Box}(${3:v3.XYZ(20, 20, 20)}, ${4:1})",
+      "\t${1:part}.STL(\"${5:out.stl}\", ${6:5.0})",
+      "}",
+      "$0"
+    ]
+  },
+  "Cylinder constructor": {
+    "scope": "go",
+    "prefix": "fsdfxcyl",
+    "description": "solid.Cylinder(height, radius, chamfer)",
+    "body": "solid.Cylinder(${1:height}, ${2:radius}, ${3:0})$0"
+  },
+  "Box constructor": {
+    "scope": "go",
+    "prefix": "fsdfxbox",
+    "description": "solid.Box(size, chamfer)",
+    "body": "solid.Box(v3.XYZ(${1:x}, ${2:y}, ${3:z}), ${4:0})$0"
+  },
+  "Sphere constructor": {
+    "scope": "go",
+    "prefix": "fsdfxsphere",
+    "description": "solid.Sphere(radius)",
+    "body": "solid.Sphere(${1:radius})$0"
+  },
+  "Drill (Cut with anchor placement)": {
+    "scope": "go",
+    "prefix": "fsdfxdrill",
+    "description": "body.Cut(tool.Top().On(body.Top()).Solid())  — drill tool into body, body kept",
+    "body": "${1:body}.Cut(${2:tool}.${3:Top}().On(${1:body}.${4:Top}()).Solid())$0"
+  },
+  "Stack on top of (OnTopOf)": {
+    "scope": "go",
+    "prefix": "fsdfxstack",
+    "description": "part.OnTopOf(target.Top()).Union()",
+    "body": "${1:part}.OnTopOf(${2:target}.Top()${3:, ${4:gap}}).Union()$0"
+  },
+  "Inside another solid": {
+    "scope": "go",
+    "prefix": "fsdfxinside",
+    "description": "inner.Inside(outer)",
+    "body": "${1:inner}.Inside(${2:outer}).${3|Union,Solid,Cut,Intersect|}()$0"
+  },
+  "Sit on build plate (BottomAt 0)": {
+    "scope": "go",
+    "prefix": "fsdfxbottom",
+    "description": "part.BottomAt(0)",
+    "body": "${1:part}.BottomAt(${2:0})$0"
+  },
+  "Polar layout (.Multi)": {
+    "scope": "go",
+    "prefix": "fsdfxpolar",
+    "description": "part.Multi(layout.Polar(radius, n)...)",
+    "body": "${1:part}.Multi(layout.Polar(${2:radius}, ${3:n})...)$0"
+  },
+  "Grid layout (.Multi)": {
+    "scope": "go",
+    "prefix": "fsdfxgrid",
+    "description": "part.Multi(layout.Grid(stepX, stepY, nx, ny)...)",
+    "body": "${1:part}.Multi(layout.Grid(${2:stepX}, ${3:stepY}, ${4:nx}, ${5:ny})...)$0"
+  },
+  "Rect-corners layout (.Multi)": {
+    "scope": "go",
+    "prefix": "fsdfxcorners",
+    "description": "part.Multi(layout.RectCorners(width, depth)...)",
+    "body": "${1:part}.Multi(layout.RectCorners(${2:width}, ${3:depth})...)$0"
+  },
+  "Recipe pattern scaffold": {
+    "scope": "go",
+    "prefix": "fsdfxrecipe",
+    "description": "Ingredients at top, single fluent assembly expression at bottom",
+    "body": [
+      "// Ingredients",
+      "${1:body} := solid.${2:Cylinder}(${3:50}, ${4:25}, ${5:4})",
+      "${6:tool} := solid.${7:Cylinder}(${8:40}, ${9:20}, ${10:0})",
+      "",
+      "// Method",
+      "${1:body}.Cut(${6:tool}.Top().On(${1:body}.Top()).Solid()).STL(\"${11:out.stl}\", ${12:5.0})",
+      "$0"
+    ]
+  },
+  "Validation test (watertight + overhang + volume)": {
+    "scope": "go",
+    "prefix": "fsdfxtest",
+    "description": "_test.go scaffold using validate.Require* helpers",
+    "body": [
+      "func Test${1:Part}Printable(t *testing.T) {",
+      "\ts := ${2:buildPart}()",
+      "\tvalidate.RequireWatertight(t, s, ${3:5.0})",
+      "\tvalidate.RequireMaxOverhang(t, s, ${3:5.0}, ${4:45.0})",
+      "\tvalidate.RequireVolumeNear(t, s, ${3:5.0}, ${5:1000.0}, ${6:0.02})",
+      "}",
+      "$0"
+    ]
+  }
+}

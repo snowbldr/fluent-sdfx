@@ -26,18 +26,17 @@ func keypadPanel() *solid.Solid {
 	// key hole
 	const holeRadius = (22.0 + 1.5) * 0.5
 
-	hole0 := solid.Cylinder(panelThickness, holeRadius, 0)
-	hole1 := hole0.Translate(v3.Y(panelYb))
-	hole2 := hole0.Translate(v3.Y(-panelYb))
-
-	return obj.Panel3D(obj.PanelParms{
+	panel := obj.Panel3D(obj.PanelParms{
 		Size:         v2.XY(panelX, panelY),
 		CornerRadius: 4,
 		HoleDiameter: baseHoleDiameter,
 		HoleMargin:   [4]float64{7, 7, 7, 7},
 		HolePattern:  [4]string{"x", "xx", "x", "xx"},
 		Thickness:    panelThickness,
-	}).Cut(hole0.Union(hole1, hole2))
+	})
+	hole := solid.Cylinder(panelThickness, holeRadius, 0)
+
+	return panel.Cut(hole.Multi(v3.Y(0), v3.Y(panelYb), v3.Y(-panelYb)))
 }
 
 //-----------------------------------------------------------------------------
@@ -52,25 +51,16 @@ func serialConverter() *solid.Solid {
 
 	outer := solid.Box(outerBox, 0.5*wallThickness)
 	inner := solid.Box(innerBox, 0)
-
-	// body
-	s := outer.Cut(inner)
-	s = s.CutPlane(v3.X(0.5*innerBox.X), v3.X(-1))
-	s = s.CutPlane(v3.Z(0.5*innerBox.Z), v3.Z(-1))
-
 	// base mounting hole
 	hole0 := solid.Cylinder(10*wallThickness, baseHoleDiameter*0.5, 0).
 		Translate(v3.Y(0.35 * innerBox.Y))
-	hole1 := hole0.MirrorXZ()
-	holes := hole0.Union(hole1)
-
 	// pcb
 	board := solid.Box(pcb, 0)
 
-	s = s.Cut(holes)
-	s = s.Cut(board)
-
-	return s
+	return outer.Cut(inner).
+		CutPlane(v3.X(0.5*innerBox.X), v3.X(-1)).
+		CutPlane(v3.Z(0.5*innerBox.Z), v3.Z(-1)).
+		Cut(hole0, hole0.MirrorXZ(), board)
 }
 
 //-----------------------------------------------------------------------------

@@ -1,10 +1,8 @@
 // Lantern cookbook step 2: hollow out the tea light pocket.
 //
-// `pocket.Top().On(body.BottomAt(0).Top())` aligns the pocket's top
-// anchor with the seated body's top anchor, returning a Placement;
-// `.Cut()` is a Placement finalizer that subtracts the placed pocket
-// from the body. Parts at the top, assembly at the bottom — one fluent
-// expression, anchor-relational, with no bbox math.
+// `body.Cut(pocket.Top().On(body.Top()).Solid())` — the chain's subject
+// is the body (so the body is kept), and the argument is the pocket
+// positioned so its top aligns with the body's top. No bbox math.
 package main
 
 import "github.com/snowbldr/fluent-sdfx/solid"
@@ -20,5 +18,5 @@ func main() {
 	body := solid.Cylinder(bodyHeight, bodyRadius, 4)
 	pocket := solid.Cylinder(pocketDepth, bodyRadius-wallThick, 0)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().STL("out.stl", 4.0)
+	body.Cut(pocket.Top().On(body.Top()).Solid()).STL("out.stl", 4.0)
 }

@@ -47,11 +47,9 @@ Hollow out the tea-light pocket. `pocket.Top().On(body.Top())` aligns the pocket
 ```go
 // Lantern cookbook step 2: hollow out the tea light pocket.
 //
-// `pocket.Top().On(body.BottomAt(0).Top())` aligns the pocket's top
-// anchor with the seated body's top anchor, returning a Placement;
-// `.Cut()` is a Placement finalizer that subtracts the placed pocket
-// from the body. Parts at the top, assembly at the bottom — one fluent
-// expression, anchor-relational, with no bbox math.
+// `body.Cut(pocket.Top().On(body.Top()).Solid())` — the chain's subject
+// is the body (so the body is kept), and the argument is the pocket
+// positioned so its top aligns with the body's top. No bbox math.
 package main
 
 import "github.com/snowbldr/fluent-sdfx/solid"
@@ -67,7 +65,7 @@ func main() {
 	body := solid.Cylinder(bodyHeight, bodyRadius, 4)
 	pocket := solid.Cylinder(pocketDepth, bodyRadius-wallThick, 0)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().STL("out.stl", 4.0)
+	body.Cut(pocket.Top().On(body.Top()).Solid()).STL("out.stl", 4.0)
 }
 ```
 
@@ -84,9 +82,9 @@ Punch a ring of decorative slots through the wall. `layout.Polar(slotRadius, 8)`
 ```go
 // Lantern cookbook step 3: punch decorative slots through the wall.
 //
-// Body, pocket, and slot are bare primitives at the top. The assembly
-// chain at the bottom does all the work: place the pocket on the seated
-// body and Cut, then Cut the polar slot ring out of the result.
+// One Cut on the body, two args: the positioned pocket and a polar ring of
+// slots. Each slot is positioned relative to the body's top — no absolute
+// Z constants, so the body stays centred at origin.
 package main
 
 import (
@@ -105,7 +103,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2 // sit centred in the wall
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2 // mid-pocket
 )
 
 func main() {
@@ -113,9 +110,11 @@ func main() {
 	pocket := solid.Cylinder(pocketDepth, bodyRadius-wallThick, 0)
 	slot := solid.Box(v3.XYZ(slotWidth, slotWidth, slotHeight), 1)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().
-		Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-		STL("out.stl", 5.0)
+	body.Cut(
+		pocket.Top().On(body.Top()).Solid(),
+		slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+			Multi(layout.Polar(slotRadius, slotCount)...),
+	).STL("out.stl", 5.0)
 }
 ```
 
@@ -132,10 +131,9 @@ Build the feet on the build plate, then lift the lantern onto them. `lantern.OnT
 ```go
 // Lantern cookbook step 4: 4 small feet under the body.
 //
-// Body, pocket, slot, and foot are bare primitives at the top. The
-// assembly chain places the pocket inside the body and cuts, cuts the
-// polar slot ring, then raises the result onto a polar ring of feet via
-// `OnTopOf(...).Union()`. Every relation is anchor-named.
+// Cut(pocket, slots) carves the body, then OnTopOf(...).Union() raises
+// the carved body onto a polar ring of feet. Every relation is anchor-
+// named and relative — no bbox math, no absolute Z constants.
 //
 // 4 feet (rather than 3) because `Polar` with an even count is bbox-
 // symmetric — the feet array's bbox top centre sits on the world Z axis,
@@ -158,7 +156,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2
 
 	footRadius = 4.0
 	footHeight = 4.0
@@ -171,11 +168,11 @@ func main() {
 	slot := solid.Box(v3.XYZ(slotWidth, slotWidth, slotHeight), 1)
 	foot := solid.Cylinder(footHeight, footRadius, 0.8)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().
-		Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-		OnTopOf(foot.BottomAt(0).Multi(layout.Polar(footRing, 4)...).Top()).
-		Union().
-		STL("out.stl", 5.0)
+	body.Cut(
+		pocket.Top().On(body.Top()).Solid(),
+		slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+			Multi(layout.Polar(slotRadius, slotCount)...),
+	).OnTopOf(foot.Multi(layout.Polar(footRing, 4)...).Top()).Union().STL("out.stl", 5.0)
 }
 ```
 
@@ -193,10 +190,10 @@ Close the open top with a flat cap, then crown it with a decorative sphere knob.
 // Lantern cookbook step 5: cap the lantern and add a finial knob.
 //
 // All six parts are bare primitives at the top. The single fluent
-// expression at the bottom does the entire assembly: place the pocket
-// inside the body and Cut, Cut the polar slot ring, raise onto the
-// polar foot ring, place the cap on top, then sit the finial on the cap.
-// Six anchor relations in one chain — no bbox math, no Z arithmetic.
+// expression at the bottom does the entire assembly: Cut the pocket and
+// slot ring out of the body, raise onto the polar foot ring, place the
+// cap on top, then sit the finial on the cap. Six anchor relations in
+// one chain — no bbox math, no Z arithmetic.
 package main
 
 import (
@@ -215,7 +212,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2
 
 	footRadius = 4.0
 	footHeight = 4.0
@@ -235,11 +231,11 @@ func main() {
 
 	finial.Bottom().On(
 		cap.OnTopOf(
-			pocket.Top().On(body.BottomAt(0).Top()).Cut().
-				Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-				OnTopOf(foot.BottomAt(0).Multi(layout.Polar(footRing, 4)...).Top()).
-				Union().
-				Top(),
+			body.Cut(
+				pocket.Top().On(body.Top()).Solid(),
+				slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+					Multi(layout.Polar(slotRadius, slotCount)...),
+			).OnTopOf(foot.Multi(layout.Polar(footRing, 4)...).Top()).Union().Top(),
 		).Union().Top(),
 	).Union().STL("out.stl", 5.0)
 }

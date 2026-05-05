@@ -36,10 +36,9 @@ func wheelRetainer() *solid.Solid {
 	s3d := s2d.Extrude(size.Z).Translate(v3.XYZ(0, wheelRadius, 0))
 
 	t := wheelThickness * 0.9
-	ofs := 0.5 * (t - size.Z)
-	wheel := solid.Cylinder(t, wheelRadius+clearance, 0).Translate(v3.XYZ(0, 0, ofs))
+	wheel := solid.Cylinder(t, wheelRadius+clearance, 0)
 
-	return s3d.Cut(wheel)
+	return s3d.Bottom().On(wheel.Bottom()).Cut()
 }
 
 // entrance0 returns an open entrance
@@ -81,10 +80,6 @@ func entrance1(size v3.Vec) *solid.Solid {
 
 // entranceWheel returns a rotating entrance for a swarm trap.
 func entranceWheel() *solid.Solid {
-	plate := solid.Cylinder(wheelThickness, wheelRadius, 0)
-
-	hole := solid.Cylinder(wheelThickness, 2.5, 0)
-
 	entranceSize := v3.XYZ(
 		4*units.MillimetresPerInch,
 		0.5*units.MillimetresPerInch,
@@ -93,13 +88,18 @@ func entranceWheel() *solid.Solid {
 	const k = 1.6
 	ofs := k * entranceSize.X * 0.5 * math.Tan(units.DtoR(30))
 
+	plate := solid.Cylinder(wheelThickness, wheelRadius, 0)
+	hole := solid.Cylinder(wheelThickness, 2.5, 0)
 	// open entrance
-	e0 := entrance0(entranceSize).Translate(v3.XYZ(0, ofs, 0))
-
+	e0 := entrance0(entranceSize)
 	// vent entrance
-	e1 := entrance1(entranceSize).Translate(v3.XYZ(0, ofs, 0)).RotateZ(120)
+	e1 := entrance1(entranceSize)
 
-	return plate.Cut(e0, e1, hole)
+	return plate.Cut(
+		e0.Translate(v3.XYZ(0, ofs, 0)),
+		e1.Translate(v3.XYZ(0, ofs, 0)).RotateZ(120),
+		hole,
+	)
 }
 
 func holePattern(n int) string {

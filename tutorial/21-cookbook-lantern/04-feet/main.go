@@ -1,9 +1,8 @@
 // Lantern cookbook step 4: 4 small feet under the body.
 //
-// Body, pocket, slot, and foot are bare primitives at the top. The
-// assembly chain places the pocket inside the body and cuts, cuts the
-// polar slot ring, then raises the result onto a polar ring of feet via
-// `OnTopOf(...).Union()`. Every relation is anchor-named.
+// Cut(pocket, slots) carves the body, then OnTopOf(...).Union() raises
+// the carved body onto a polar ring of feet. Every relation is anchor-
+// named and relative — no bbox math, no absolute Z constants.
 //
 // 4 feet (rather than 3) because `Polar` with an even count is bbox-
 // symmetric — the feet array's bbox top centre sits on the world Z axis,
@@ -26,7 +25,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2
 
 	footRadius = 4.0
 	footHeight = 4.0
@@ -39,9 +37,9 @@ func main() {
 	slot := solid.Box(v3.XYZ(slotWidth, slotWidth, slotHeight), 1)
 	foot := solid.Cylinder(footHeight, footRadius, 0.8)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().
-		Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-		OnTopOf(foot.BottomAt(0).Multi(layout.Polar(footRing, 4)...).Top()).
-		Union().
-		STL("out.stl", 5.0)
+	body.Cut(
+		pocket.Top().On(body.Top()).Solid(),
+		slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+			Multi(layout.Polar(slotRadius, slotCount)...),
+	).OnTopOf(foot.Multi(layout.Polar(footRing, 4)...).Top()).Union().STL("out.stl", 5.0)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
@@ -32,16 +33,8 @@ func zOffset(radius float64) float64 {
 
 func ballRow(ncol int, radius float64) *solid.Solid {
 	space := colSpace(radius)
-	x := v3.X(-0.5 * ((float64(ncol) - 1) * space))
-	dx := v3.X(space)
-
-	sphere := solid.Sphere(radius)
-	balls := make([]*solid.Solid, ncol)
-	for i := 0; i < ncol; i++ {
-		balls[i] = sphere.Translate(x)
-		x = x.Add(dx)
-	}
-	return solid.UnionAll(balls...)
+	half := 0.5 * (float64(ncol) - 1) * space
+	return solid.Sphere(radius).Multi(layout.Line(v3.X(-half), v3.X(half), ncol)...)
 }
 
 func ballGrid(ncol, nrow int, radius float64) *solid.Solid {

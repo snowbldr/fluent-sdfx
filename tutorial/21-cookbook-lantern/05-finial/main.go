@@ -1,10 +1,10 @@
 // Lantern cookbook step 5: cap the lantern and add a finial knob.
 //
 // All six parts are bare primitives at the top. The single fluent
-// expression at the bottom does the entire assembly: place the pocket
-// inside the body and Cut, Cut the polar slot ring, raise onto the
-// polar foot ring, place the cap on top, then sit the finial on the cap.
-// Six anchor relations in one chain — no bbox math, no Z arithmetic.
+// expression at the bottom does the entire assembly: Cut the pocket and
+// slot ring out of the body, raise onto the polar foot ring, place the
+// cap on top, then sit the finial on the cap. Six anchor relations in
+// one chain — no bbox math, no Z arithmetic.
 package main
 
 import (
@@ -23,7 +23,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2
 
 	footRadius = 4.0
 	footHeight = 4.0
@@ -43,11 +42,11 @@ func main() {
 
 	finial.Bottom().On(
 		cap.OnTopOf(
-			pocket.Top().On(body.BottomAt(0).Top()).Cut().
-				Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-				OnTopOf(foot.BottomAt(0).Multi(layout.Polar(footRing, 4)...).Top()).
-				Union().
-				Top(),
+			body.Cut(
+				pocket.Top().On(body.Top()).Solid(),
+				slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+					Multi(layout.Polar(slotRadius, slotCount)...),
+			).OnTopOf(foot.Multi(layout.Polar(footRing, 4)...).Top()).Union().Top(),
 		).Union().Top(),
 	).Union().STL("out.stl", 5.0)
 }

@@ -15,29 +15,23 @@ func ferriteMount() *solid.Solid {
 	const holderRadius = WallThickness + rodRadius
 	const holderLength = holderDepth + WallThickness
 
-	// support wall (triangle offset)
-	triShape := obj.IsocelesTriangle2D(baseSize, rodHeight).Offset(holderRadius)
-	wall := triShape.Extrude(WallThickness)
-
-	// base
 	const baseX = baseSize + 2.0*holderRadius
 	const baseY = holderRadius
 	const baseZ = 20.0
-	base := solid.Box(v3.XYZ(baseX, baseY, baseZ), 0).
-		Translate(v3.YZ(-0.5*(baseY+rodHeight), 0.5*(baseZ-WallThickness)))
 
+	// support wall (triangle offset)
+	wall := obj.IsocelesTriangle2D(baseSize, rodHeight).Offset(holderRadius).Extrude(WallThickness)
+	// base
+	base := solid.Box(v3.XYZ(baseX, baseY, baseZ), 0)
 	// holder
 	holder := solid.Cylinder(holderLength, holderRadius, 0)
-	rodHole := solid.Cylinder(holderDepth, rodRadius, 0).
-		Translate(v3.Z(0.5 * (holderLength - holderDepth)))
-	holder = holder.Cut(rodHole).
-		Translate(v3.YZ(rodHeight*0.5, 0.5*(holderLength-WallThickness)))
+	rodHole := solid.Cylinder(holderDepth, rodRadius, 0)
 
-	// cut off the excess base
-	fm := base.Union(wall, holder)
-	fm = fm.CutPlane(v3.Y(-0.5*rodHeight-WallThickness), v3.Y(1))
-
-	return fm
+	return base.Translate(v3.YZ(-0.5*(baseY+rodHeight), 0.5*(baseZ-WallThickness))).Union(
+		wall,
+		holder.Cut(rodHole.Translate(v3.Z(0.5*(holderLength-holderDepth)))).
+			Translate(v3.YZ(rodHeight*0.5, 0.5*(holderLength-WallThickness))),
+	).CutPlane(v3.Y(-0.5*rodHeight-WallThickness), v3.Y(1))
 }
 
 const screwHoleRadius = 3.7 * 0.5
@@ -81,19 +75,15 @@ func vcapKnob() *solid.Solid {
 	const knobRadius = 40.0 * 0.5
 	const knobWidth = 15.0
 	const shaftLength = mountThickness - 1.3
+	const totalLength = knobWidth + shaftLength
 
 	knob := solid.Cylinder(knobWidth, knobRadius, 2.0)
 	knurl := obj.KnurledHead3D(knobRadius, knobWidth*0.67, 3.0)
-	knob = knob.Union(knurl)
+	shaft := solid.Cylinder(totalLength, shaftRadius, 0)
+	hole := vcapShaftHole(totalLength)
 
-	totalLength := knobWidth + shaftLength
-	shaft := solid.Cylinder(totalLength, shaftRadius, 0).
-		Translate(v3.Z(0.5 * shaftLength))
-
-	hole := vcapShaftHole(totalLength).
-		Translate(v3.Z(0.5 * shaftLength))
-
-	return knob.Union(shaft).Cut(hole)
+	return knob.Union(knurl, shaft.Translate(v3.Z(0.5*shaftLength))).
+		Cut(hole.Translate(v3.Z(0.5 * shaftLength)))
 }
 
 func vcapMount() *solid.Solid {

@@ -1,8 +1,8 @@
 // Lantern cookbook step 3: punch decorative slots through the wall.
 //
-// Body, pocket, and slot are bare primitives at the top. The assembly
-// chain at the bottom does all the work: place the pocket on the seated
-// body and Cut, then Cut the polar slot ring out of the result.
+// One Cut on the body, two args: the positioned pocket and a polar ring of
+// slots. Each slot is positioned relative to the body's top — no absolute
+// Z constants, so the body stays centred at origin.
 package main
 
 import (
@@ -21,7 +21,6 @@ const (
 	slotRadius = bodyRadius - wallThick/2 // sit centred in the wall
 	slotWidth  = 7.0
 	slotHeight = 30.0
-	slotZ      = bodyHeight - pocketDepth/2 // mid-pocket
 )
 
 func main() {
@@ -29,7 +28,9 @@ func main() {
 	pocket := solid.Cylinder(pocketDepth, bodyRadius-wallThick, 0)
 	slot := solid.Box(v3.XYZ(slotWidth, slotWidth, slotHeight), 1)
 
-	pocket.Top().On(body.BottomAt(0).Top()).Cut().
-		Cut(slot.TranslateZ(slotZ).Multi(layout.Polar(slotRadius, slotCount)...)).
-		STL("out.stl", 5.0)
+	body.Cut(
+		pocket.Top().On(body.Top()).Solid(),
+		slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+			Multi(layout.Polar(slotRadius, slotCount)...),
+	).STL("out.stl", 5.0)
 }

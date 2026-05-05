@@ -172,11 +172,11 @@ The canonical way to place parts. See [/positioning](/positioning/) for the full
 - Absolute (return `*Solid`): `At(v3.Vec)`, `AtX`, `AtY`, `AtZ`
 - Anchor tweaks (return `AnchoredSolid`): `ShiftX`, `ShiftY`, `ShiftZ`
 
-**`Placement` finalizers** (boolean partner is the target's owner):
+**`Placement` finalizers** — the chain's subject (the moved/active solid) is what's kept, matching the `s.Cut(other)` convention:
 
-- Plain: `.Union()` / `.Add()`, `.Cut()` / `.Difference()`, `.Intersect()`
+- Plain: `.Union()` / `.Add()` (commutative), `.Cut()` / `.Difference()` (subtracts base from moved), `.Intersect()` (commutative)
 - Smooth: `.SmoothUnion(min)` / `.SmoothAdd(min)`, `.SmoothCut(max)` / `.SmoothDifference(max)`, `.SmoothIntersect(max)`
-- Escape: `.Solid()` returns the moved solid alone, no boolean
+- Escape: `.Solid()` returns the moved solid alone, no boolean — useful for drilling: `body.Cut(tool.Top().On(body.Top()).Solid())`
 
 **Sugar verbs on `*Solid`** (relative; return `Placement`):
 
@@ -211,7 +211,10 @@ Pure functions returning `[]v3.Vec` (or `[]v2.Vec`), designed to flow into the v
 | `RectCorners(width, depth)` | `[]v3.Vec` | 4 XY corners centered on origin |
 | `BoxCorners(size)` | `[]v3.Vec` | 8 box corners centered on origin |
 | `Polar2(radius, n)` | `[]v2.Vec` | 2D circle |
+| `PolarArc2(radius, n, startDeg, sweepDeg)` | `[]v2.Vec` | 2D arc |
 | `Grid2(stepX, stepY, nx, ny)` | `[]v2.Vec` | 2D grid |
+| `Line2(p0, p1, n)` | `[]v2.Vec` | 2D evenly spaced from p0 to p1 |
+| `RectCorners2(width, depth)` | `[]v2.Vec` | 2D 4 corners centered on origin |
 
 ---
 
@@ -302,9 +305,31 @@ Type aliases (`Triangle3`, `Triangle2`, `Line2`, `TriangleISet`) plus helpers th
 - `ToTriangles(solid, r)`
 - `CollectTriangles(solid, r)`
 - `CountBoundaryEdges`
+- `IsWatertight`
 - `SaveSTL(path, tris)`
 - `Delaunay2d(vs)`, `Delaunay2dSlow(vs)`
 - `VertexToLine(vs, closed)`
+
+---
+
+## `validate` — Mesh validation & test helpers
+
+Inspect a rendered solid for printability and regression-test signals. See [Testing & validation](/testing-validation/).
+
+| Function | Use |
+|---|---|
+| `Of(s, cellsPerMM) Stats` | render and compute every metric in one pass |
+| `OfMesh(tris) Stats` | same, on a precomputed mesh (no Bounds) |
+| `Volume(tris) float64` | mm³ — signed-tetrahedron sum |
+| `SurfaceArea(tris) float64` | mm² — sum of triangle areas |
+| `IsWatertight(tris) (bool, int)` | `true` and `0` for sealed mesh |
+| `OverhangArea(tris, deg) float64` | mm² of faces overhanging > deg from vertical |
+| `OverhangFaces(tris, deg) []Triangle3` | the offending triangles |
+| `RequireWatertight(t, s, cellsPerMM)` | `*testing.T` helper, fails on holes |
+| `RequireVolumeNear(t, s, cellsPerMM, expectedMM3, relTol)` | regression guard |
+| `RequireMaxOverhang(t, s, cellsPerMM, maxAngleDeg, tinyArea...)` | printability gate |
+
+Stats fields: `Triangles, SurfaceArea, Volume, BoundaryEdges, Watertight, Bounds, OverhangArea` (the last is at the FDM 45° threshold).
 
 ---
 

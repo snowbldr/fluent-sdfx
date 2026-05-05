@@ -55,23 +55,22 @@ func pinLug(w float64) *solid.Solid {
 // pinLugs returns the pin lugs pattern.
 func pinLugs() *solid.Solid {
 	w := lugBaseWidth
+	pinWidth := w - 2.0*lugOffset
+	yofs := 0.5 * (pinWidth - lugThickness)
+
 	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(w, w, lugBaseThickness),
 		BaseAngle:   units.DtoR(90 - lugBaseDraft),
 		BaseRadius:  lugThickness*0.5 + lugOffset,
 		RoundRadius: lugBaseThickness * 0.25,
 	})
-
-	pinWidth := w - 2.0*lugOffset
 	pin := pinLug(pinWidth)
-	yofs := 0.5 * (pinWidth - lugThickness)
-	pin0 := pin.Translate(v3.XYZ(0, yofs, lugBaseThickness))
-	pin1 := pin.Translate(v3.XYZ(0, -yofs, lugBaseThickness))
-
-	s := solid.SmoothUnion(solid.PolyMin(lugBaseThickness*0.75), base, pin0, pin1)
-
 	holes := alignmentHoles()
-	return s.Cut(holes)
+
+	return solid.SmoothUnion(solid.PolyMin(lugBaseThickness*0.75), base,
+		pin.Translate(v3.XYZ(0, yofs, lugBaseThickness)),
+		pin.Translate(v3.XYZ(0, -yofs, lugBaseThickness)),
+	).Cut(holes)
 }
 
 // sandKey returns an internal sand key.
@@ -94,26 +93,26 @@ func oddSide(height float64) *solid.Solid {
 	sy := height*1.1 + 2.0*d
 	sz := d
 
+	// mounting/pull holes
+	h := 3.0 * d
+	yofs := (height*1.1 - cornerThickness) * 0.5
+
+	// hook into internal sand key
+	sx2 := 0.8 * sx
+	sy2 := height * keyRatio * 0.99
+	sz2 := keyDepth
+
 	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
 		Size:        v3.XYZ(sx, sy, sz),
 		BaseAngle:   theta45,
 		BaseRadius:  0.5 * sx,
 		RoundRadius: 0,
 	})
-
-	// mounting/pull holes
-	h := 3.0 * d
-	yofs := (height*1.1 - cornerThickness) * 0.5
 	hole := solid.Cylinder(h, holeRadius, 0)
-	holes := hole.Multi(v3.XYZ(0, yofs, 0), v3.XYZ(0, -yofs, 0))
+	key := sandKey(v3.XYZ(sx2, sy2, sz2))
 
-	// hook into internal sand key
-	sx2 := 0.8 * sx
-	sy2 := height * keyRatio * 0.99
-	sz2 := keyDepth
-	key := sandKey(v3.XYZ(sx2, sy2, sz2)).Translate(v3.XYZ(0.5*sx2, 0, 0))
-
-	return base.Union(key).Cut(holes)
+	return base.Union(key.Translate(v3.XYZ(0.5*sx2, 0, 0))).
+		Cut(hole.Multi(v3.XYZ(0, yofs, 0), v3.XYZ(0, -yofs, 0)))
 }
 
 // sideDraftProfile returns the 2d profile for the side draft of the flask pattern.
@@ -179,21 +178,15 @@ func flaskHalf(width, height float64) *solid.Solid {
 }
 
 func flaskSide(width, height float64) *solid.Solid {
-	side0 := flaskHalf(width, height)
-	side1 := side0.MirrorYZ()
-	flaskBody := side0.Union(side1)
-
 	w := width + 2.0*cornerLength
 
+	side0 := flaskHalf(width, height)
 	key := sandKey(v3.XYZ(w, height*keyRatio, keyDepth)).RotateX(-90)
-
-	sd := sideDraftProfile(height)
-	sideDraft3D := sd.Extrude(w).RotateY(90)
-
+	sideDraft3D := sideDraftProfile(height).Extrude(w).RotateY(90)
 	aHoles := alignmentHoles().RotateX(90)
 	pHoles := pullHoles(width).RotateX(90)
 
-	return flaskBody.Cut(key, sideDraft3D, aHoles, pHoles)
+	return side0.Union(side0.MirrorYZ()).Cut(key, sideDraft3D, aHoles, pHoles)
 }
 
 func main() {

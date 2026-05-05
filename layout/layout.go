@@ -124,3 +124,49 @@ func Grid2(stepX, stepY float64, nx, ny int) []v2.Vec {
 	}
 	return out
 }
+
+// PolarArc2 returns n positions evenly spaced along an arc of sweepDeg degrees
+// beginning at startDeg, on a circle of the given radius. For n == 1 the
+// single point lands at startDeg.
+func PolarArc2(radius float64, n int, startDeg, sweepDeg float64) []v2.Vec {
+	out := make([]v2.Vec, n)
+	if n == 1 {
+		theta := startDeg * math.Pi / 180
+		out[0] = v2.XY(radius*math.Cos(theta), radius*math.Sin(theta))
+		return out
+	}
+	for i := 0; i < n; i++ {
+		deg := startDeg + sweepDeg*float64(i)/float64(n-1)
+		theta := deg * math.Pi / 180
+		out[i] = v2.XY(radius*math.Cos(theta), radius*math.Sin(theta))
+	}
+	return out
+}
+
+// Line2 returns n equally spaced positions from p0 to p1 inclusive.
+// For n == 1 the single point lands at p0.
+func Line2(p0, p1 v2.Vec, n int) []v2.Vec {
+	out := make([]v2.Vec, n)
+	if n == 1 {
+		out[0] = p0
+		return out
+	}
+	d := p1.Sub(p0)
+	for i := 0; i < n; i++ {
+		t := float64(i) / float64(n-1)
+		out[i] = v2.XY(p0.X+d.X*t, p0.Y+d.Y*t)
+	}
+	return out
+}
+
+// RectCorners2 returns the 4 XY corners of a rectangle of the given width
+// (X) and depth (Y), centered on the origin.
+func RectCorners2(width, depth float64) []v2.Vec {
+	hx, hy := width/2, depth/2
+	return []v2.Vec{
+		v2.XY(-hx, -hy),
+		v2.XY(hx, -hy),
+		v2.XY(hx, hy),
+		v2.XY(-hx, hy),
+	}
+}

@@ -31,14 +31,13 @@ func finialFrom(base2d *shape.Shape) *solid.Solid {
 	columnRadius := 15.0
 	columnHeight := 60.0
 	ballRadius := 45.0
-	columnOfs := (columnHeight + baseHeight) / 2
 	ballOfs := (baseHeight / 2) + columnHeight + ballRadius*0.8
 	round := ballRadius / 5
 
 	s1 := shape.Circle(columnRadius)
-	column3d := base2d.LoftTo(s1, columnHeight, 0).Translate(v3.XYZ(0, 0, columnOfs))
-	ball3d := solid.Sphere(ballRadius).Translate(v3.XYZ(0, 0, ballOfs))
 	base3d := base2d.Extrude(baseHeight)
+	column3d := base2d.LoftTo(s1, columnHeight, 0).OnTopOf(base3d.Top()).Solid()
+	ball3d := solid.Sphere(ballRadius).Translate(v3.XYZ(0, 0, ballOfs))
 
 	bc3d := solid.SmoothUnion(solid.PolyMin(round), column3d, ball3d)
 	return bc3d.Union(base3d)

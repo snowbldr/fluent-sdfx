@@ -42,6 +42,7 @@ That's the part you'll build by the end of the [quickstart](/quickstart/): a rou
 - **`obj`** — parametric helpers: bolts, nuts, washers, panels, eurorack, standoffs, pipes, servos, gridfinity, gears.
 - **`vec/{v2,v3,p2}`** — vector types with named constructors so you can skip `Vec{X: ..., Y: ...}` boilerplate.
 - **`render`** — output helpers and lower-level renderer constructors.
+- **`validate`** — mesh validation for `_test.go`: watertight check, volume regression guards, FDM overhang detection. See [Testing & validation](/testing-validation/).
 
 ## Where to next
 

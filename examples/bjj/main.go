@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -42,8 +43,7 @@ func bushing() *solid.Solid {
 
 func plateHoles2D() *shape.Shape {
 	d := 17.0
-	h := shape.Circle(1.2)
-	return h.Multi(v2.XY(d, d), v2.XY(-d, -d), v2.XY(-d, d), v2.XY(d, -d))
+	return shape.Circle(1.2).Multi(layout.RectCorners2(2*d, 2*d)...)
 }
 
 const rod_r = (1.0 / 16.0) * units.MillimetresPerInch * 1.10
@@ -93,14 +93,14 @@ func gears() *solid.Solid {
 		Facets:        involute_facets,
 	}).Extrude(g_height)
 
-	s0 := g0.Translate(v3.XYZ(0, 0, g_height/2.0))
-	s1 := g1.Translate(v3.XYZ(0, 0, -g_height/2.0))
+	s0 := g0.BottomAt(0)
+	s1 := g1.TopAt(0)
 
 	s2 := solid.Cylinder(2.0*g_height, ch_r, 0)
 
 	ph := plateHoles2D()
 	screw_depth := 10.0
-	s3 := ph.Extrude(screw_depth).Translate(v3.XYZ(0, 0, screw_depth/2.0-g_height))
+	s3 := ph.Extrude(screw_depth).TopAt(0)
 
 	return s0.Union(s1).Cut(s2, s3)
 }

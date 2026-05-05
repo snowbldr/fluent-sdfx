@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -76,7 +77,7 @@ func servoMountHoles(h float64) *solid.Solid {
 		Translate(v3.X((servoMountBaseLength + servoMountThickness) * 0.5))
 	dx := (servoMountBaseLength * 0.5) - servoMountThickness - 4.0
 	dy := (servoMountWidth * 0.5) - servoMountThickness - 6.0
-	return hole.Multi(v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0))
+	return hole.Multi(layout.RectCorners(2*dx, 2*dy)...)
 }
 
 func servoMount() *solid.Solid {

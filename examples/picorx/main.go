@@ -165,28 +165,26 @@ func picoRxBezel(thickness float64) *solid.Solid {
 	})
 
 	pb := solid.Box(v3.XYZ(13.2, 10.8, thickness), 0)
-	xOfs := 22.0
-	pb0 := pb.Translate(v3.XYZ(xOfs, 0, 0))
-	pb1 := pb.Translate(v3.XYZ(-xOfs, 0, 0))
-
-	d1n := display1(thickness, true)
-	d1p := display1(thickness, false)
-	yOfs := 13.0
-	xOfs = 47.0
-	d1n = d1n.Translate(v3.XYZ(xOfs, yOfs, 0))
-	d1p = d1p.Translate(v3.XYZ(xOfs, yOfs, 0))
-
-	yOfs = -17.0
-	input := re.Union(pb0, pb1).Translate(v3.XYZ(xOfs, yOfs, 0))
-
 	d0n := display0(thickness, true)
 	d0p := display0(thickness, false)
-	yOfs = 0.0
-	xOfs = -35.0
-	d0n = d0n.Translate(v3.XYZ(xOfs, yOfs, 0))
-	d0p = d0p.Translate(v3.XYZ(xOfs, yOfs, 0))
+	d1n := display1(thickness, true)
+	d1p := display1(thickness, false)
 
-	return panel.Union(d0p, d1p).Cut(input, d0n, d1n)
+	const pbXOfs = 22.0
+	// rotary encoder + push buttons
+	input := re.Union(
+		pb.Translate(v3.XYZ(pbXOfs, 0, 0)),
+		pb.Translate(v3.XYZ(-pbXOfs, 0, 0)),
+	).Translate(v3.XYZ(47.0, -17.0, 0))
+
+	return panel.Union(
+		d0p.Translate(v3.XYZ(-35.0, 0, 0)),
+		d1p.Translate(v3.XYZ(47.0, 13.0, 0)),
+	).Cut(
+		input,
+		d0n.Translate(v3.XYZ(-35.0, 0, 0)),
+		d1n.Translate(v3.XYZ(47.0, 13.0, 0)),
+	)
 }
 
 func twoHoles(thickness, diameter, distance float64) *solid.Solid {

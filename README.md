@@ -37,6 +37,10 @@ func main() {
 
 The [quickstart](https://snowbldr.github.io/fluent-sdfx/quickstart/) walks through this exact part in five incremental steps.
 
+## The recipe pattern
+
+For multi-part assemblies, fluent-sdfx is meant to be written as **ingredients at the top, method at the bottom** — bare primitives in named variables, then one fluent expression that positions and combines them via anchors and `layout` helpers. No `pos1 := ...; result := pos1.Foo()` ladder. The [lantern cookbook](https://snowbldr.github.io/fluent-sdfx/cookbook-lantern/) is the canonical worked example, and the [positioning page](https://snowbldr.github.io/fluent-sdfx/positioning/#the-recipe-pattern) explains why.
+
 ## What's in the docs
 
 - [**Install**](https://snowbldr.github.io/fluent-sdfx/install/) — Go, fluent-sdfx, f3d.
@@ -44,7 +48,7 @@ The [quickstart](https://snowbldr.github.io/fluent-sdfx/quickstart/) walks throu
 - [**Dev loop with stldev**](https://snowbldr.github.io/fluent-sdfx/dev-loop/) — watch-rebuild-preview iteration cycle.
 - [**Quickstart**](https://snowbldr.github.io/fluent-sdfx/quickstart/) — five steps to a non-trivial part.
 - **Foundations** — vectors, 2D shapes, 3D solids, booleans, transforms, [positioning](https://snowbldr.github.io/fluent-sdfx/positioning/).
-- **Operations** — extrude/revolve/loft/sweep, smooth blends, modifiers, patterns, cross-sections, text, output resolution, parametric helpers.
+- **Operations** — extrude/revolve/loft/sweep, smooth blends, modifiers, patterns, cross-sections, text, output resolution, parametric helpers, [testing & validation](https://snowbldr.github.io/fluent-sdfx/testing-validation/).
 - **Cookbook** — bolt assembly, enclosure, gear.
 - [**API reference**](https://snowbldr.github.io/fluent-sdfx/api-reference/) — every type and method, package by package.
 
@@ -58,6 +62,7 @@ fluent-sdfx/
 ├── obj/        Parametric helpers (bolts, panels, gears, …)
 ├── render/     Output formats (STL, 3MF, DXF, SVG, PNG)
 ├── mesh/       Triangle-mesh utilities
+├── validate/   Mesh validation: watertight, volume, overhang, *testing.T helpers
 ├── plane/      Plane helpers for cross-sections
 ├── units/      Constants and unit conversions
 ├── vec/        Vector types (v2, v3, v2i, v3i, p2)

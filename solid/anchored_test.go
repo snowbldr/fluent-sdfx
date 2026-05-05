@@ -64,12 +64,14 @@ func TestBottomAtPreservesXY(t *testing.T) {
 	}
 }
 
-func TestPlacementCutEqualsManualCut(t *testing.T) {
+func TestPlacementCutKeepsSubject(t *testing.T) {
+	// Placement.Cut preserves the subject of the chain (the active solid)
+	// and subtracts the base — same convention as s.Cut(other).
 	body := Box(v3.XYZ(20, 20, 20), 0)
 	drill := Cylinder(30, 2, 0)
 
 	auto := drill.OnTopOf(body.Top()).Cut()
-	manual := body.Cut(drill.Bottom().On(body.Top()).Solid())
+	manual := drill.OnTopOf(body.Top()).Solid().Cut(body)
 
 	a := auto.Bounds()
 	m := manual.Bounds()

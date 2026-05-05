@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/snowbldr/fluent-sdfx/solid"
-	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 const wallThickness = 2.0
@@ -19,9 +18,9 @@ func tubeCap() *solid.Solid {
 
 	ih := innerHeight
 	ir := innerDiameter * 0.5
-	inner := solid.Cylinder(ih, ir, 1.0).Translate(v3.Z(wallThickness * 0.5))
+	inner := solid.Cylinder(ih, ir, 1.0)
 
-	return outer.Cut(inner)
+	return outer.Top().On(inner.Top()).Cut()
 }
 
 func main() {

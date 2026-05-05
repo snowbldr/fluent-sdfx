@@ -33,25 +33,29 @@ func (p Placement) SmoothUnion(min MinFunc) *Solid { return p.Base.SmoothUnion(m
 // SmoothAdd alias for SmoothUnion
 func (p Placement) SmoothAdd(min MinFunc) *Solid { return p.SmoothUnion(min) }
 
-// Difference subtracts the moved solid from the base.
-func (p Placement) Difference() *Solid { return p.Base.Difference(p.Moved) }
+// Difference subtracts the base from the moved (active) solid and returns
+// the moved. Mirrors s.Cut(other): the subject of the chain is what's kept.
+func (p Placement) Difference() *Solid { return p.Moved.Difference(p.Base) }
 
-// Cut alias for Difference
+// Cut alias for Difference.
 func (p Placement) Cut() *Solid { return p.Difference() }
 
-// SmoothDifference smoothly subtracts the moved solid from the base.
-func (p Placement) SmoothDifference(max MaxFunc) *Solid { return p.Base.SmoothDifference(max, p.Moved) }
+// SmoothDifference smoothly subtracts the base from the moved solid and
+// returns the moved.
+func (p Placement) SmoothDifference(max MaxFunc) *Solid {
+	return p.Moved.SmoothDifference(max, p.Base)
+}
 
-// SmoothCut alias for SmoothDifference
+// SmoothCut alias for SmoothDifference.
 func (p Placement) SmoothCut(max MaxFunc) *Solid { return p.SmoothDifference(max) }
 
-// SmoothIntersect smoothly intersects the moved solid with the base
+// SmoothIntersect smoothly intersects the base with the moved solid (commutative).
 func (p Placement) SmoothIntersect(max MaxFunc) *Solid { return p.Base.SmoothIntersect(max, p.Moved) }
 
-// Intersect intersects the base with the moved solid.
+// Intersect intersects the base with the moved solid (commutative).
 func (p Placement) Intersect() *Solid { return p.Base.Intersect(p.Moved) }
 
-// Solid returns the moved solid alone, discarding the boolean partner.
+// Solid returns the moved (active) solid alone, discarding the boolean partner.
 func (p Placement) Solid() *Solid { return p.Moved }
 
 // --- Anchor selectors on Solid (the full 27) ---

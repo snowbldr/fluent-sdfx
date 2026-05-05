@@ -132,19 +132,19 @@ func panelCutouts() *shape.Shape {
 func frontPanel() *solid.Solid {
 	xOfs := 0.5 * pcbLength
 	yOfs := (0.5 * frontPanelHeight) - frontPanelYOffset
+	bHeight := 4.0
+
 	panel2d := obj.Panel2D(obj.PanelParms{
 		Size:         v2.XY(frontPanelLength, frontPanelHeight),
 		CornerRadius: 5.0,
 		HoleDiameter: 3.5,
 		HoleMargin:   [4]float64{5.0, 5.0, 5.0, 5.0},
 		HolePattern:  [4]string{"xx", "x", "xx", "x"},
-	}).Translate(v2.XY(xOfs, yOfs))
-
+	})
 	// Add buttons to the finger button
-	bHeight := 4.0
 	b := solid.Cylinder(bHeight, 1.4, 0)
 
-	return panel2d.Cut(panelCutouts()).Extrude(frontPanelThickness).Union(
+	return panel2d.Translate(v2.XY(xOfs, yOfs)).Cut(panelCutouts()).Extrude(frontPanelThickness).Union(
 		b.Translate(pb0.ToV3(-0.5*bHeight)),
 		b.Translate(pb1.ToV3(-0.5*bHeight)),
 	)

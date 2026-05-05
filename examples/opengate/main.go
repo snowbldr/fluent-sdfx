@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
-	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 // material shrinkage
@@ -28,13 +28,9 @@ func standoffs() *solid.Solid {
 		HoleDiameter:   2.4, // #4 screw
 	})
 
-	positions0 := []v3.Vec{v3.Zero, v3.X(pcbX), v3.XY(pcbX, pcbY), v3.Y(pcbY)}
-
-	xOfs := -0.5 * pcbX
-	yOfs := -0.5 * pcbY
 	zOfs := 0.5 * (pillarHeight + baseThickness)
 
-	return s.Multi(positions0...).Translate(v3.XYZ(xOfs, yOfs, zOfs))
+	return s.Multi(layout.RectCorners(pcbX, pcbY)...).TranslateZ(zOfs)
 }
 
 func mainBoard() *solid.Solid {

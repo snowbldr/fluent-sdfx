@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -86,19 +87,6 @@ func powerBoardMount() *solid.Solid {
 	const ySpace = 1.1 * units.MillimetresPerInch
 
 	s0 := standoff(standoffHeight)
-	// 4x2 sections
-	const zOfs = (baseThickness + standoffHeight) * 0.5
-	positions := []v3.Vec{
-		v3.XYZ(-1.5*xSpace, -0.5*ySpace, zOfs),
-		v3.XYZ(-1.5*xSpace, 0.5*ySpace, zOfs),
-		v3.XYZ(-0.5*xSpace, -0.5*ySpace, zOfs),
-		v3.XYZ(-0.5*xSpace, 0.5*ySpace, zOfs),
-		v3.XYZ(0.5*xSpace, -0.5*ySpace, zOfs),
-		v3.XYZ(0.5*xSpace, 0.5*ySpace, zOfs),
-		v3.XYZ(1.5*xSpace, -0.5*ySpace, zOfs),
-		v3.XYZ(1.5*xSpace, 0.5*ySpace, zOfs),
-	}
-	s1 := s0.Multi(positions...)
 
 	// base
 	const baseX = (4 - 0.1) * xSpace
@@ -115,6 +103,8 @@ func powerBoardMount() *solid.Solid {
 	c0 := shape.Rect(v2.XY(3*xSpace, 0.5*ySpace), 3.0)
 	s3 := s2.Cut(c0).Extrude(baseThickness)
 
+	s1 := s0.Multi(layout.Grid(xSpace, ySpace, 4, 2)...).OnTopOf(s3.Top()).Solid()
+
 	return solid.SmoothUnion(solid.PolyMin(3.0), s3, s1)
 }
 
@@ -123,13 +113,11 @@ var psuSize = v3.XYZ(98, 129, 38)
 // rt65b returns a model of a Meanwell RT-65B PSU
 func rt65b() *solid.Solid {
 	body := solid.Box(psuSize, 0).Translate(psuSize.MulScalar(0.5))
-
 	s0 := obj.CounterBoredHole3D(12, 3.8*0.5, 10.6*0.5, 3.5)
 
 	// vertical screws
 	vs0 := s0.RotateY(180).Translate(v3.XYZ(31, 4.5+73.5, 0))
 	vs1 := vs0.Translate(v3.XYZ(33, 0, 0))
-
 	// horizontal screws
 	hs0 := s0.RotateY(90).Translate(v3.XYZ(psuSize.X, 32, 38-18.5))
 	hs1 := hs0.Translate(v3.XYZ(0, 77, 9))
@@ -223,6 +211,8 @@ func powerPanelRouting() *solid.Solid {
 
 // arPanel returns the panel for an attack/release module.
 func arPanel() *solid.Solid {
+	const standoffHeight = 25
+
 	// 3u x 12hp panel
 	panel := obj.EuroRackPanel3D(obj.EuroRackParms{
 		U:            3,
@@ -232,33 +222,22 @@ func arPanel() *solid.Solid {
 		Thickness:    panelThickness,
 		Ridge:        true,
 	})
-
 	// breadboard standoffs
-	const standoffHeight = 25
-	so := halfBreadBoardStandoffs(standoffHeight).
-		Translate(v3.XYZ(0, 3, (panelThickness+standoffHeight)*0.5))
-	s := solid.SmoothUnion(solid.PolyMin(2), panel, so)
-
+	so := halfBreadBoardStandoffs(standoffHeight)
 	// push button
 	pb := solid.Box(v3.XYZ(13.2, 10.8, panelThickness), 0)
-
-	// cv input/output
-	cv := jack35()
-	cv0 := cv.Translate(v3.XYZ(-20, -45, 0))
-	cv1 := cv.Translate(v3.XYZ(20, -45, 0))
-
+	// cv input/output (mirrored pair around y = -45)
+	cvs := jack35().Multi(v3.XYZ(-20, -45, 0), v3.XYZ(20, -45, 0))
 	// LED
-	ledS := led().Translate(v3.XYZ(0, -45, 0))
-
-	// attack/release pots
-	pot := pot0()
-	pot0s := pot.Translate(v3.XYZ(-15, 25, 0))
-	pot1s := pot.Translate(v3.XYZ(15, 25, 0))
-
+	ledS := led()
+	// attack/release pots (mirrored pair around y = 25)
+	pots := pot0().Multi(v3.XYZ(-15, 25, 0), v3.XYZ(15, 25, 0))
 	// spdt switch
-	spdtS := spdt().Translate(v3.XYZ(0, -22, 0))
+	spdtS := spdt()
 
-	return s.Cut(pb, cv0, cv1, ledS, pot0s, pot1s, spdtS)
+	return solid.SmoothUnion(solid.PolyMin(2), panel,
+		so.Translate(v3.XYZ(0, 3, (panelThickness+standoffHeight)*0.5))).
+		Cut(pb, cvs, ledS.Translate(v3.XYZ(0, -45, 0)), pots, spdtS.Translate(v3.XYZ(0, -22, 0)))
 }
 
 // bbPanel returns a panel for mounting a half bread board.

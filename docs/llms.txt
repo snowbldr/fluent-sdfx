@@ -133,12 +133,15 @@ s.TopFrontRight() s.BottomBackLeft() ...                               // 8 corn
 s.AnchorAt(x, y, z int)                                                // arbitrary; each in {-1,0,+1}
 
 // Relative placement (anchor → anchor) — returns Placement
-cap.Bottom().On(body.Top()).Union()         // stack flush, then union
-hole.Bottom().Above(body.Top(), 2).Cut()    // 2mm gap, then subtract
-pocket.Top().On(body.Top()).Cut()           // align tops, then subtract
-cap.OnTopOf(lantern.Top()).Union()          // sugar: cap above lantern's top, then union
-m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
+cap.Bottom().On(body.Top()).Union()         // stack flush, then union (commutative)
 boss.OnTopOf(plate.Top()).SmoothUnion(solid.RoundMin(2)) // smooth fillet at the seam
+m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
+
+// Drilling/cutting: the chain's subject is what's kept (matches s.Cut(other)).
+// To drill into a body, START the chain from the body and pass the
+// positioned tool as a Cut argument:
+body.Cut(pocket.Top().On(body.Top()).Solid())  // body kept, pocket carved from top
+body.Cut(hole.Bottom().Above(body.Top(), 2).Solid())  // 2mm gap, then drill
 
 // Sugar on *Solid (same chains, fewer anchors)
 s.OnTopOf(t.Top())          // == s.Bottom().Above(t.Top())
@@ -160,14 +163,14 @@ s.CenterAt(v3.XYZ(0, 0, 25))
 // ShiftX/Y/Z move the anchor point without moving the solid yet
 s.OnTopOf(plate.Top().ShiftY(-4))            // stack on top, but 4mm forward of center
 
-// Placement finalizers — boolean partner is the target's owner
-.Union()  .Add()                                  // unions the moved into the base
-.Cut()    .Difference()                           // subtracts the moved from the base
-.Intersect()                                      // intersect base with moved
+// Placement finalizers — chain's subject (the moved/active solid) is what's kept
+.Union()  .Add()                                  // union — commutative, order doesn't matter
+.Cut()    .Difference()                           // subtracts the base from the moved (subject kept)
+.Intersect()                                      // intersect base with moved (commutative)
 .SmoothUnion(min)  .SmoothAdd(min)                // smooth-blended union with a MinFunc
 .SmoothCut(max)    .SmoothDifference(max)         // smooth-blended cut with a MaxFunc
 .SmoothIntersect(max)                             // smooth-blended intersect with a MaxFunc
-.Solid()                                          // escape — moved part alone, no boolean
+.Solid()                                          // escape — the moved part alone, no boolean
 
 // 2D mirror (Shape) — same names, halved anchor set
 s.Top() s.Bottom() s.Right() s.Left()
@@ -184,7 +187,7 @@ hole.Multi(layout.Grid(10, 10, 4, 4)...)     // nx*ny grid centered on origin
 post.Multi(layout.RectCorners(80, 50)...)    // 4 panel corners
 peg.Multi(layout.BoxCorners(v3.XYZ(20, 10, 5))...) // 8 box corners
 post.Multi(layout.Line(v3.X(0), v3.X(60), 4)...)   // n equally spaced
-// 2D variants: layout.Polar2, layout.Grid2
+// 2D variants: layout.Polar2, layout.PolarArc2, layout.Grid2, layout.Line2, layout.RectCorners2
 ```
 
 ### Reach-for guide
@@ -194,6 +197,31 @@ post.Multi(layout.Line(v3.X(0), v3.X(60), 4)...)   // n equally spaced
 - `anchor.On(target)` / sugar verbs (`OnTopOf`, ...) — relative to another part.
 - `BottomAt(z)` / `LeftAt(x)` / ... — flush a face against an axis plane.
 - `layout.X` + `.Multi(...)` — repeated copies in a regular pattern.
+
+### The recipe pattern (preferred style for assemblies)
+
+For multi-part assemblies, structure code as **ingredients at the top, method
+at the bottom**. Top: bare primitives (`solid.Cylinder(...)`, `obj.Bolt(...)`)
+assigned to named variables — no transforms, no booleans. Bottom: a single
+fluent expression that positions and combines them via anchor verbs and
+layout helpers. No throwaway `pos1 := ...; result := pos1.Foo()` ladder.
+
+```go
+body := solid.Cylinder(50, 25, 4)
+pocket := solid.Cylinder(40, 20, 0)
+foot := solid.Cylinder(4, 4, 0.8)
+cap := solid.Cylinder(4, 25, 1.5)
+
+cap.OnTopOf(
+    body.Cut(pocket.Top().On(body.Top()).Solid()).
+        OnTopOf(foot.Multi(layout.Polar(18, 4)...).Top()).Union().Top(),
+).Union().STL("out.stl", 5.0)
+```
+
+Reach for it whenever you have several parts to assemble. Don't force it on
+single-primitive parts or procedural geometry — there's nothing to assemble.
+The lantern cookbook (`tutorial/21-cookbook-lantern/`) is the canonical
+worked example.
 
 ## Modifiers cheat-sheet
 
@@ -256,6 +284,44 @@ shape.ToPNG(path, w, h)              // 2D PNG (renders the SDF as a heatmap, no
 | Final 10mm gear | `15`–`20` |
 
 Tiny parts hit `solid.MinCells` (default 32) so a 1mm sphere at low density still produces a usable mesh.
+
+## Testing & validation (`validate` package)
+
+Inspects a rendered solid's mesh for printability and regression-test signals.
+Use in `_test.go` files to guard real geometric properties.
+
+```go
+import "github.com/snowbldr/fluent-sdfx/validate"
+
+func TestBracketPrintable(t *testing.T) {
+    s := buildBracket()
+    validate.RequireWatertight(t, s, 5.0)              // sealed mesh, no holes
+    validate.RequireMaxOverhang(t, s, 5.0, 45.0)       // FDM rule of thumb
+    validate.RequireVolumeNear(t, s, 5.0, 12500, 0.02) // ±2% of expected
+}
+
+// Or read all stats at once:
+st := validate.Of(part, 5.0)
+// st.Triangles, st.SurfaceArea, st.Volume, st.BoundaryEdges,
+// st.Watertight, st.Bounds, st.OverhangArea
+```
+
+What each check catches:
+- **Watertight** — non-zero boundary edges = holes in mesh = SDF discontinuity
+  or Lipschitz violation. Slicer behaves unpredictably without this.
+- **Volume drift** — pin a finalized part's volume; future bug that flips a
+  sign, swaps Cut/Union, or loses a boolean argument trips the test.
+- **Overhang area** — mm² of faces overhanging > maxAngleDeg from vertical
+  in default Z-up print orientation. Catches "needs supports" before you
+  open the slicer. Pass an optional 4th arg `tinyArea` (mm²) to ignore
+  marching-cubes numerical noise.
+
+Triangle-level helpers: `Volume(tris)`, `SurfaceArea(tris)`,
+`OverhangArea(tris, deg)`, `OverhangFaces(tris, deg)`, `IsWatertight(tris)`
+— take a precomputed mesh if you've rendered already (`mesh.CollectTriangles`).
+
+Best practice: validation tests are like preview renders — pick a density
+that catches bugs without burning seconds (`5.0`–`8.0` is usually enough).
 
 ## Parametric helpers (`obj` package)
 
@@ -351,6 +417,7 @@ func main() {
 - [/text-2d-output](/text-2d-output/) — Text rendering, DXF/SVG/PNG.
 - [/obj-overview](/obj-overview/) — tour of the parametric helpers.
 - [/output-resolution](/output-resolution/) — cellsPerMM, decimation, 3MF.
+- [/testing-validation](/testing-validation/) — `validate` package: watertight, volume, overhang area, Require* helpers for `_test.go`.
 - [/cookbook-bolt](/cookbook-bolt/) — bolt + nut + washer assembly.
 - [/cookbook-enclosure](/cookbook-enclosure/) — printable enclosure.
 - [/cookbook-gear](/cookbook-gear/) — gear with hub, shaft bore, set-screw.

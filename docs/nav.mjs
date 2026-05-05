@@ -36,7 +36,8 @@ export const sections = [
       { slug: 'cross-sections', title: 'Cross-sections' },
       { slug: 'text-2d-output', title: 'Text & 2D output' },
       { slug: 'obj-overview', title: 'Parametric helpers' },
-      { slug: 'output-resolution', title: 'Output & resolution' }
+      { slug: 'output-resolution', title: 'Output & resolution' },
+      { slug: 'testing-validation', title: 'Testing & validation' }
     ]
   },
   {

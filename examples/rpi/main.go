@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -59,23 +60,15 @@ func sideProfile(t float64) *shape.Shape {
 }
 
 func webs() *solid.Solid {
-	s2d := sideProfile(webSize)
 	l := webLength
-	s := s2d.Extrude(l)
 	ofs := 0.5 * (baseLength - l)
-	s0 := s.Translate(v3.XYZ(0, 0, ofs))
-	s1 := s.Translate(v3.XYZ(0, 0, -ofs))
-	return s0.Union(s1)
+	return sideProfile(webSize).Extrude(l).Multi(v3.Z(ofs), v3.Z(-ofs))
 }
 
 func supports() *solid.Solid {
-	s2d := sideProfile(0)
 	l := supportLength + webLength
-	s := s2d.Extrude(l)
 	ofs := 0.5 * (baseLength - l)
-	s0 := s.Translate(v3.XYZ(0, 0, ofs))
-	s1 := s.Translate(v3.XYZ(0, 0, -ofs))
-	return s0.Union(s1)
+	return sideProfile(0).Extrude(l).Multi(v3.Z(ofs), v3.Z(-ofs))
 }
 
 func baseProfile() *shape.Shape {
@@ -106,23 +99,15 @@ func baseHole() *solid.Solid {
 }
 
 func baseHoles() *solid.Solid {
-	s := baseHole()
-
-	dx := 0.5 * baseHolePosn.X * baseWidth
-	dy := 0.5 * baseHolePosn.Y * baseLength
-
-	holes := s.Multi(v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0))
+	w := baseHolePosn.X * baseWidth
+	l := baseHolePosn.Y * baseLength
+	holes := baseHole().Multi(layout.RectCorners(w, l)...)
 	return holes.RotateX(-90).Translate(v3.XYZ(0.5*baseWidth, 0, 0))
 }
 
 func displayHoles() *solid.Solid {
 	s := solid.Cylinder(2*supportThickness, displayHoleRadius, 0)
-
-	dx := 0.5 * displayW
-	dy := 0.5 * displayH
-
-	holes := s.Multi(v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0))
-	holes = holes.RotateY(90).RotateZ(15)
+	holes := s.Multi(layout.RectCorners(displayW, displayH)...).RotateY(90).RotateZ(15)
 
 	yOfs := displayPosn * supportHeight
 	xOfs := (1-supportPosn)*baseWidth - (baseHeight * tanTheta) - (yOfs * tanTheta)

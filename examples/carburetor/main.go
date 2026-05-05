@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	"github.com/snowbldr/fluent-sdfx/units"
@@ -43,10 +44,7 @@ func blockOffPlate() *solid.Solid {
 	plate := shape.Rect(v2.XY(plateX, plateY), 1.0*plateZ)
 	hole := shape.Circle(holeClearance * holeRadius)
 
-	posn := []v2.Vec{
-		v2.XY(dX, dY0), v2.XY(-dX, -dY0), v2.XY(dX, -dY0), v2.XY(-dX, dY0),
-		v2.XY(dX, dY1), v2.XY(-dX, -dY1), v2.XY(dX, -dY1), v2.XY(-dX, dY1),
-	}
+	posn := append(layout.RectCorners2(2*dX, 2*dY0), layout.RectCorners2(2*dX, 2*dY1)...)
 	holes := hole.Multi(posn...)
 
 	return plate.Cut(holes).Extrude(plateZ)

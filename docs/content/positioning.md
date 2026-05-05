@@ -27,7 +27,7 @@ Three concepts:
 
 1. **Anchors** — `s.Top()`, `s.BottomFrontRight()`, `s.AnchorAt(x,y,z)` — return an `AnchoredSolid` (the solid + the anchor point in world space).
 2. **Placement verbs** on `AnchoredSolid` — `On`, `Above`, `Below`, `RightOf`, `LeftOf`, `Behind`, `InFrontOf`, `At`, `AtX`, `AtY`, `AtZ`, `ShiftX/Y/Z` — move the solid so its anchor lands on a target. Relative verbs return a `Placement`; absolute verbs return a `*Solid`.
-3. **`Placement` finalizers** — `.Union()`, `.Cut()`, `.Intersect()`, `.Solid()` — finish the chain. `.Solid()` is the escape hatch when you want the moved part on its own.
+3. **`Placement` finalizers** — `.Union()`, `.Cut()`, `.Intersect()`, `.Solid()` — finish the chain. The chain's subject (the active solid) is what's kept, matching the `s.Cut(other)` convention. `.Solid()` is the escape hatch when you want the moved part on its own — useful for drilling: `body.Cut(tool.Top().On(body.Top()).Solid())` keeps the body and carves the tool from it.
 
 ## Anchors
 
@@ -379,7 +379,7 @@ Everything above mirrors to `*Shape` with the 2D anchor set: `Top`, `Bottom`, `L
 
 ```go
 label.OnTopOf(panel.Top()).Union()
-hole.Inside(plate).Cut()
+plate.Cut(hole.Inside(plate).Solid())
 ```
 
 ## When to reach for what
@@ -389,3 +389,42 @@ hole.Inside(plate).Cut()
 - **`anchor.On(target)` / sugar verbs** — anything relative to another part.
 - **`BottomAt(z)` / `LeftAt(x)` etc.** — flush a specific face against an axis plane.
 - **`layout.X` + `.Multi`** — repeated copies in a regular pattern.
+
+## The recipe pattern
+
+The positioning API is meant to be used in a particular shape — what the docs call the **recipe pattern**:
+
+1. **Ingredients** at the top — every part is a bare primitive constructor assigned to a named variable. No transforms, no booleans, no positioning. Just `solid.Cylinder(...)`, `solid.Box(...)`, `obj.Bolt(...)`.
+2. **Method** at the bottom — one fluent expression that positions and combines the parts using anchors, layout helpers, and Cut/Union finalizers. No intermediate `pos1 := ...` / `pos2 := ...` / `result := ...` ladder.
+
+The lantern cookbook is the canonical example:
+
+```go
+body := solid.Cylinder(bodyHeight, bodyRadius, 4)
+pocket := solid.Cylinder(pocketDepth, bodyRadius-wallThick, 0)
+slot := solid.Box(v3.XYZ(slotWidth, slotWidth, slotHeight), 1)
+foot := solid.Cylinder(footHeight, footRadius, 0.8)
+cap := solid.Cylinder(capHeight, bodyRadius, 1.5)
+finial := solid.Sphere(finialRadius)
+
+finial.Bottom().On(
+    cap.OnTopOf(
+        body.Cut(
+            pocket.Top().On(body.Top()).Solid(),
+            slot.Top().Below(body.Top(), (pocketDepth-slotHeight)/2).Solid().
+                Multi(layout.Polar(slotRadius, slotCount)...),
+        ).OnTopOf(foot.Multi(layout.Polar(footRing, 4)...).Top()).Union().Top(),
+    ).Union().Top(),
+).Union().STL("out.stl", 5.0)
+```
+
+Why structure code this way:
+
+- The **ingredients block reads like a parts list**. A reader scanning the file sees what the assembly is made of without having to follow positioning logic.
+- The **method block reads like an assembly story**. Anchor verbs (`OnTopOf`, `On(body.Top())`) describe relationships between parts in plain English — no Z arithmetic, no `Bounds().Max.Z` lookups.
+- **No throwaway intermediates.** When every step is `result1 := ...; result2 := result1.Foo(); result3 := result2.Bar()`, the reader has to mentally substitute names back. A single chain skips that.
+- **Edits stay local.** Resizing a part means changing one constructor at the top. Reordering the assembly means moving one line in the chain. The two concerns don't mix.
+
+The pattern leans on three pieces of API — anchors (`Top`, `Bottom`, …), placement verbs (`On`, `OnTopOf`, …), and `layout` helpers (`Polar`, `Grid`, `RectCorners`, …) — each of which has the property that it takes parts as input and returns something composable. You don't need to introduce a variable to hold the intermediate result.
+
+Reach for it whenever you're building a multi-part assembly. Single-primitive parts, parametric helpers, and procedural geometry don't benefit — there's nothing to assemble.

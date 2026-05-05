@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 
+	"github.com/snowbldr/fluent-sdfx/layout"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
 	"github.com/snowbldr/fluent-sdfx/units"
@@ -131,8 +132,7 @@ func core_box() *solid.Solid {
 	dy := w * 0.37
 	dx := h * 0.4
 	hole_radius := ((3.0 / 16.0) * units.MillimetresPerInch) / 2.0
-	positions := []v3.Vec{v3.XYZ(dx, dy, 0), v3.XYZ(-dx, dy, 0), v3.XYZ(dx, -dy, 0), v3.XYZ(-dx, -dy, 0)}
-	holes := solid.Cylinder(d, hole_radius, 0).Multi(positions...)
+	holes := solid.Cylinder(d, hole_radius, 0).Multi(layout.RectCorners(2*dx, 2*dy)...)
 
 	box = box.Cut(holes)
 
