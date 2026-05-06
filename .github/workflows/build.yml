@@ -7,6 +7,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  # Needed by codecov-action v5's OIDC tokenless upload path. Without this
+  # permission the upload fails with "Token required - not valid tokenless
+  # upload" on the v5 action against a public repo.
+  id-token: write
+
 jobs:
   build-and-test:
     name: build, vet, test, examples
@@ -35,4 +42,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.out
+          use_oidc: true
           fail_ci_if_error: false
