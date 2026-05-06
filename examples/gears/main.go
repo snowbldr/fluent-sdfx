@@ -4,22 +4,21 @@ import (
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/shape"
 	"github.com/snowbldr/fluent-sdfx/solid"
-	"github.com/snowbldr/fluent-sdfx/units"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 var module = (5.0 / 8.0) / 20.0
-var pa = units.DtoR(20.0)
+var paDeg = 20.0
 var h = 0.15
 var numberTeeth = 20
 
 func gear() *solid.Solid {
 	return obj.InvoluteGear(obj.InvoluteGearParms{
-		NumberTeeth:   numberTeeth,
-		Module:        module,
-		PressureAngle: pa,
-		RingWidth:     0.05,
-		Facets:        7,
+		NumberTeeth:      numberTeeth,
+		Module:           module,
+		PressureAngleDeg: paDeg,
+		RingWidth:        0.05,
+		Facets:            7,
 	}).Extrude(h)
 }
 

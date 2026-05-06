@@ -29,7 +29,15 @@ func PolyMin(k float64) MinFunc { return sdf.PolyMin(k) }
 func PolyMax(k float64) MaxFunc { return sdf.PolyMax(k) }
 
 // SmoothUnion returns a union of solids blended with the given MinFunc.
+// Panics if called with zero solids; with a single solid, returns it
+// unchanged (a smooth-min has no seam to blend without a partner).
 func SmoothUnion(min MinFunc, solids ...*Solid) *Solid {
+	if len(solids) == 0 {
+		panic("solid.SmoothUnion: at least one solid required")
+	}
+	if len(solids) == 1 {
+		return solids[0]
+	}
 	sdf3s := make([]sdf.SDF3, len(solids))
 	for i, s := range solids {
 		sdf3s[i] = s.SDF3
@@ -39,8 +47,12 @@ func SmoothUnion(min MinFunc, solids ...*Solid) *Solid {
 	return &Solid{u}
 }
 
-// SmoothDifference subtracts the union of tools from s, blended with the given MaxFunc.
+// SmoothDifference subtracts the union of tools from s, blended with the
+// given MaxFunc. With no tools, returns s unchanged.
 func SmoothDifference(max MaxFunc, s *Solid, tools ...*Solid) *Solid {
+	if len(tools) == 0 {
+		return s
+	}
 	sdf3s := make([]sdf.SDF3, len(tools))
 	for i, t := range tools {
 		sdf3s[i] = t.SDF3
@@ -60,8 +72,12 @@ func SmoothAdd(min MinFunc, solids ...*Solid) *Solid {
 	return SmoothUnion(min, solids...)
 }
 
-// SmoothIntersection intersects s with the union of others, blended with the given MaxFunc.
+// SmoothIntersection intersects s with the union of others, blended with
+// the given MaxFunc. With no others, returns s unchanged.
 func SmoothIntersection(max MaxFunc, s *Solid, others ...*Solid) *Solid {
+	if len(others) == 0 {
+		return s
+	}
 	sdf3s := make([]sdf.SDF3, len(others))
 	for i, o := range others {
 		sdf3s[i] = o.SDF3

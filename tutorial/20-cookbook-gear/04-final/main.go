@@ -5,20 +5,19 @@ package main
 import (
 	"github.com/snowbldr/fluent-sdfx/obj"
 	"github.com/snowbldr/fluent-sdfx/solid"
-	"github.com/snowbldr/fluent-sdfx/units"
 )
 
 const shrink = 1.0 / 0.999 // PLA ~0.1%
 
 func main() {
 	gear := obj.InvoluteGear(obj.InvoluteGearParms{
-		NumberTeeth:   24,
-		Module:        2,
-		PressureAngle: units.DtoR(20),
-		Backlash:      0.05,
-		Clearance:     0.2,
-		RingWidth:     21,
-		Facets:        16,
+		NumberTeeth:      24,
+		Module:           2,
+		PressureAngleDeg: 20,
+		Backlash:         0.05,
+		Clearance:        0.2,
+		RingWidth:        21,
+		Facets:           16,
 	}).ExtrudeRounded(4, 0.4) // soft top/bottom edges
 
 	hub := solid.Cylinder(8, 8, 0.5)

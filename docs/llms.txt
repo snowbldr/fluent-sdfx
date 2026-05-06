@@ -7,7 +7,7 @@ This file is the agent-oriented reference for fluent-sdfx. If you take away one 
 ## Mental model
 
 - **Two core types.** `*shape.Shape` wraps `sdf.SDF2` (2D); `*solid.Solid` wraps `sdf.SDF3` (3D). Both are immutable: every method returns a new value. The receiver is never modified.
-- **Degrees everywhere — with one exception.** All angle parameters are in degrees, converted to radians internally. The exceptions are `TwistExtrude`, `ScaleTwistExtrude`, and `InvoluteGearParms.PressureAngle`, which take **radians**. Use `units.DtoR(deg)` to convert.
+- **Degrees everywhere.** All angle parameters in the public API are in degrees, converted to radians internally as needed (`PressureAngleDeg`, `BaseAngleDeg`, `twistDeg`, etc. — anything `…Deg`).
 - **Constructors panic on invalid input.** No `(*Shape, error)` return tuples. CAD-geometry errors are programming bugs, so you chain without `if err != nil` interruptions.
 - **Z is up.** Cylinders, screws, sweeps, and the `RotateCopyZ` pattern all use Z as the axial direction — *except* `Revolve()` and `RevolveAngle()`, which revolve around the Y axis (an sdfx convention). For Z-axis revolutions, rotate the result 90° around X.
 - **The 2D ↔ 3D direction.** `*shape.Shape` becomes `*solid.Solid` via `.Extrude`, `.Revolve`, `.LoftTo`, `.SweepHelix`, `.Screw`. `*solid.Solid` becomes `*shape.Shape` via `.SliceAt(plane.Plane)` (cross-section).
@@ -17,7 +17,7 @@ This file is the agent-oriented reference for fluent-sdfx. If you take away one 
 
 - `solid/` — 3D primitives (`Box`, `Cylinder`, `Sphere`, `Cone`, `Capsule`, `Torus`, `Gyroid`), transforms, booleans, blends, patterns, modifiers.
 - `shape/` — 2D primitives (`Rect`, `Circle`, `Polygon`, `Hexagon`, `Star`, `Cross`, `Triangle`, `Text`, `NewPoly()`, `NewBezier()`, threads, cams, gear racks), transforms, booleans, 2D→3D extrusion methods, `.ToDXF`, `.ToSVG`, `.ToPNG`.
-- `obj/` — parametric helpers wrapping sdfx/obj (`Bolt`, `Nut`, `Washer3D`, `Panel3D`, `EuroRackPanel3D`, `PanelBox3D`, `Standoff3D`, `InvoluteGear`, `Servo3D`, `Spring3D`, `GfBase`/`GfBody` for Gridfinity, etc.). All take a parameter struct.
+- `obj/` — parametric helpers wrapping sdfx/obj (`Bolt`, `Nut`, `Washer3D`, `Panel3D`, `EuroRackPanel3D`, `PanelBox3D`, `Standoff3D`, `InvoluteGear`, `Servo3D`, `Spring3D`, `GridfinityBase`/`GridfinityBody`, etc.). All take a parameter struct.
 - `vec/{v2,v3,v2i,v3i,p2}` — vector types with named constructors: `v3.X(5)`, `v3.YZ(2, 3)`, `v3.XYZ(1, 2, 3)`, `v3.Zero`. `p2.RT(r, theta)` for polar.
 - `plane/` — slice-plane helpers: `plane.AtZ(10)`, `plane.At(origin, normal)`, plus `plane.XY`, `plane.XZ`, `plane.YZ`.
 - `units/` — constants and converters: `Pi`, `MillimetresPerInch`, `DtoR(deg)`, `RtoD(rad)`.
@@ -56,7 +56,7 @@ profile := p.Build()                         // returns *shape.Shape
 // 2D → 3D
 shape.Rect(...).Extrude(8)
 shape.Rect(...).ExtrudeRounded(8, 1.5)       // top/bottom edge fillet
-shape.Star(...).TwistExtrude(20, units.DtoR(90))   // twist in RADIANS
+shape.Star(...).TwistExtrude(20, 90)                // twist in degrees
 shape.Rect(...).ScaleExtrude(20, v2.XY(0.4, 0.4))  // tapered
 profile.Revolve()                            // around Y axis
 profile.RevolveAngle(270)                    // partial, in degrees
@@ -268,7 +268,7 @@ plane.At(origin, normal)                         // arbitrary plane
 ```go
 part.STL("part.stl", 5.0)            // mesh density in cells per real millimetre
 part.STL("part.stl", 5.0, 0.5)       // optional decimation: keep 50% of triangles
-part.ThreeMF("part.3mf", 5.0)        // 3MF (modern alternative; aliased as MF3)
+part.ThreeMF("part.3mf", 5.0)        // 3MF (modern alternative)
 
 shape.ToDXF(path, meshCells)         // 2D DXF
 shape.ToSVG(path, meshCells)         // 2D SVG
@@ -348,7 +348,7 @@ obj.InvoluteGear(obj.InvoluteGearParms{
     Backlash: 0.05, Clearance: 0.2,
     RingWidth: 6, Facets: 16,
 })
-obj.GfBase(obj.GfBaseParms{Size: v2i.XY(2, 1), Magnet: true, Hole: true})  // Gridfinity
+obj.GridfinityBase(obj.GridfinityBaseParms{Size: v2i.XY(2, 1), Magnet: true, Hole: true})
 obj.PanelBox3D(obj.PanelBoxParms{...})       // returns []*solid.Solid
 ```
 

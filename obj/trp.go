@@ -1,6 +1,8 @@
 package obj
 
 import (
+	"math"
+
 	"github.com/snowbldr/fluent-sdfx/solid"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 	"github.com/snowbldr/sdfx/obj"
@@ -9,16 +11,16 @@ import (
 
 // TruncRectPyramidParms configures a truncated rectangular pyramid.
 type TruncRectPyramidParms struct {
-	Size        v3.Vec  // size of truncated pyramid
-	BaseAngle   float64 // base angle of pyramid (radians)
-	BaseRadius  float64 // base corner radius
-	RoundRadius float64 // edge rounding radius
+	Size         v3.Vec  // size of truncated pyramid
+	BaseAngleDeg float64 // base angle of pyramid (degrees, like the rest of the API)
+	BaseRadius   float64 // base corner radius
+	RoundRadius  float64 // edge rounding radius
 }
 
 func (p *TruncRectPyramidParms) toSDF() *obj.TruncRectPyramidParms {
 	return &obj.TruncRectPyramidParms{
 		Size:        v3sdf.Vec(p.Size),
-		BaseAngle:   p.BaseAngle,
+		BaseAngle:   p.BaseAngleDeg * math.Pi / 180,
 		BaseRadius:  p.BaseRadius,
 		RoundRadius: p.RoundRadius,
 	}

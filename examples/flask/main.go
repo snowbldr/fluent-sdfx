@@ -45,10 +45,10 @@ func alignmentHoles() *solid.Solid {
 // pinLug returns a single pin lug.
 func pinLug(w float64) *solid.Solid {
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(w, lugThickness, lugHeight),
-		BaseAngle:   units.DtoR(90 - lugDraft),
-		BaseRadius:  lugThickness * 0.5,
-		RoundRadius: lugThickness * 0.1,
+		Size:         v3.XYZ(w, lugThickness, lugHeight),
+		BaseAngleDeg: 90 - lugDraft,
+		BaseRadius:   lugThickness * 0.5,
+		RoundRadius:  lugThickness * 0.1,
 	})
 }
 
@@ -59,10 +59,10 @@ func pinLugs() *solid.Solid {
 	yofs := 0.5 * (pinWidth - lugThickness)
 
 	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(w, w, lugBaseThickness),
-		BaseAngle:   units.DtoR(90 - lugBaseDraft),
-		BaseRadius:  lugThickness*0.5 + lugOffset,
-		RoundRadius: lugBaseThickness * 0.25,
+		Size:         v3.XYZ(w, w, lugBaseThickness),
+		BaseAngleDeg: 90 - lugBaseDraft,
+		BaseRadius:   lugThickness*0.5 + lugOffset,
+		RoundRadius:  lugBaseThickness * 0.25,
 	})
 	pin := pinLug(pinWidth)
 	holes := alignmentHoles()
@@ -75,12 +75,12 @@ func pinLugs() *solid.Solid {
 
 // sandKey returns an internal sand key.
 func sandKey(size v3.Vec) *solid.Solid {
-	theta := units.DtoR(90 - keyDraft)
+	thetaDeg := 90 - keyDraft
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        size,
-		BaseAngle:   theta,
-		BaseRadius:  keyDepth / math.Tan(theta),
-		RoundRadius: size.X * 0.5,
+		Size:         size,
+		BaseAngleDeg: thetaDeg,
+		BaseRadius:   keyDepth / math.Tan(units.DtoR(thetaDeg)),
+		RoundRadius:  size.X * 0.5,
 	})
 }
 
@@ -103,10 +103,10 @@ func oddSide(height float64) *solid.Solid {
 	sz2 := keyDepth
 
 	base := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(sx, sy, sz),
-		BaseAngle:   theta45,
-		BaseRadius:  0.5 * sx,
-		RoundRadius: 0,
+		Size:         v3.XYZ(sx, sy, sz),
+		BaseAngleDeg: 45,
+		BaseRadius:   0.5 * sx,
+		RoundRadius:  0,
 	})
 	hole := solid.Cylinder(h, holeRadius, 0)
 	key := sandKey(v3.XYZ(sx2, sy2, sz2))

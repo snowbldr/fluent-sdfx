@@ -54,10 +54,10 @@ func envelope(k *msParms, machined bool) *solid.Solid {
 func wall(k *msParms, l float64) *solid.Solid {
 	ofs := (k.wallThickness - k.allowance) * 0.5
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(l, k.wallThickness+k.allowance, (k.width*0.5)+k.allowance),
-		BaseAngle:   units.DtoR(90.0 - draft),
-		BaseRadius:  (k.wallThickness + k.allowance) * 0.5,
-		RoundRadius: k.wallThickness * 0.25,
+		Size:         v3.XYZ(l, k.wallThickness+k.allowance, (k.width*0.5)+k.allowance),
+		BaseAngleDeg: 90.0 - draft,
+		BaseRadius:   (k.wallThickness + k.allowance) * 0.5,
+		RoundRadius:  k.wallThickness * 0.25,
 	}).Translate(v3.XYZ(0, ofs, 0))
 }
 
@@ -138,10 +138,10 @@ func corner90(k *msParms) *solid.Solid {
 	r := 2.0 * k.wallThickness
 	ofs := 0.8 * r
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
-		BaseAngle:   units.DtoR(90.0 - 3.0*draft),
-		BaseRadius:  r,
-		RoundRadius: k.wallThickness * 0.25,
+		Size:         v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
+		BaseAngleDeg: 90.0 - 3.0*draft,
+		BaseRadius:   r,
+		RoundRadius:  k.wallThickness * 0.25,
 	}).Translate(v3.XYZ(ofs, ofs, 0))
 }
 
@@ -150,10 +150,10 @@ func corner45(k *msParms) *solid.Solid {
 	dy := 0.7 * r
 	dx := dy * (1.0 + math.Sqrt(2.0))
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
-		BaseAngle:   units.DtoR(90.0 - 3.0*draft),
-		BaseRadius:  r,
-		RoundRadius: k.wallThickness * 0.25,
+		Size:         v3.XYZ(2.0*r, 2.0*r, (k.width*0.5)+k.allowance),
+		BaseAngleDeg: 90.0 - 3.0*draft,
+		BaseRadius:   r,
+		RoundRadius:  k.wallThickness * 0.25,
 	}).Translate(v3.XYZ(k.size-dx, dy, 0))
 }
 

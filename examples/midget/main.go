@@ -35,10 +35,10 @@ func cylinderBase() *solid.Solid {
 	const round = 0.125
 
 	base0 := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(x, y, z),
-		BaseAngle:   units.DtoR(90 - draft),
-		BaseRadius:  round,
-		RoundRadius: round * 1.5,
+		Size:         v3.XYZ(x, y, z),
+		BaseAngleDeg: 90 - draft,
+		BaseRadius:   round,
+		RoundRadius:  round * 1.5,
 	})
 	base1 := base0.MirrorXY()
 	base := base0.Union(base1)
@@ -110,10 +110,10 @@ func mountLugs() *solid.Solid {
 	const thickness = 0.25
 
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(4.75, thickness, crankcaseOuterHeight),
-		BaseAngle:   units.DtoR(90 - draft),
-		BaseRadius:  crankcaseOuterHeight * 0.1,
-		RoundRadius: crankcaseOuterHeight * 0.1,
+		Size:         v3.XYZ(4.75, thickness, crankcaseOuterHeight),
+		BaseAngleDeg: 90 - draft,
+		BaseRadius:   crankcaseOuterHeight * 0.1,
+		RoundRadius:  crankcaseOuterHeight * 0.1,
 	}).Translate(v3.XYZ(0, thickness*0.5, 0))
 }
 
@@ -121,10 +121,10 @@ func cylinderMount() *solid.Solid {
 	const draft = 3.0
 
 	return obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(2.0, 5.0/16.0, 1+(3.0/16.0)),
-		BaseAngle:   units.DtoR(90 - draft),
-		BaseRadius:  crankcaseOuterHeight * 0.1,
-		RoundRadius: crankcaseOuterHeight * 0.1,
+		Size:         v3.XYZ(2.0, 5.0/16.0, 1+(3.0/16.0)),
+		BaseAngleDeg: 90 - draft,
+		BaseRadius:   crankcaseOuterHeight * 0.1,
+		RoundRadius:  crankcaseOuterHeight * 0.1,
 	}).Translate(v3.XYZ(0, crankcaseInnerRadius, 0))
 }
 
@@ -132,10 +132,10 @@ func boltLugs() *solid.Solid {
 	const draft = 3.0
 
 	lug := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(0, 0, crankcaseOuterHeight),
-		BaseAngle:   units.DtoR(90 - draft),
-		BaseRadius:  boltLugRadius,
-		RoundRadius: crankcaseOuterHeight * 0.1,
+		Size:         v3.XYZ(0, 0, crankcaseOuterHeight),
+		BaseAngleDeg: 90 - draft,
+		BaseRadius:   boltLugRadius,
+		RoundRadius:  crankcaseOuterHeight * 0.1,
 	})
 
 	r := crankcaseOuterRadius
@@ -150,10 +150,10 @@ func basePattern() *solid.Solid {
 	const draft = 3.0
 
 	body := obj.TruncRectPyramid3D(obj.TruncRectPyramidParms{
-		Size:        v3.XYZ(0, 0, crankcaseOuterHeight),
-		BaseAngle:   units.DtoR(90 - draft),
-		BaseRadius:  crankcaseOuterRadius,
-		RoundRadius: crankcaseOuterHeight * 0.1,
+		Size:         v3.XYZ(0, 0, crankcaseOuterHeight),
+		BaseAngleDeg: 90 - draft,
+		BaseRadius:   crankcaseOuterRadius,
+		RoundRadius:  crankcaseOuterHeight * 0.1,
 	})
 
 	bl := boltLugs()

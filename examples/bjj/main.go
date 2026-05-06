@@ -73,24 +73,24 @@ func plate() *solid.Solid {
 }
 
 var gear_module = 80.0 / 16.0
-var pressure_angle = units.DtoR(20)
+var pressure_angle_deg = 20.0
 var involute_facets = 10
 
 func gears() *solid.Solid {
 	g_height := 10.0
 
 	g0 := obj.InvoluteGear(obj.InvoluteGearParms{
-		NumberTeeth:   12,
-		Module:        gear_module,
-		PressureAngle: pressure_angle,
-		Facets:        involute_facets,
+		NumberTeeth:      12,
+		Module:           gear_module,
+		PressureAngleDeg: pressure_angle_deg,
+		Facets:           involute_facets,
 	}).Extrude(g_height)
 
 	g1 := obj.InvoluteGear(obj.InvoluteGearParms{
-		NumberTeeth:   16,
-		Module:        gear_module,
-		PressureAngle: pressure_angle,
-		Facets:        involute_facets,
+		NumberTeeth:      16,
+		Module:           gear_module,
+		PressureAngleDeg: pressure_angle_deg,
+		Facets:           involute_facets,
 	}).Extrude(g_height)
 
 	s0 := g0.BottomAt(0)

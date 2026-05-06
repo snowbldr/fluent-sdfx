@@ -11,17 +11,16 @@ package main
 
 import (
 	"github.com/snowbldr/fluent-sdfx/obj"
-	"github.com/snowbldr/fluent-sdfx/units"
 )
 
 func main() {
 	obj.InvoluteGear(obj.InvoluteGearParms{
-		NumberTeeth:   24,
-		Module:        2,
-		PressureAngle: units.DtoR(20), // 20° is the modern default
-		Backlash:      0.05,
-		Clearance:     0.2,
-		RingWidth:     21, // ≥ root radius → fully solid gear
-		Facets:        16,
+		NumberTeeth:      24,
+		Module:           2,
+		PressureAngleDeg: 20, // 20° is the modern default
+		Backlash:         0.05,
+		Clearance:        0.2,
+		RingWidth:        21, // ≥ root radius → fully solid gear
+		Facets:           16,
 	}).Extrude(1).STL("out.stl", 5)
 }

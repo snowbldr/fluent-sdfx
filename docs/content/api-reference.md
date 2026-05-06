@@ -47,9 +47,9 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 |---|---|
 | `Extrude(height)` | Linear extrusion |
 | `ExtrudeRounded(height, round)` | Extrusion with rounded edges |
-| `TwistExtrude(height, twist)` | Twist around Z (radians) |
+| `TwistExtrude(height, twistDeg)` | Twist around Z (degrees) |
 | `ScaleExtrude(height, scale)` | Extrude with linear scaling |
-| `ScaleTwistExtrude(height, twist, scale)` | Both |
+| `ScaleTwistExtrude(height, twistDeg, scale)` | Both |
 | `Revolve()` | Full revolution around Y |
 | `RevolveAngle(angleDeg)` | Partial revolution |
 | `Screw(height, start, pitch, n)` | Helical screw thread |
@@ -107,9 +107,9 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 |---|---|
 | `Extrude(profile, height)` | Linear extrusion |
 | `ExtrudeRounded(profile, height, round)` | Rounded edges |
-| `TwistExtrude(profile, height, twist)` | Twisted (radians) |
+| `TwistExtrude(profile, height, twistDeg)` | Twisted (degrees) |
 | `ScaleExtrude(profile, height, scale)` | Linearly scaled |
-| `ScaleTwistExtrude(profile, height, twist, scale)` | Both |
+| `ScaleTwistExtrude(profile, height, twistDeg, scale)` | Both |
 | `Revolve(profile)` | Full Y-axis revolution |
 | `RevolveAngle(profile, angle)` | Partial |
 | `Screw(profile, height, start, pitch, n)` | Helical thread |
@@ -374,5 +374,5 @@ Pair with `s.SliceAt(plane.AtZ(10))` or `shape.SliceAt(s, plane.XY)`.
 ## Design principles
 
 - **Chainable.** Every transform/boolean returns a new object — `solid.Cylinder(10, 5, 0).RotateX(90).Translate(v3.Z(10))` works as a single expression.
-- **Degrees everywhere.** All angle parameters in degrees, converted to radians internally. Exception: `TwistExtrude` and `ScaleTwistExtrude` take twist in radians (use `units.DtoR(...)` to convert).
+- **Degrees everywhere.** All angle parameters in the public API are in degrees, converted to radians internally as needed.
 - **No error returns.** Constructors panic on invalid input — CAD geometry errors are programming bugs, not runtime conditions.

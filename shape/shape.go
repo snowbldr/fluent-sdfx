@@ -42,9 +42,12 @@ func Rect(size v2.Vec, round float64) *Shape {
 }
 
 // Circle returns a circle of the given radius, centered at the origin.
-// Panics on negative radius.
+// Panics on non-positive radius.
 func Circle(radius float64) *Shape {
-	s, _ := sdf.Circle2D(radius)
+	s, err := sdf.Circle2D(radius)
+	if err != nil {
+		panic(fmt.Errorf("shape.Circle: %w", err))
+	}
 	return &Shape{s}
 }
 
@@ -59,6 +62,22 @@ func Polygon(pts []v2.Vec) *Shape {
 		panic(err)
 	}
 	return &Shape{s}
+}
+
+// UnionAll combines multiple shapes into one. Panics on zero arguments —
+// there's no sensible result for "union of nothing"; pass at least one shape.
+func UnionAll(shapes ...*Shape) *Shape {
+	if len(shapes) == 0 {
+		panic("shape.UnionAll: at least one shape required")
+	}
+	if len(shapes) == 1 {
+		return shapes[0]
+	}
+	sdf2s := make([]sdf.SDF2, len(shapes))
+	for i, s := range shapes {
+		sdf2s[i] = s.SDF2
+	}
+	return &Shape{sdf.Union2D(sdf2s...)}
 }
 
 // --- Cross-section helpers (3D → 2D) ---
@@ -282,8 +301,19 @@ func (s *Shape) Multi(positions ...v2.Vec) *Shape {
 }
 
 // LineOf creates a union of the shape along a line from p0 to p1.
-// The pattern string controls placement: 'x' places a copy, any other char skips.
+// The pattern string controls placement: 'x' places a copy, any other char
+// skips. With an empty or all-skip pattern, returns s unchanged.
 func (s *Shape) LineOf(p0, p1 v2.Vec, pattern string) *Shape {
+	hasCopy := false
+	for _, c := range pattern {
+		if c == 'x' {
+			hasCopy = true
+			break
+		}
+	}
+	if !hasCopy {
+		return s
+	}
 	return &Shape{sdf.LineOf2D(s.SDF2, v2sdf.Vec(p0), v2sdf.Vec(p1), pattern)}
 }
 

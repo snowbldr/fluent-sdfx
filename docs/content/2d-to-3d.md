@@ -8,7 +8,7 @@ The fastest path to most 3D parts is "draw a 2D profile, then turn it into a sol
 |---|---|
 | `Extrude(h)` | Linear extrusion along Z. |
 | `ExtrudeRounded(h, r)` | Linear extrusion with rounded top and bottom edges. |
-| `TwistExtrude(h, twist)` | Extrude while rotating the profile around Z. |
+| `TwistExtrude(h, twistDeg)` | Extrude while rotating the profile around Z (degrees). |
 | `ScaleExtrude(h, scale)` | Extrude while scaling the profile linearly. |
 | `Revolve()` | Full 360° revolution around the Y axis. |
 | `RevolveAngle(deg)` | Partial revolution. |
@@ -66,7 +66,7 @@ func main() {
 
 ## TwistExtrude
 
-Rotates the profile around Z over the height. The `twist` is in **radians** — use `units.DtoR(deg)` if you'd rather think in degrees.
+Rotates the profile around Z over the height. `twistDeg` is in degrees, like every other angle in the public API.
 
 <!-- src: tutorial/10-2d-to-3d/03-twist-extrude/main.go -->
 ```go
@@ -116,7 +116,7 @@ func main() {
   <figcaption>A 16mm square tapered to 40% of its size at the top.</figcaption>
 </figure>
 
-There's also `ScaleTwistExtrude(h, twist, scale)` that does both at once.
+There's also `ScaleTwistExtrude(h, twistDeg, scale)` that does both at once.
 
 ## Revolve
 

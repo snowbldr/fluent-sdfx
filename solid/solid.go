@@ -100,8 +100,15 @@ func Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid {
 	return New(sdf.Screw3D(profile, height, start, pitch, num))
 }
 
-// UnionAll combines multiple solids into one.
+// UnionAll combines multiple solids into one. Panics on zero arguments —
+// there's no sensible result for "union of nothing"; pass at least one solid.
 func UnionAll(solids ...*Solid) *Solid {
+	if len(solids) == 0 {
+		panic("solid.UnionAll: at least one solid required")
+	}
+	if len(solids) == 1 {
+		return solids[0]
+	}
 	sdf3s := make([]sdf.SDF3, len(solids))
 	for i, s := range solids {
 		sdf3s[i] = s.SDF3
@@ -385,8 +392,19 @@ func (s *Solid) Multi(positions ...v3.Vec) *Solid {
 }
 
 // LineOf creates a union of the solid along a line from p0 to p1.
-// The pattern string controls placement: 'x' places a copy, any other char skips.
+// The pattern string controls placement: 'x' places a copy, any other char
+// skips. With an empty or all-skip pattern, returns s unchanged.
 func (s *Solid) LineOf(p0, p1 v3.Vec, pattern string) *Solid {
+	hasCopy := false
+	for _, c := range pattern {
+		if c == 'x' {
+			hasCopy = true
+			break
+		}
+	}
+	if !hasCopy {
+		return s
+	}
 	return &Solid{sdf.LineOf3D(s.SDF3, v3sdf.Vec(p0), v3sdf.Vec(p1), pattern)}
 }
 
