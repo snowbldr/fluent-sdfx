@@ -13,7 +13,7 @@
 //		s := buildBracket()
 //		validate.RequireWatertight(t, s, 5.0)
 //		validate.RequireMaxOverhang(t, s, 5.0, 45.0)  // FDM rule of thumb
-//		validate.RequireVolumeNear(t, s, 5.0, 12.5, 0.02)
+//		validate.RequireVolumeNear(t, s, 5.0, 12500, 0.02)  // mm³ (12.5 cm³)
 //	}
 package validate
 

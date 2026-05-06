@@ -39,18 +39,32 @@ func Wrap(sdf sdf.SDF3) *Solid {
 
 // --- Constructors ---
 
+// Cylinder returns a cylinder of the given height and radius, centered at
+// the origin and oriented along Z. round adds a fillet of that radius
+// where the cylindrical surface meets the end caps; pass 0 for sharp edges.
+// Panics on negative dimensions.
 func Cylinder(height, radius, round float64) *Solid {
 	return New(sdf.Cylinder3D(height, radius, round))
 }
 
+// Box returns an axis-aligned box of the given size, centered at the origin.
+// round adds a fillet of that radius on every edge; pass 0 for sharp edges.
+// Panics if any size component is negative or if round exceeds half the
+// smallest dimension.
 func Box(size v3.Vec, round float64) *Solid {
 	return New(sdf.Box3D(v3sdf.Vec(size), round))
 }
 
+// Sphere returns a sphere of the given radius, centered at the origin.
+// Panics on negative radius.
 func Sphere(radius float64) *Solid {
 	return New(sdf.Sphere3D(radius))
 }
 
+// Cone returns a truncated cone of the given height with bottom radius r0
+// and top radius r1, centered at the origin and oriented along Z. Pass r1=0
+// for a tip; r0==r1 reduces to a cylinder. round adds a fillet of that
+// radius at the base/top edges.
 func Cone(height, r0, r1, round float64) *Solid {
 	return New(sdf.Cone3D(height, r0, r1, round))
 }
@@ -65,16 +79,23 @@ func Extrude(profile sdf.SDF2, height float64) *Solid {
 }
 
 // Slice cuts a planar cross-section through a solid and returns it as a
-// raw sdf.SDF2. Wrap with shape.Of for the full *shape.Shape fluent API,
-// or use shape.Slice / solid.SliceShape helpers.
+// raw sdf.SDF2. Wrap with shape.Wrap2D for the full *shape.Shape fluent
+// API, or use shape.Slice / solid.SliceShape helpers.
 func Slice(s *Solid, origin, normal v3.Vec) sdf.SDF2 {
 	return sdf.Slice2D(s.SDF3, v3sdf.Vec(origin), v3sdf.Vec(normal))
 }
 
+// TwistExtrude linearly extrudes a 2D profile to the given height while
+// rotating it twist degrees from bottom to top — useful for twisted
+// columns, fluted bars, and helical decorative shapes.
 func TwistExtrude(profile sdf.SDF2, height, twist float64) *Solid {
 	return &Solid{sdf.TwistExtrude3D(profile, height, twist)}
 }
 
+// Screw sweeps a 2D thread profile along a helical path of the given height,
+// thread starting offset (in degrees), pitch (axial advance per revolution),
+// and num thread starts. Pair with sdfx's thread-profile constructors
+// (e.g. obj.Thread*) to build a real screw or nut.
 func Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid {
 	return New(sdf.Screw3D(profile, height, start, pitch, num))
 }

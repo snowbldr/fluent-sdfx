@@ -177,7 +177,7 @@ func main() {
 ```
 
 <figure>
-  <img src="../images/21-cookbook-lantern-04-feet.png" alt="Lantern raised onto three small feet.">
+  <img src="../images/21-cookbook-lantern-04-feet.png" alt="Lantern raised onto four small feet.">
   <figcaption>Four feet evenly spaced around the bottom, lantern sitting on top.</figcaption>
 </figure>
 

@@ -34,22 +34,19 @@ func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
 	}
 	tmp, err := os.CreateTemp(dir, ".stl-tmp-*")
 	if err != nil {
-		fmt.Printf("error creating temp file: %s\n", err)
-		return
+		panic(fmt.Errorf("ToSTL: create temp file in %s: %w", dir, err))
 	}
 	tmpPath := tmp.Name()
 	tmp.Close()
 
 	if err := render.SaveSTL(tmpPath, mesh); err != nil {
-		fmt.Printf("error writing STL: %s\n", err)
 		os.Remove(tmpPath)
-		return
+		panic(fmt.Errorf("ToSTL: write %s: %w", tmpPath, err))
 	}
 
 	if err := os.Rename(tmpPath, path); err != nil {
-		fmt.Printf("error renaming STL: %s\n", err)
 		os.Remove(tmpPath)
-		return
+		panic(fmt.Errorf("ToSTL: rename to %s: %w", path, err))
 	}
 }
 

@@ -34,15 +34,25 @@ func v2Slice(pts []v2.Vec) []v2sdf.Vec {
 
 // --- Constructors ---
 
+// Rect returns an axis-aligned rectangle of the given size, centered at the
+// origin. round adds a fillet of that radius on every corner; pass 0 for
+// sharp corners. Panics if any size component is negative.
 func Rect(size v2.Vec, round float64) *Shape {
 	return &Shape{sdf.Box2D(v2sdf.Vec(size), round)}
 }
 
+// Circle returns a circle of the given radius, centered at the origin.
+// Panics on negative radius.
 func Circle(radius float64) *Shape {
 	s, _ := sdf.Circle2D(radius)
 	return &Shape{s}
 }
 
+// Polygon returns a flat (sharp-corner) polygon from the given vertex list.
+// Vertices are in 2D (XY) and should be ordered consistently (clockwise or
+// counter-clockwise — either works as long as it's consistent). Panics if
+// the polygon is degenerate (fewer than 3 distinct vertices) or self-
+// intersecting.
 func Polygon(pts []v2.Vec) *Shape {
 	s, err := sdf.FlatPolygon2D(v2Slice(pts))
 	if err != nil {

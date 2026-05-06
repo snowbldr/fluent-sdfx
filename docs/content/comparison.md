@@ -90,7 +90,7 @@ The CadQuery-style face-selector + pushPoints workflow is replaced by anchor pla
 
 fluent-sdfx is a thin chainable wrapper on top of [sdfx](https://github.com/snowbldr/sdfx). The SDF kernel, marching cubes, mesh decimation, threads, gears — everything compute-heavy — is sdfx. fluent-sdfx adds the chainable types, anchor positioning, layout helpers, and the validate package on top.
 
-You can drop down to raw sdfx at any time: `s.SDF3` exposes the wrapped `sdf.SDF3` value. Conversely, any `sdf.SDF3` can be lifted into a `*solid.Solid` via `solid.WrapSDF3(...)`.
+You can drop down to raw sdfx at any time: `s.SDF3` exposes the wrapped `sdf.SDF3` value. Conversely, any `sdf.SDF3` can be lifted into a `*solid.Solid` via `solid.Wrap(...)` (or `shape.Wrap2D(...)` for 2D).
 
 Migration:
 

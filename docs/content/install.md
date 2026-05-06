@@ -4,7 +4,7 @@ Install fluent-sdfx, the f3d viewer, and the optional stldev dev-loop tool.
 
 fluent-sdfx is a Go library. You'll want three things on your machine before you build anything:
 
-1. **Go 1.21 or newer** — to compile the library and your designs.
+1. **Go 1.25 or newer** — to compile the library and your designs (see `go.mod`).
 2. **fluent-sdfx itself** — added with `go get`.
 3. **f3d** *(optional but recommended)* — to view STL files. Free, fast, headless-capable.
 4. **stldev** *(optional)* — a watch-rebuild-preview loop that pairs nicely with fluent-sdfx; covered on the [dev-loop page](/dev-loop/).

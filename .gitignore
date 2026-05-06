@@ -5,3 +5,6 @@
 !docs/stl/*.stl
 *.test
 *.out
+
+# Dev artifacts at the repo root from `go build` / `go run` of unnamed packages.
+/positioning
