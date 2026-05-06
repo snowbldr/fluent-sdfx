@@ -9,10 +9,6 @@ on:
 
 permissions:
   contents: read
-  # Needed by codecov-action v5's OIDC tokenless upload path. Without this
-  # permission the upload fails with "Token required - not valid tokenless
-  # upload" on the v5 action against a public repo.
-  id-token: write
 
 jobs:
   build-and-test:
@@ -42,5 +38,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.out
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
