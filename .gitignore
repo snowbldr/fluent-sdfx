@@ -15,3 +15,7 @@ coverage.html
 
 # Generated fuzz corpus (per-package, not committed).
 testdata/fuzz/
+
+# Local-only planning / scratch docs. Kept out of git so they don't show
+# up in pkg.go.dev or on the GitHub repo page.
+/meta/
