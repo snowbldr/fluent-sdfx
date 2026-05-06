@@ -170,10 +170,11 @@ For complete signatures and parameter struct fields, see [API reference](/api-re
 The most useful pattern for real projects is to *combine* obj helpers with your own geometry:
 
 ```go
-case := obj.PanelBox3D(...)
-mounted := case.Union(
-    obj.Standoff3D(...).Translate(...),
-    obj.Standoff3D(...).Translate(...),
+parts := obj.PanelBox3D(obj.PanelBoxParms{...})
+shell := parts[0] // shell, panels and tabs come back as separate solids
+mounted := shell.Union(
+    obj.Standoff3D(obj.StandoffParms{...}).Translate(...),
+    obj.Standoff3D(obj.StandoffParms{...}).Translate(...),
 )
 ```
 

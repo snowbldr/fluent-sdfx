@@ -150,8 +150,7 @@ In under 20 lines of Go you used:
 
 - A primitive constructor (`solid.Cylinder`).
 - A boolean (`Cut`).
-- A scatter pattern (`Multi`) that places copies of a tool at multiple positions.
-- Per-axis translation helpers (`TranslateX`, `TranslateY`).
+- A scatter pattern (`Multi`) combined with a layout helper (`layout.Polar`) that places copies of a tool at multiple positions.
 - A uniform scale (`ScaleUniform`) for shrink compensation.
 - The mesh exporter with optional decimation (`STL`).
 

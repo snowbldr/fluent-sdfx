@@ -8,15 +8,36 @@
 package layout
 
 import (
+	"fmt"
 	"math"
+	"sync/atomic"
 
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
+// gridLimit caps Grid / Grid2 nx*ny to prevent accidental OOMs (e.g. a
+// `Grid(1, 1, 100000, 100000)` typo allocates ~240 GB). The default of 1M
+// is comfortably above any sensible CAD grid; raise via SetGridLimit if
+// you genuinely need denser arrays.
+var gridLimitAtomic int64 = 1_000_000
+
+var gridLimit = 1_000_000 // exposed read path; the atomic copy is the source of truth
+
+// SetGridLimit overrides the maximum nx*ny accepted by Grid / Grid2.
+// Atomic and safe from any goroutine.
+func SetGridLimit(n int) {
+	atomic.StoreInt64(&gridLimitAtomic, int64(n))
+	gridLimit = n
+}
+
 // Polar returns n positions evenly spaced on a circle of the given radius
 // in the XY plane (z = 0). The first position is at angle 0 (+X axis).
+// Panics if n is negative; n == 0 returns an empty slice.
 func Polar(radius float64, n int) []v3.Vec {
+	if n < 0 {
+		panic(fmt.Errorf("layout.Polar: n must be >= 0, got %d", n))
+	}
 	out := make([]v3.Vec, n)
 	for i := 0; i < n; i++ {
 		theta := 2 * math.Pi * float64(i) / float64(n)
@@ -45,7 +66,15 @@ func PolarArc(radius float64, n int, startDeg, sweepDeg float64) []v3.Vec {
 
 // Grid returns nx*ny positions on an XY grid centered on the origin
 // (z = 0), with stepX between columns and stepY between rows.
+// Panics if nx or ny is negative or if nx*ny exceeds gridLimit (a sanity
+// cap that prevents accidental OOM from a parameter mistake).
 func Grid(stepX, stepY float64, nx, ny int) []v3.Vec {
+	if nx < 0 || ny < 0 {
+		panic(fmt.Errorf("layout.Grid: nx and ny must be >= 0, got nx=%d ny=%d", nx, ny))
+	}
+	if nx*ny > gridLimit {
+		panic(fmt.Errorf("layout.Grid: nx*ny = %d exceeds limit %d (likely a parameter mistake; raise layout.SetGridLimit if intentional)", nx*ny, gridLimit))
+	}
 	out := make([]v3.Vec, 0, nx*ny)
 	x0 := -float64(nx-1) * stepX / 2
 	y0 := -float64(ny-1) * stepY / 2
@@ -103,7 +132,11 @@ func BoxCorners(size v3.Vec) []v3.Vec {
 // --- 2D variants ---
 
 // Polar2 returns n positions evenly spaced on a circle of the given radius.
+// Panics if n is negative; n == 0 returns an empty slice.
 func Polar2(radius float64, n int) []v2.Vec {
+	if n < 0 {
+		panic(fmt.Errorf("layout.Polar2: n must be >= 0, got %d", n))
+	}
 	out := make([]v2.Vec, n)
 	for i := 0; i < n; i++ {
 		theta := 2 * math.Pi * float64(i) / float64(n)
@@ -113,7 +146,14 @@ func Polar2(radius float64, n int) []v2.Vec {
 }
 
 // Grid2 returns nx*ny positions on an XY grid centered on the origin.
+// Panics on negative nx/ny or if nx*ny exceeds the grid limit.
 func Grid2(stepX, stepY float64, nx, ny int) []v2.Vec {
+	if nx < 0 || ny < 0 {
+		panic(fmt.Errorf("layout.Grid2: nx and ny must be >= 0, got nx=%d ny=%d", nx, ny))
+	}
+	if nx*ny > gridLimit {
+		panic(fmt.Errorf("layout.Grid2: nx*ny = %d exceeds limit %d (raise via layout.SetGridLimit if intentional)", nx*ny, gridLimit))
+	}
 	out := make([]v2.Vec, 0, nx*ny)
 	x0 := -float64(nx-1) * stepX / 2
 	y0 := -float64(ny-1) * stepY / 2

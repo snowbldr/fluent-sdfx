@@ -253,8 +253,8 @@ func main() {
 ```
 
 <figure>
-  <img src="../images/19-cookbook-enclosure-05-assembly.png" alt="The complete enclosure: body with standoffs (left) and the screw-on lid (right).">
-  <figcaption>The complete enclosure: body with standoffs (left) and the screw-on lid (right).</figcaption>
+  <img src="../images/19-cookbook-enclosure-05-assembly.png" alt="The complete enclosure: body with standoffs in front and the screw-on lid behind.">
+  <figcaption>The complete enclosure: body with standoffs in front and the screw-on lid behind.</figcaption>
 </figure>
 
 ## Tips

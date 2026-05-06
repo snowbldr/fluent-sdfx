@@ -68,7 +68,7 @@ That's it. From here, every page in this guide is a refinement: more primitives,
 For anything more than a single part, you'll want:
 
 - **Multiple `main` packages**, one per part. A common layout:
-  ```
+  ```text
   my-project/
   ├── go.mod
   ├── parts/

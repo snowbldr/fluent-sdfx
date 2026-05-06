@@ -42,8 +42,11 @@ func Rect(size v2.Vec, round float64) *Shape {
 }
 
 // Circle returns a circle of the given radius, centered at the origin.
-// Panics on non-positive radius.
+// Panics on zero, negative, NaN, or infinite radius.
 func Circle(radius float64) *Shape {
+	if radius <= 0 || math.IsNaN(radius) || math.IsInf(radius, 0) {
+		panic(fmt.Errorf("shape.Circle: radius must be > 0 and finite, got %v", radius))
+	}
 	s, err := sdf.Circle2D(radius)
 	if err != nil {
 		panic(fmt.Errorf("shape.Circle: %w", err))

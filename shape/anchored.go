@@ -2,6 +2,7 @@ package shape
 
 import (
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
+	"github.com/snowbldr/sdfx/sdf"
 )
 
 // AnchoredShape is a *Shape paired with a marker point on (or inside) its
@@ -27,11 +28,38 @@ type Placement2D struct {
 // Union unions the moved shape with the base (commutative).
 func (p Placement2D) Union() *Shape { return p.Base.Union(p.Moved) }
 
+// Add is an alias for Union.
+func (p Placement2D) Add() *Shape { return p.Union() }
+
+// SmoothUnion smoothly unions the moved shape with the base.
+func (p Placement2D) SmoothUnion(min sdf.MinFunc) *Shape {
+	return SmoothUnion(min, p.Base, p.Moved)
+}
+
+// SmoothAdd is an alias for SmoothUnion.
+func (p Placement2D) SmoothAdd(min sdf.MinFunc) *Shape { return p.SmoothUnion(min) }
+
 // Cut subtracts the base from the moved shape; the moved (subject) is kept.
 func (p Placement2D) Cut() *Shape { return p.Moved.Cut(p.Base) }
 
+// Difference is an alias for Cut.
+func (p Placement2D) Difference() *Shape { return p.Cut() }
+
+// SmoothCut smoothly subtracts the base from the moved shape.
+func (p Placement2D) SmoothCut(max sdf.MaxFunc) *Shape {
+	return SmoothCut(max, p.Moved, p.Base)
+}
+
+// SmoothDifference is an alias for SmoothCut.
+func (p Placement2D) SmoothDifference(max sdf.MaxFunc) *Shape { return p.SmoothCut(max) }
+
 // Intersect intersects the moved with the base (commutative).
 func (p Placement2D) Intersect() *Shape { return p.Base.Intersect(p.Moved) }
+
+// SmoothIntersect smoothly intersects the moved with the base.
+func (p Placement2D) SmoothIntersect(max sdf.MaxFunc) *Shape {
+	return SmoothIntersect(max, p.Base, p.Moved)
+}
 
 // Shape returns the moved shape alone, discarding the boolean partner.
 func (p Placement2D) Shape() *Shape { return p.Moved }

@@ -270,9 +270,9 @@ part.STL("part.stl", 5.0)            // mesh density in cells per real millimetr
 part.STL("part.stl", 5.0, 0.5)       // optional decimation: keep 50% of triangles
 part.ThreeMF("part.3mf", 5.0)        // 3MF (modern alternative)
 
-shape.ToDXF(path, meshCells)         // 2D DXF
-shape.ToSVG(path, meshCells)         // 2D SVG
-shape.ToPNG(path, w, h)              // 2D PNG (renders the SDF as a heatmap, not a clean outline)
+shape2d.ToDXF(path, meshCells)       // 2D DXF
+shape2d.ToSVG(path, meshCells)       // 2D SVG
+shape2d.ToPNG(path, w, h)            // 2D PNG (renders the SDF as a heatmap, not a clean outline)
 ```
 
 `cellsPerMM` is independent of part size — the same density gives the same visual quality on a 1mm gear and a 500mm enclosure. Render time scales as cells³, so halving density is an 8× speedup.
@@ -344,7 +344,7 @@ obj.Standoff3D(obj.StandoffParms{
 })
 obj.InvoluteGear(obj.InvoluteGearParms{
     NumberTeeth: 24, Module: 2,              // pitch diameter = NumberTeeth × Module
-    PressureAngle: units.DtoR(20),           // RADIANS — use DtoR
+    PressureAngleDeg: 20,                    // degrees, like the rest of the API
     Backlash: 0.05, Clearance: 0.2,
     RingWidth: 6, Facets: 16,
 })
@@ -361,7 +361,7 @@ Other helpers in `obj`: `Hex2D/3D`, `HexHead3D`, `ChamferedCylinder`, `CounterBo
 - **Always make cutting tools longer/larger than the body.** A hole that's exactly as tall as the body leaves a single layer of mesh that may or may not survive marching cubes. Pad by 1–2mm.
 - **`Cache()` text shapes** before further use. `shape.Text` re-samples glyph outlines at every distance evaluation; caching pays off as soon as you generate the geometry twice (e.g. once for DXF, once for STL).
 - **Print-shrinkage compensation:** `part.ScaleUniform(1.0 / 0.999)` ≈ 0.1% (PLA). Apply at the very end, just before `STL`.
-- **Mating gears must share `Module` and `PressureAngle`.** Centre distance is `(N1 + N2) × Module / 2`.
+- **Mating gears must share `Module` and `PressureAngleDeg`.** Centre distance is `(N1 + N2) × Module / 2`.
 - **Variadic Cut is faster** than chained Cut. `body.Cut(t1, t2, t3)`, never `.Cut(t1).Cut(t2).Cut(t3)`.
 - **Smooth blends propagate `k`.** A large `k` near a thin feature can deform that feature visibly. Match `k` to the smallest local feature you don't want disturbed.
 - **For shells with an opening** (cup, box, tray), `s.Shell(t).Cut(openingTool)`. Shell on its own is closed on every face.
@@ -374,8 +374,6 @@ package main
 import (
     "github.com/snowbldr/fluent-sdfx/obj"
     "github.com/snowbldr/fluent-sdfx/solid"
-    "github.com/snowbldr/fluent-sdfx/units"
-    v3 "github.com/snowbldr/fluent-sdfx/vec/v3"
 )
 
 const shrink = 1.0 / 0.999 // PLA
@@ -383,7 +381,7 @@ const shrink = 1.0 / 0.999 // PLA
 func main() {
     gear := obj.InvoluteGear(obj.InvoluteGearParms{
         NumberTeeth: 24, Module: 2,
-        PressureAngle: units.DtoR(20),
+        PressureAngleDeg: 20,
         Backlash: 0.05, Clearance: 0.2,
         RingWidth: 6, Facets: 16,
     }).ExtrudeRounded(4, 0.4)

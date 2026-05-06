@@ -47,8 +47,8 @@ func main() {
 ```
 
 <figure>
-  <img src="../images/11-smooth-blends-01-round-min.png" alt="A box and a horizontal cylinder smooth-unioned with a 2.5mm round blend.">
-  <figcaption>A box and a horizontal cylinder smooth-unioned with a 2.5mm round blend.</figcaption>
+  <img src="../images/11-smooth-blends-01-round-min.png" alt="A box and a vertical cylinder smooth-unioned with a 1.25mm round blend.">
+  <figcaption>A box and a vertical cylinder smooth-unioned with a 1.25mm round blend.</figcaption>
 </figure>
 
 ## SmoothUnion with ChamferMin

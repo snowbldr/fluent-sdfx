@@ -6,7 +6,7 @@ A 24-tooth involute spur gear, designed for a 6mm shaft with a radial set-screw.
 
 ## Step 1 — The gear profile
 
-`obj.InvoluteGear(InvoluteGearParms)` returns a 2D `*Shape`. The big knob is `Module`: pitch diameter = `NumberTeeth × Module`, so 24 teeth at module 2 gives a 48mm pitch circle. That's the "size" of the gear. Adjust `Module` and `NumberTeeth` to taste; mating gears must share `Module` and `PressureAngle`.
+`obj.InvoluteGear(InvoluteGearParms)` returns a 2D `*Shape`. The big knob is `Module`: pitch diameter = `NumberTeeth × Module`, so 24 teeth at module 2 gives a 48mm pitch circle. That's the "size" of the gear. Adjust `Module` and `NumberTeeth` to taste; mating gears must share `Module` and `PressureAngleDeg`.
 
 <!-- src: tutorial/20-cookbook-gear/01-gear-profile/main.go -->
 ```go
@@ -45,7 +45,7 @@ func main() {
 
 The other parameters:
 
-- `PressureAngle` is in **radians** — convert from degrees with `units.DtoR(20)`. 20° is the modern default; older hobbyist gears use 14.5°.
+- `PressureAngleDeg` is in **degrees** (like the rest of the angle-bearing API). 20° is the modern default; older hobbyist gears use 14.5°.
 - `Backlash` adds a per-tooth gap between mating gears. ~0.05–0.1 prints cleanly.
 - `Clearance` adds extra root depth so the mating gear's tip doesn't bottom out.
 - `RingWidth` is how much "meat" is left between the gear's root circle and its centre. Set it to 0 to get a pure tooth ring; non-zero values fill in toward the centre.
@@ -180,21 +180,21 @@ func main() {
 
 ## Mating gears
 
-Two gears mesh if they share `Module` and `PressureAngle`. The centre-to-centre distance is `(N1 + N2) × Module / 2`. For two 24-tooth gears at module 2, that's 48mm.
+Two gears mesh if they share `Module` and `PressureAngleDeg`. The centre-to-centre distance is `(N1 + N2) × Module / 2`. For two 24-tooth gears at module 2, that's 48mm.
 
 ```go
 const (
     module = 2.0
-    paDeg  = 20
+    paDeg  = 20.0
 )
 
 a := obj.InvoluteGear(obj.InvoluteGearParms{
-    NumberTeeth: 24, Module: module, PressureAngle: units.DtoR(paDeg),
+    NumberTeeth: 24, Module: module, PressureAngleDeg: paDeg,
     Backlash: 0.05, Clearance: 0.2, RingWidth: 6, Facets: 16,
 }).ExtrudeRounded(4, 0.4)
 
 b := obj.InvoluteGear(obj.InvoluteGearParms{
-    NumberTeeth: 16, Module: module, PressureAngle: units.DtoR(paDeg),
+    NumberTeeth: 16, Module: module, PressureAngleDeg: paDeg,
     Backlash: 0.05, Clearance: 0.2, RingWidth: 5, Facets: 16,
 }).ExtrudeRounded(4, 0.4)
 

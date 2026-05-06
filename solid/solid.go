@@ -2,6 +2,7 @@ package solid
 
 import (
 	"math"
+	"sync/atomic"
 
 	"github.com/snowbldr/fluent-sdfx/plane"
 	flrender "github.com/snowbldr/fluent-sdfx/render"
@@ -11,6 +12,16 @@ import (
 	v3sdf "github.com/snowbldr/sdfx/vec/v3"
 	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
+
+// requireSDF3 panics with a fluent context if s is nil. CAD-geometry SDFs
+// must never be nil — this catches programming errors at the wrap site
+// rather than letting them surface later as a nil-pointer dereference deep
+// in a render call.
+func requireSDF3(name string, s sdf.SDF3) {
+	if s == nil {
+		panic(name + ": nil sdf.SDF3 (likely a programming error)")
+	}
+}
 
 type Solid struct {
 	sdf.SDF3
@@ -24,16 +35,21 @@ func v3Slice(pts []v3.Vec) []v3sdf.Vec {
 	return out
 }
 
-// New wraps a raw SDF3 (with optional error) into a Solid.
+// New wraps a raw SDF3 (with optional error) into a Solid. Panics if
+// err is non-nil OR if the SDF3 is nil — both are programming errors.
 func New(sdf sdf.SDF3, err error) *Solid {
 	if err != nil {
 		panic(err)
 	}
+	requireSDF3("solid.New", sdf)
 	return &Solid{sdf}
 }
 
-// Wrap wraps a raw SDF3 into a Solid (no error).
+// Wrap wraps a raw SDF3 into a Solid (no error). Panics on nil — letting
+// a nil through here would surface later as a nil-pointer dereference
+// inside the renderer, far from where the bug was introduced.
 func Wrap(sdf sdf.SDF3) *Solid {
+	requireSDF3("solid.Wrap", sdf)
 	return &Solid{sdf}
 }
 
@@ -448,9 +464,28 @@ func (s *Solid) Raycast(from, dir v3.Vec, scaleAndSigmoid, stepScale, epsilon, m
 
 // MinCells is the floor applied by CellsFor so sub-mm parts (e.g. a 1 mm
 // sphere at 3 cells/mm, which would otherwise give 3 cells and render as
-// an empty mesh) still produce a recognizable shape. Raise it for more
-// sub-mm detail, lower it (or set to 1) for raw density behavior.
+// an empty mesh) still produce a recognizable shape.
+//
+// Set this once at program startup. It's a plain int with no synchronization,
+// so concurrent writes from different goroutines are racy — use SetMinCells
+// for in-flight changes if you really need them, but the typical usage is
+// "set in main(), never touched again."
 var MinCells = 32
+
+// SetMinCells atomically updates the MinCells floor used by CellsFor.
+// Safe to call from any goroutine. Reading via plain MinCells is also safe
+// when no concurrent writer is running; SetMinCells exists for the rare
+// case of dynamic re-tuning during a render pipeline.
+func SetMinCells(n int) { atomic.StoreInt64(&minCellsAtomic, int64(n)); MinCells = n }
+
+var minCellsAtomic int64 = 32
+
+func minCells() int {
+	if v := atomic.LoadInt64(&minCellsAtomic); v != int64(MinCells) {
+		return int(v)
+	}
+	return MinCells
+}
 
 // STL renders the solid to an STL file using the parallel octree renderer.
 //
@@ -495,8 +530,8 @@ func CellsFor(s *Solid, cellsPerMM float64) int {
 	size := s.SDF3.BoundingBox().Size()
 	longest := math.Max(math.Max(size.X, size.Y), size.Z)
 	cells := int(math.Ceil(longest * cellsPerMM))
-	if cells < MinCells {
-		cells = MinCells
+	if min := minCells(); cells < min {
+		cells = min
 	}
 	return cells
 }

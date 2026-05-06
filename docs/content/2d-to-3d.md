@@ -261,8 +261,8 @@ func main() {
 ```
 
 <figure>
-  <img src="../images/10-2d-to-3d-09-screw.png" alt="A custom triangular thread profile screwed at 3mm pitch.">
-  <figcaption>A custom triangular thread profile screwed at 3mm pitch.</figcaption>
+  <img src="../images/10-2d-to-3d-09-screw.png" alt="An ACME thread profile screwed at 3mm pitch.">
+  <figcaption>An ACME thread profile screwed at 3mm pitch.</figcaption>
 </figure>
 
 For real fasteners, use `obj.Bolt` and `obj.Nut` — covered on [Parametric helpers](/obj-overview/).

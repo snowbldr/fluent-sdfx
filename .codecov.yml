@@ -1,0 +1,78 @@
+# Codecov configuration for fluent-sdfx.
+#
+# Goal: report coverage of the kernel packages only. Examples, tutorials, the
+# docs viewer, meta scripts, and tools/* are intentionally excluded — they're
+# build-only or generative code, not library surface.
+
+coverage:
+  precision: 1
+  round: down
+  range: "50...90"
+
+  status:
+    project:
+      default:
+        target: 50%
+        threshold: 1%
+        informational: false
+        if_ci_failed: error
+      kernel:
+        # Stricter target for the core packages once they have tests.
+        target: 50%
+        threshold: 1%
+        paths:
+          - solid/
+          - shape/
+          - validate/
+          - layout/
+          - mesh/
+          - render/
+    patch:
+      default:
+        target: 50%
+        threshold: 5%
+        informational: true
+
+# Comments-only mode: post a coverage comment on PRs, do not block merges.
+comment:
+  layout: "header, diff, flags, components, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Component breakdown — separate stats for the kernel-essential packages.
+component_management:
+  individual_components:
+    - component_id: solid
+      name: solid
+      paths:
+        - solid/**
+    - component_id: shape
+      name: shape
+      paths:
+        - shape/**
+    - component_id: validate
+      name: validate
+      paths:
+        - validate/**
+    - component_id: layout
+      name: layout
+      paths:
+        - layout/**
+    - component_id: mesh
+      name: mesh
+      paths:
+        - mesh/**
+    - component_id: render
+      name: render
+      paths:
+        - render/**
+
+ignore:
+  - "examples/**"
+  - "tutorial/**"
+  - "docs/visuals/**"
+  - "docs/**"
+  - "meta/**"
+  - "tools/**"

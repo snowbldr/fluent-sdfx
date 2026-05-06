@@ -169,7 +169,7 @@ func main() {
 </figure>
 
 > [!NOTE]
-> Order matters. `RotateZ(30).TranslateZ(8)` rotates first, then lifts up — the part rises straight up from the rotated position. `TranslateZ(8).RotateZ(30)` lifts first, then rotates around the global Z axis — the part swings out into a circle. Read transform chains right-to-left, like function calls.
+> Order matters. `RotateZ(30).TranslateZ(8)` rotates first, then lifts up — the part rises straight up from the rotated position. `TranslateZ(8).RotateZ(30)` lifts first, then rotates around the global Z axis — the part swings out into a circle. Fluent chains read left-to-right: each method applies in turn, so the leftmost transform happens first.
 
 ## Other useful transforms
 

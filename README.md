@@ -6,6 +6,7 @@
   <a href="https://pkg.go.dev/github.com/snowbldr/fluent-sdfx"><img src="https://pkg.go.dev/badge/github.com/snowbldr/fluent-sdfx.svg" alt="Go Reference"></a>
   <a href="https://goreportcard.com/report/github.com/snowbldr/fluent-sdfx"><img src="https://goreportcard.com/badge/github.com/snowbldr/fluent-sdfx" alt="Go Report Card"></a>
   <a href="https://github.com/snowbldr/fluent-sdfx/actions/workflows/build.yml"><img src="https://github.com/snowbldr/fluent-sdfx/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="https://codecov.io/gh/snowbldr/fluent-sdfx"><img src="https://codecov.io/gh/snowbldr/fluent-sdfx/branch/main/graph/badge.svg" alt="Coverage"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/snowbldr/fluent-sdfx" alt="License"></a>
 </p>
 
@@ -66,7 +67,7 @@ For multi-part assemblies, fluent-sdfx is meant to be written as **ingredients a
 
 ## Repo layout
 
-```
+```text
 fluent-sdfx/
 ├── shape/      2D primitives, builders, transforms, booleans
 ├── solid/      3D primitives, transforms, booleans, modifiers, anchor positioning

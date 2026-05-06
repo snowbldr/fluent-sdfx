@@ -2,11 +2,19 @@ package shape
 
 import (
 	"math"
+	"sync"
 
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 	"github.com/snowbldr/sdfx/sdf"
 	v2sdf "github.com/snowbldr/sdfx/vec/v2"
 )
+
+// bezierMu serialises sdf.Bezier sampling. sdfx's bezier sampler reads a
+// package-level *rand.Rand without synchronisation; concurrent
+// Build/Polygon/Vertices calls from multiple goroutines race on it. We can
+// hold this lock for the (millisecond-scale) sampling without serious
+// contention; users building one bezier per goroutine will queue briefly.
+var bezierMu sync.Mutex
 
 // Bezier is a fluent wrapper over sdf.Bezier for building bezier curves.
 type Bezier struct {
@@ -35,7 +43,12 @@ func (b *Bezier) Close() *Bezier {
 }
 
 // Polygon converts the bezier curve into a (sampled) sdf.Polygon.
+//
+// Safe to call from multiple goroutines — sdfx's sampler uses a package-level
+// random source, so this method holds an internal lock during sampling.
 func (b *Bezier) Polygon() *sdf.Polygon {
+	bezierMu.Lock()
+	defer bezierMu.Unlock()
 	p, err := b.b.Polygon()
 	if err != nil {
 		panic(err)
@@ -44,7 +57,12 @@ func (b *Bezier) Polygon() *sdf.Polygon {
 }
 
 // Build returns a Shape from the bezier curve using a polygon SDF.
+//
+// Safe to call from multiple goroutines — sdfx's sampler uses a package-level
+// random source, so this method holds an internal lock during sampling.
 func (b *Bezier) Build() *Shape {
+	bezierMu.Lock()
+	defer bezierMu.Unlock()
 	s, err := b.b.Mesh2D()
 	if err != nil {
 		panic(err)

@@ -6,5 +6,12 @@
 *.test
 *.out
 
+# Coverage artifacts produced by scripts/coverage.sh and CI.
+coverage.out
+coverage.html
+
 # Dev artifacts at the repo root from `go build` / `go run` of unnamed packages.
 /positioning
+
+# Generated fuzz corpus (per-package, not committed).
+testdata/fuzz/
