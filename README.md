@@ -15,6 +15,9 @@ fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid
 
 📚 **[Read the docs](https://snowbldr.github.io/fluent-sdfx/)** — install, project setup, the dev loop, foundations, operations, cookbook recipes, and the full API reference.
 
+> [!NOTE]
+> **Status: v0.x.** The library is usable today but pre-1.0 — the public API may shift in response to early-user feedback. Watch [releases](https://github.com/snowbldr/fluent-sdfx/releases) for breaking-change notes; pin a tag if you need stability.
+
 ## Install
 
 ```bash

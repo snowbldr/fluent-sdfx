@@ -69,5 +69,5 @@ func icosahedron() *solid.Solid {
 func main() {
 	s := icosahedron()
 	s.STL("icosahedron.stl", 3.0)
-	s.MF3("icosahedron.3mf", 3.0)
+	s.ThreeMF("icosahedron.3mf", 3.0)
 }

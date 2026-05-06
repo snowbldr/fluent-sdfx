@@ -9,14 +9,14 @@ import (
 	v3isdf "github.com/snowbldr/sdfx/vec/v3i"
 )
 
-// GfBaseParms configures a Gridfinity base.
-type GfBaseParms struct {
-	Size   v2i.Vec // size of base in gridfinity units
+// GridfinityBaseParms configures a Gridfinity base.
+type GridfinityBaseParms struct {
+	Size   v2i.Vec // size of base in Gridfinity units
 	Magnet bool    // add magnet mounts
 	Hole   bool    // add mounting holes
 }
 
-func (p *GfBaseParms) toSDF() *obj.GfBaseParms {
+func (p *GridfinityBaseParms) toSDF() *obj.GfBaseParms {
 	return &obj.GfBaseParms{
 		Size:   v2isdf.Vec(p.Size),
 		Magnet: p.Magnet,
@@ -24,14 +24,14 @@ func (p *GfBaseParms) toSDF() *obj.GfBaseParms {
 	}
 }
 
-// GfBodyParms configures a Gridfinity body.
-type GfBodyParms struct {
-	Size  v3i.Vec // size of body in gridfinity units
+// GridfinityBodyParms configures a Gridfinity body (bin / container).
+type GridfinityBodyParms struct {
+	Size  v3i.Vec // size of body in Gridfinity units
 	Empty bool    // return an empty container
 	Hole  bool    // add through holes to the body
 }
 
-func (p *GfBodyParms) toSDF() *obj.GfBodyParms {
+func (p *GridfinityBodyParms) toSDF() *obj.GfBodyParms {
 	return &obj.GfBodyParms{
 		Size:  v3isdf.Vec(p.Size),
 		Empty: p.Empty,
@@ -39,12 +39,12 @@ func (p *GfBodyParms) toSDF() *obj.GfBodyParms {
 	}
 }
 
-// GfBase returns a Gridfinity base plate.
-func GfBase(p GfBaseParms) *solid.Solid {
+// GridfinityBase returns a Gridfinity base plate of the given grid size.
+func GridfinityBase(p GridfinityBaseParms) *solid.Solid {
 	return solid.Wrap(obj.GfBase(p.toSDF()))
 }
 
-// GfBody returns a Gridfinity body.
-func GfBody(p GfBodyParms) *solid.Solid {
+// GridfinityBody returns a Gridfinity bin / container of the given grid size.
+func GridfinityBody(p GridfinityBodyParms) *solid.Solid {
 	return solid.Wrap(obj.GfBody(p.toSDF()))
 }

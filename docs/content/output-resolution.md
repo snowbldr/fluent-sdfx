@@ -17,7 +17,6 @@ STL is ASCII or binary; fluent-sdfx writes binary by default — smaller and fas
 
 ```go
 part.ThreeMF("output.3mf", 5.0)
-// alias: part.MF3("output.3mf", 5.0)
 ```
 
 3MF is a modern XML-based format with explicit units, colour, and metadata baked in. Slicers (PrusaSlicer, BambuStudio, etc.) prefer it for multi-material parts. Use 3MF when you have either, otherwise STL is fine.

@@ -165,8 +165,14 @@ func RequireWatertight(t *testing.T, s *solid.Solid, cellsPerMM float64) {
 // expected by more than relTol (e.g. 0.02 = 2%). Useful as a regression guard:
 // a refactor that accidentally inverts an SDF or breaks a boolean shows up as
 // a wildly different volume.
+//
+// expectedMM3 must be positive — passing 0 makes the relative tolerance
+// undefined and would silently pass for any computed volume.
 func RequireVolumeNear(t *testing.T, s *solid.Solid, cellsPerMM, expectedMM3, relTol float64) {
 	t.Helper()
+	if expectedMM3 <= 0 {
+		t.Fatalf("RequireVolumeNear: expectedMM3 must be > 0, got %v", expectedMM3)
+	}
 	st := Of(s, cellsPerMM)
 	rel := math.Abs(st.Volume-expectedMM3) / expectedMM3
 	if rel > relTol {

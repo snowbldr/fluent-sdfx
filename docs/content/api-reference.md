@@ -244,7 +244,7 @@ Wraps `sdfx/obj`'s parametric parts so they plug into the fluent API directly. A
 | `PipeConnector3D` / `StdPipeConnector3D` | Multi-port pipe connectors |
 | `Servo3D` / `Servo2D` / `ServoLookup(name)` / `ServoHorn(ServoHornParms)` | Servo bodies & horns |
 | `Spring2D/3D(SpringParms)` / `SpringLength` | Flat planar springs |
-| `GfBase(GfBaseParms)` / `GfBody(GfBodyParms)` | Gridfinity base/body |
+| `GridfinityBase(GridfinityBaseParms)` / `GridfinityBody(GridfinityBodyParms)` | Gridfinity base/body |
 | `DrainCover(DrainCoverParms)` | Drain covers |
 | `Display(DisplayParms, negative)` | Display bezels |
 | `DroneMotorArm` / `DroneMotorArmSocket` | Drone arm parts |
@@ -263,7 +263,7 @@ Wraps `sdfx/obj`'s parametric parts so they plug into the fluent API directly. A
 ```go
 part.STL("output.stl", 6.0)              // 6 cells per mm
 part.STL("output.stl", 6.0, 0.9)         // optional decimation (90% removed = keep 10%)
-part.ThreeMF("output.3mf", 6.0)          // alias: .MF3(...)
+part.ThreeMF("output.3mf", 6.0)
 
 profile.ToDXF("profile.dxf", 400)
 profile.ToSVG("profile.svg", 400)

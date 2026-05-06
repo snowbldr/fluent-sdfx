@@ -112,7 +112,7 @@ func main() {
 
 ## Gridfinity
 
-The popular [Gridfinity](https://gridfinity.xyz) modular storage system. `obj.GfBase` builds a base; `obj.GfBody` builds a bin or container that mates with it.
+The popular [Gridfinity](https://gridfinity.xyz) modular storage system. `obj.GridfinityBase` builds a base; `obj.GridfinityBody` builds a bin or container that mates with it.
 
 <!-- src: tutorial/16-obj-overview/04-gridfinity/main.go -->
 ```go
@@ -128,7 +128,7 @@ import (
 )
 
 func main() {
-	obj.GfBase(obj.GfBaseParms{
+	obj.GridfinityBase(obj.GridfinityBaseParms{
 		Size:   v2i.XY(2, 1),
 		Magnet: true,
 		Hole:   true,

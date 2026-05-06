@@ -132,7 +132,12 @@ func (s *Shape) CenterAndScale(k float64) *Shape {
 
 // --- Boolean methods ---
 
+// Union returns the union of s and any number of other shapes. With no
+// arguments, returns s unchanged.
 func (s *Shape) Union(other ...*Shape) *Shape {
+	if len(other) == 0 {
+		return s
+	}
 	sdf2s := make([]sdf.SDF2, len(other)+1)
 	sdf2s[0] = s.SDF2
 	for i, o := range other {
@@ -146,7 +151,12 @@ func (s *Shape) Add(other ...*Shape) *Shape {
 	return s.Union(other...)
 }
 
+// Cut subtracts the union of any number of other shapes from s. With no
+// arguments, returns s unchanged.
 func (s *Shape) Cut(other ...*Shape) *Shape {
+	if len(other) == 0 {
+		return s
+	}
 	sdf2s := make([]sdf.SDF2, len(other))
 	for i, o := range other {
 		sdf2s[i] = o.SDF2
@@ -159,7 +169,12 @@ func (s *Shape) Difference(other ...*Shape) *Shape {
 	return s.Cut(other...)
 }
 
+// Intersect returns the intersection of s with any number of other shapes.
+// With no arguments, returns s unchanged.
 func (s *Shape) Intersect(other ...*Shape) *Shape {
+	if len(other) == 0 {
+		return s
+	}
 	sdf2s := make([]sdf.SDF2, len(other))
 	for i, o := range other {
 		sdf2s[i] = o.SDF2
@@ -257,8 +272,12 @@ func (s *Shape) SmoothRotateUnion(n int, step M33, min sdf.MinFunc) *Shape {
 
 // Multi creates a union of the shape at the given positions. Variadic so
 // you can write `hole.Multi(v2.XY(5, 0), v2.XY(-5, 0))` directly; pass a
-// slice with `hole.Multi(positions...)`.
+// slice with `hole.Multi(positions...)`. With no positions, returns s
+// unchanged.
 func (s *Shape) Multi(positions ...v2.Vec) *Shape {
+	if len(positions) == 0 {
+		return s
+	}
 	return &Shape{sdf.Multi2D(s.SDF2, v2Slice(positions))}
 }
 
@@ -280,10 +299,10 @@ func (s *Shape) ExtrudeRounded(height, round float64) *solid.Solid {
 	return solid.ExtrudeRounded(s.SDF2, height, round)
 }
 
-// TwistExtrude extrudes while rotating the profile about the Z axis over the height.
-// twist is the total rotation in radians.
-func (s *Shape) TwistExtrude(height, twist float64) *solid.Solid {
-	return solid.TwistExtrude(s.SDF2, height, twist)
+// TwistExtrude extrudes while rotating the profile about the Z axis over the
+// height. twistDeg is the total rotation in degrees.
+func (s *Shape) TwistExtrude(height, twistDeg float64) *solid.Solid {
+	return solid.TwistExtrude(s.SDF2, height, twistDeg)
 }
 
 // ScaleExtrude extrudes while scaling the profile linearly over the height.
@@ -291,9 +310,10 @@ func (s *Shape) ScaleExtrude(height float64, scale v2.Vec) *solid.Solid {
 	return solid.ScaleExtrude(s.SDF2, height, scale)
 }
 
-// ScaleTwistExtrude extrudes while scaling and twisting (radians) the profile over the height.
-func (s *Shape) ScaleTwistExtrude(height, twist float64, scale v2.Vec) *solid.Solid {
-	return solid.ScaleTwistExtrude(s.SDF2, height, twist, scale)
+// ScaleTwistExtrude extrudes while scaling and twisting the profile over the
+// height. twistDeg is the total rotation in degrees.
+func (s *Shape) ScaleTwistExtrude(height, twistDeg float64, scale v2.Vec) *solid.Solid {
+	return solid.ScaleTwistExtrude(s.SDF2, height, twistDeg, scale)
 }
 
 // Revolve rotates the shape around the Y axis to form a solid of revolution.

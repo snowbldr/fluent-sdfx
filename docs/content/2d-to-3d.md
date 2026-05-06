@@ -72,16 +72,15 @@ Rotates the profile around Z over the height. The `twist` is in **radians** — 
 ```go
 // 2D → 3D: extrusion that twists the profile around Z over the height.
 //
-// twist is in radians. units.DtoR converts from degrees if you'd rather.
+// twistDeg is in degrees, like every angle in the public API.
 package main
 
 import (
 	"github.com/snowbldr/fluent-sdfx/shape"
-	"github.com/snowbldr/fluent-sdfx/units"
 )
 
 func main() {
-	shape.Star(12, 5, 5).TwistExtrude(20, units.DtoR(90)).STL("out.stl", 5.0)
+	shape.Star(12, 5, 5).TwistExtrude(20, 90).STL("out.stl", 5.0)
 }
 ```
 

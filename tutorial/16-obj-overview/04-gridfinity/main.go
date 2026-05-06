@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	obj.GfBase(obj.GfBaseParms{
+	obj.GridfinityBase(obj.GridfinityBaseParms{
 		Size:   v2i.XY(2, 1),
 		Magnet: true,
 		Hole:   true,

@@ -40,9 +40,10 @@ func ScaleExtrude(profile sdf.SDF2, height float64, scale v2.Vec) *Solid {
 	return &Solid{sdf.ScaleExtrude3D(profile, height, v2sdf.Vec(scale))}
 }
 
-// ScaleTwistExtrude extrudes a 2D profile while scaling and twisting (radians) over the height.
-func ScaleTwistExtrude(profile sdf.SDF2, height, twist float64, scale v2.Vec) *Solid {
-	return &Solid{sdf.ScaleTwistExtrude3D(profile, height, twist, v2sdf.Vec(scale))}
+// ScaleTwistExtrude extrudes a 2D profile while scaling and twisting it
+// twistDeg degrees over the height.
+func ScaleTwistExtrude(profile sdf.SDF2, height, twistDeg float64, scale v2.Vec) *Solid {
+	return &Solid{sdf.ScaleTwistExtrude3D(profile, height, twistDeg*math.Pi/180, v2sdf.Vec(scale))}
 }
 
 // Loft transitions between two 2D profiles over a given height with optional rounding.

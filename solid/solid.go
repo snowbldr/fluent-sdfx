@@ -86,16 +86,16 @@ func Slice(s *Solid, origin, normal v3.Vec) sdf.SDF2 {
 }
 
 // TwistExtrude linearly extrudes a 2D profile to the given height while
-// rotating it twist degrees from bottom to top — useful for twisted
+// rotating it twistDeg degrees from bottom to top — useful for twisted
 // columns, fluted bars, and helical decorative shapes.
-func TwistExtrude(profile sdf.SDF2, height, twist float64) *Solid {
-	return &Solid{sdf.TwistExtrude3D(profile, height, twist)}
+func TwistExtrude(profile sdf.SDF2, height, twistDeg float64) *Solid {
+	return &Solid{sdf.TwistExtrude3D(profile, height, twistDeg*math.Pi/180)}
 }
 
-// Screw sweeps a 2D thread profile along a helical path of the given height,
-// thread starting offset (in degrees), pitch (axial advance per revolution),
-// and num thread starts. Pair with sdfx's thread-profile constructors
-// (e.g. obj.Thread*) to build a real screw or nut.
+// Screw sweeps a 2D thread profile along a helical path. height is the axial
+// length, start is the starting Z, pitch is the axial advance per
+// revolution, and num is the number of starts (parallel helices). Pair with
+// sdfx's thread-profile constructors (e.g. obj.Thread*) to build a screw or nut.
 func Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid {
 	return New(sdf.Screw3D(profile, height, start, pitch, num))
 }
@@ -197,7 +197,12 @@ func (s *Solid) Center() *Solid {
 
 // --- Boolean methods ---
 
+// Union returns the union of s and any number of other solids. With no
+// arguments, returns s unchanged.
 func (s *Solid) Union(other ...*Solid) *Solid {
+	if len(other) == 0 {
+		return s
+	}
 	sdf3s := make([]sdf.SDF3, len(other)+1)
 	sdf3s[0] = s.SDF3
 	for i, o := range other {
@@ -211,7 +216,12 @@ func (s *Solid) Add(other ...*Solid) *Solid {
 	return s.Union(other...)
 }
 
+// Intersect returns the intersection of s with any number of other solids.
+// With no arguments, returns s unchanged.
 func (s *Solid) Intersect(other ...*Solid) *Solid {
+	if len(other) == 0 {
+		return s
+	}
 	sdf3s := make([]sdf.SDF3, len(other))
 	for i, o := range other {
 		sdf3s[i] = o.SDF3
@@ -219,13 +229,17 @@ func (s *Solid) Intersect(other ...*Solid) *Solid {
 	return &Solid{sdf.Intersect3D(s.SDF3, sdf.Union3D(sdf3s...))}
 }
 
+// Cut subtracts the union of any number of other solids from s. With no
+// arguments, returns s unchanged.
 func (s *Solid) Cut(other ...*Solid) *Solid {
+	if len(other) == 0 {
+		return s
+	}
 	sdf3s := make([]sdf.SDF3, len(other))
 	for i, o := range other {
 		sdf3s[i] = o.SDF3
 	}
-	tool := sdf.Union3D(sdf3s...)
-	return &Solid{sdf.Difference3D(s.SDF3, tool)}
+	return &Solid{sdf.Difference3D(s.SDF3, sdf.Union3D(sdf3s...))}
 }
 
 // Difference is an alias for Cut.
@@ -360,8 +374,13 @@ func (s *Solid) SmoothRotateUnionZ(n int, step M44, min sdf.MinFunc) *Solid {
 
 // Multi creates a union of the solid at the given positions. Variadic so
 // you can write `hole.Multi(v3.X(5), v3.X(-5))` directly; pass a slice
-// with `hole.Multi(positions...)`.
+// with `hole.Multi(positions...)`. With no positions, returns s unchanged
+// — useful when feeding from a layout helper that may produce zero
+// positions for an edge-case parameter (e.g., layout.Polar(r, 0)).
 func (s *Solid) Multi(positions ...v3.Vec) *Solid {
+	if len(positions) == 0 {
+		return s
+	}
 	return &Solid{sdf.Multi3D(s.SDF3, v3Slice(positions))}
 }
 
@@ -446,11 +465,6 @@ func (s *Solid) STL(path string, cellsPerMM float64, decimate ...float64) {
 // notes on the MinCells floor.
 func (s *Solid) ThreeMF(path string, cellsPerMM float64) {
 	flrender.To3MF(s, path, CellsFor(s, cellsPerMM))
-}
-
-// MF3 is an alias for ThreeMF, for users who expect to autocomplete from "3".
-func (s *Solid) MF3(path string, cellsPerMM float64) {
-	s.ThreeMF(path, cellsPerMM)
 }
 
 // CellsFor returns the cell count along the longest bounding-box axis
