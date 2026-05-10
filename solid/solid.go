@@ -1,7 +1,9 @@
 package solid
 
 import (
+	"fmt"
 	"math"
+	"sort"
 	"sync/atomic"
 
 	"github.com/snowbldr/fluent-sdfx/plane"
@@ -378,8 +380,132 @@ func (s *Solid) SmoothArray(numX, numY, numZ int, step v3.Vec, min sdf.MinFunc) 
 }
 
 // RotateCopyZ creates N copies of the solid evenly spaced around the Z axis.
+//
+// The underlying sdfx fold maps every query point into a single canonical
+// sector (about Z) centered at angle 0 with half-width 180°/n. Two
+// practical constraints follow:
+//
+//   - The source's angular extent in XY must be < 360°/n. Wider sources
+//     alias onto themselves; use RotateUnionZ for those.
+//   - The source must sit inside the canonical sector. RotateCopyZ
+//     auto-recenters by inferring the source's angle from the XY of its
+//     bounding-box center and rotating about Z to canonical before the
+//     fold. Use RotateCopyAtZ for an explicit, intent-preserving variant.
+//
+// Panics if n <= 0 or if the source's angular extent (estimated from its
+// bounding-box corners projected to XY) exceeds 360°/n — recentering
+// can't save those, and RotateUnionZ is the right tool.
 func (s *Solid) RotateCopyZ(n int) *Solid {
-	return &Solid{sdf.RotateCopy3D(s.SDF3, n)}
+	if n <= 0 {
+		panic(fmt.Errorf("solid.RotateCopyZ: n must be > 0, got %d", n))
+	}
+	bb := s.Bounds()
+	c := bb.Center()
+	// Bbox center on the Z axis: assume the source is rotationally
+	// symmetric about Z (a ring, a centered cylinder) — the inferred
+	// angle is meaningless and the bbox-based extent check would
+	// falsely panic on rotationally symmetric solids whose XY bbox
+	// spans 270°. Skip both recenter and check.
+	if isNearAxisZ(c, bb.Size()) {
+		return &Solid{sdf.RotateCopy3D(s.SDF3, n)}
+	}
+	// Validate angular extent on the incoming bbox. Extent is invariant
+	// under rotation about Z, so checking before the recenter rotation
+	// avoids the AABB-of-rotated-AABB growth that compounds every
+	// Transform3D and would otherwise produce false positives at the
+	// sector boundary.
+	checkAngularExtentZ("RotateCopyZ", bb.Box, n)
+	atDeg := math.Atan2(c.Y, c.X) * 180 / math.Pi
+	folded := &Solid{sdf.RotateCopy3D(s.RotateZ(-atDeg).SDF3, n)}
+	return folded.RotateZ(atDeg)
+}
+
+// RotateCopyAtZ creates N copies of the solid evenly spaced around the Z
+// axis, with the first copy centered at angle atDeg (degrees, CCW about
+// +Z). The solid is assumed to already sit in the canonical sector
+// centered at angle 0 — typically because the caller built it that way
+// (e.g., a wedge symmetric about the +X half-plane). The fold is
+// performed at canonical 0 and the resulting union is rotated about Z to
+// atDeg.
+//
+// Prefer this over RotateCopyZ when expressing "N copies, first one at
+// angle X": it documents intent and avoids relying on the auto-recenter
+// inferring it from the bounding-box center.
+//
+// Panics if n <= 0 or if the source's angular extent (estimated from its
+// bounding-box corners projected to XY) exceeds 360°/n — see RotateCopyZ
+// for the constraint.
+func (s *Solid) RotateCopyAtZ(n int, atDeg float64) *Solid {
+	if n <= 0 {
+		panic(fmt.Errorf("solid.RotateCopyAtZ: n must be > 0, got %d", n))
+	}
+	bb := s.Bounds()
+	// Bbox-on-Z-axis sources are assumed rotationally symmetric (see
+	// RotateCopyZ for the same reasoning) — skip the extent check.
+	if !isNearAxisZ(bb.Center(), bb.Size()) {
+		checkAngularExtentZ("RotateCopyAtZ", bb.Box, n)
+	}
+	out := &Solid{sdf.RotateCopy3D(s.SDF3, n)}
+	if atDeg == 0 {
+		return out
+	}
+	return out.RotateZ(atDeg)
+}
+
+func checkAngularExtentZ(fn string, bb v3.Box, n int) {
+	if n <= 1 {
+		return
+	}
+	sectorWidth := 360.0 / float64(n)
+	extent := angularExtentZDeg(bb)
+	if extent > sectorWidth*(1+1e-9)+1e-12 {
+		panic(fmt.Errorf("solid.%s: source angular extent %.3f° exceeds sector width %.3f° (n=%d); use RotateUnionZ for wider sources", fn, extent, sectorWidth, n))
+	}
+}
+
+// angularExtentZDeg returns the angular extent (in degrees) of the bbox's
+// 8 corners projected to the XY plane and seen from the Z axis — the
+// width of the smallest arc that covers all of them. Robust across the
+// ±π wrap: angles are sorted and the largest empty gap is removed from
+// the full circle.
+//
+// Returns 0 when every projected corner sits on the Z axis (extent is
+// meaningless for those — handled separately by isNearAxisZ).
+func angularExtentZDeg(bb v3.Box) float64 {
+	verts := bb.Vertices()
+	angles := make([]float64, 0, len(verts))
+	for _, v := range verts {
+		if v.X == 0 && v.Y == 0 {
+			continue
+		}
+		angles = append(angles, math.Atan2(v.Y, v.X))
+	}
+	if len(angles) == 0 {
+		return 0
+	}
+	sort.Float64s(angles)
+	largestGap := 2*math.Pi + angles[0] - angles[len(angles)-1]
+	for i := 1; i < len(angles); i++ {
+		if g := angles[i] - angles[i-1]; g > largestGap {
+			largestGap = g
+		}
+	}
+	return (2*math.Pi - largestGap) * 180 / math.Pi
+}
+
+// isNearAxisZ reports whether the bbox center's XY projection is close
+// enough to the origin that atan2 of its position is meaningless — for
+// symmetric rings or solids already centered on Z, the inferred angle
+// would oscillate on floating-point noise. Threshold is relative to the
+// bbox size.
+func isNearAxisZ(center, size v3.Vec) bool {
+	const eps = 1e-9
+	scale := size.MaxComponent()
+	if scale < 1 {
+		scale = 1
+	}
+	xy := math.Hypot(center.X, center.Y)
+	return xy <= eps*scale
 }
 
 // RotateUnionZ creates a union of the solid rotated N times by the given step matrix.

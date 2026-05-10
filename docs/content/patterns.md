@@ -7,12 +7,12 @@ A pattern operation takes one solid and produces many — without manually union
 | Method | Layout |
 |---|---|
 | `Array(nx, ny, nz, step)` | Regular 3D grid. |
-| `RotateCopyZ(n)` | `n` copies evenly spaced around the Z axis. |
+| `RotateCopyZ(n)` / `RotateCopyAtZ(n, atDeg)` | `n` copies evenly spaced around the Z axis. |
 | `LineOf(p0, p1, pattern)` | Copies along a line, with per-slot enable. |
 | `Multi(positions...)` | Explicit list of positions (variadic). |
 | `Orient(base, dirs)` | Copies aligned to a list of unit vectors. |
 
-The 2D shape package mirrors these — `Array(nx, ny, step)`, `RotateCopy(n)`, `LineOf(...)`, `Multi(...)` — all returning `*Shape`.
+The 2D shape package mirrors these — `Array(nx, ny, step)`, `RotateCopy(n)` / `RotateCopyAt(n, atDeg)`, `LineOf(...)`, `Multi(...)` — all returning `*Shape`.
 
 ## Array — regular grid
 
@@ -68,7 +68,10 @@ func main() {
   <figcaption>Eight teeth around a centre — a stylised gear.</figcaption>
 </figure>
 
-Position the source solid where you want a single copy to sit; `RotateCopyZ(n)` orbits the rest around the Z axis evenly.
+Position the source solid where you want a single copy to sit; `RotateCopyZ(n)` orbits the rest around the Z axis evenly. The wrapper auto-recenters: it infers the source's angle from its bounding-box center (XY projection) and rotates to the canonical sector before folding, so a pre-rotated source like `tooth.RotateZ(-150).RotateCopyZ(3)` still produces three intact copies. For an explicit "first copy at angle X" form, use `RotateCopyAtZ(n, atDeg)` — the source is assumed to already be in canonical position (centered at angle 0 about Z).
+
+> [!IMPORTANT]
+> `RotateCopyZ` works by folding every query into a single 360°/n sector — fast, but the source's angular extent (XY bounding-box corners as seen from the Z axis) must fit inside that sector. Wider sources alias onto themselves; the wrapper panics with a message recommending `RotateUnionZ`, which composes N rotated copies explicitly without folding (slower per evaluation, no extent constraint). The same constraint applies to the 2D `RotateCopy` / `RotateCopyAt` and `RotateUnion`.
 
 ## LineOf — with per-slot enable
 

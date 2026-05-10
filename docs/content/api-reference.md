@@ -64,7 +64,7 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 
 **Modifiers:** `Offset`, `CutLine`, `Split`, `Elongate`, `Cache`
 
-**Patterns:** `Array`, `SmoothArray`, `RotateCopy`, `RotateUnion`, `SmoothRotateUnion`, `Multi`, `LineOf`
+**Patterns:** `Array`, `SmoothArray`, `RotateCopy`, `RotateCopyAt`, `RotateUnion`, `SmoothRotateUnion`, `Multi`, `LineOf`
 
 ### Inspection & sampling
 
@@ -140,7 +140,7 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 
 **Modifiers:** `Shrink`, `Grow`, `Correct`, `Shell`, `CutPlane`, `Split`, `Elongate`, `Offset`
 
-**Patterns:** `Array`, `SmoothArray`, `RotateCopyZ`, `RotateUnionZ`, `SmoothRotateUnionZ`, `Multi`, `LineOf`, `Orient`
+**Patterns:** `Array`, `SmoothArray`, `RotateCopyZ`, `RotateCopyAtZ`, `RotateUnionZ`, `SmoothRotateUnionZ`, `Multi`, `LineOf`, `Orient`
 
 ### Mesh / voxel
 
@@ -168,7 +168,8 @@ The canonical way to place parts. See [/positioning](/positioning/) for the full
 
 **Placement verbs on `AnchoredSolid`:**
 
-- Relative (return `Placement`): `On(target)`, `Above(target, gap...)`, `Below`, `RightOf`, `LeftOf`, `Behind`, `InFrontOf`
+- Relative, receiver moves (return `Placement`): `On(target)`, `Above(target, gap...)`, `Below`, `RightOf`, `LeftOf`, `Behind`, `InFrontOf`
+- Relative, receiver stays / argument moves (return `Placement`): `Attach(part)`, `AttachAbove(part, gap...)`, `AttachBelow`, `AttachRight`, `AttachLeft`, `AttachBehind`, `AttachInFront`. Mirror images of the above — pick whichever keeps the chain's subject readable.
 - Absolute (return `*Solid`): `At(v3.Vec)`, `AtX`, `AtY`, `AtZ`
 - Anchor tweaks (return `AnchoredSolid`): `ShiftX`, `ShiftY`, `ShiftZ`
 
@@ -180,7 +181,8 @@ The canonical way to place parts. See [/positioning](/positioning/) for the full
 
 **Sugar verbs on `*Solid`** (relative; return `Placement`):
 
-- `OnTopOf`, `UnderneathOf`, `LeftOf`, `RightOf`, `InFrontOf`, `BehindOf` (each takes `target AnchoredSolid, gap ...float64`)
+- Receiver moves (target `AnchoredSolid, gap ...float64`): `OnTopOf`, `UnderneathOf`, `LeftOf`, `RightOf`, `InFrontOf`, `BehindOf`
+- Receiver stays (part `*Solid, gap ...float64`, defaults touching faces): `AttachOnTop`, `AttachUnderneath`, `AttachLeft`, `AttachRight`, `AttachInFront`, `AttachBehind`
 - `Inside(other *Solid)`
 
 **Absolute scalar setters on `*Solid`** (return `*Solid`):

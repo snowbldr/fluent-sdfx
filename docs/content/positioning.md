@@ -26,7 +26,7 @@ pegs := peg.Multi(layout.Polar(20, 6)...)
 Three concepts:
 
 1. **Anchors** — `s.Top()`, `s.BottomFrontRight()`, `s.AnchorAt(x,y,z)` — return an `AnchoredSolid` (the solid + the anchor point in world space).
-2. **Placement verbs** on `AnchoredSolid` — `On`, `Above`, `Below`, `RightOf`, `LeftOf`, `Behind`, `InFrontOf`, `At`, `AtX`, `AtY`, `AtZ`, `ShiftX/Y/Z` — move the solid so its anchor lands on a target. Relative verbs return a `Placement`; absolute verbs return a `*Solid`.
+2. **Placement verbs** on `AnchoredSolid` — `On`, `Above`, `Below`, `RightOf`, `LeftOf`, `Behind`, `InFrontOf`, `At`, `AtX`, `AtY`, `AtZ`, `ShiftX/Y/Z` — move the solid so its anchor lands on a target. Relative verbs return a `Placement`; absolute verbs return a `*Solid`. Each relative verb has a mirror image — `Attach`, `AttachAbove`, `AttachBelow`, `AttachRight`, `AttachLeft`, `AttachBehind`, `AttachInFront` — that flips which side moves: receiver stays, argument is the part that moves to meet it. Pick whichever reads naturally for the scene.
 3. **`Placement` finalizers** — `.Union()`, `.Cut()`, `.Intersect()`, `.Solid()` — finish the chain. The chain's subject (the active solid) is what's kept, matching the `s.Cut(other)` convention. `.Solid()` is the escape hatch when you want the moved part on its own — useful for drilling: `body.Cut(tool.Top().On(body.Top()).Solid())` keeps the body and carves the tool from it.
 
 ## Anchors
@@ -321,21 +321,37 @@ Once you have an anchor, you place it. **Relative** verbs take another anchor an
   </div>
 </div>
 
+### Two readings: receiver moves vs. receiver stays
+
+Every relative verb has both forms. Pick whichever keeps the chain's subject readable in context:
+
+| Receiver moves (the `On` family) | Receiver stays (the `Attach` family) |
+|---|---|
+| `cap.Bottom().On(body.Top())` | `body.Top().Attach(cap.Bottom())` |
+| `peg.Bottom().Above(plate.Top(), 2)` | `plate.Top().AttachAbove(peg.Bottom(), 2)` |
+| `m.Top().Below(host.Bottom(), 2)` | `host.Bottom().AttachBelow(m.Top(), 2)` |
+| `m.Left().RightOf(host.Right(), 2)` | `host.Right().AttachRight(m.Left(), 2)` |
+| `m.Right().LeftOf(host.Left(), 2)` | `host.Left().AttachLeft(m.Right(), 2)` |
+| `m.Front().Behind(host.Back(), 2)` | `host.Back().AttachBehind(m.Front(), 2)` |
+| `m.Back().InFrontOf(host.Front(), 2)` | `host.Front().AttachInFront(m.Back(), 2)` |
+
+Both produce the same final geometry — what differs is which solid is the chain's subject. Reach for `Attach*` when you're building up an assembly and want the assembly to stay the subject across multiple appended steps; reach for `On`/`Above`/etc. when you're describing a single part landing on a fixed reference.
+
 ### Sugar on `*Solid`
 
-For the most common case — placing a solid relative to another solid's matching face — there's a shorter form on the moved solid:
+For the most common case — placing a solid relative to another solid's matching face — there's a shorter form. Both readings are available:
 
-| Sugar | Equivalent |
-|---|---|
-| `s.OnTopOf(t.Top())` | `s.Bottom().Above(t.Top())` |
-| `s.UnderneathOf(t.Bottom())` | `s.Top().Below(t.Bottom())` |
-| `s.RightOf(t.Right())` | `s.Left().RightOf(t.Right())` |
-| `s.LeftOf(t.Left())` | `s.Right().LeftOf(t.Left())` |
-| `s.InFrontOf(t.Front())` | `s.Back().InFrontOf(t.Front())` |
-| `s.BehindOf(t.Back())` | `s.Front().Behind(t.Back())` |
-| `s.Inside(t)` | `s.AnchorAt(0,0,0).On(t.AnchorAt(0,0,0))` |
+| Receiver moves | Receiver stays | Equivalent (anchor form) |
+|---|---|---|
+| `s.OnTopOf(t.Top())` | `t.AttachOnTop(s)` | `s.Bottom().Above(t.Top())` |
+| `s.UnderneathOf(t.Bottom())` | `t.AttachUnderneath(s)` | `s.Top().Below(t.Bottom())` |
+| `s.RightOf(t.Right())` | `t.AttachRight(s)` | `s.Left().RightOf(t.Right())` |
+| `s.LeftOf(t.Left())` | `t.AttachLeft(s)` | `s.Right().LeftOf(t.Left())` |
+| `s.InFrontOf(t.Front())` | `t.AttachInFront(s)` | `s.Back().InFrontOf(t.Front())` |
+| `s.BehindOf(t.Back())` | `t.AttachBehind(s)` | `s.Front().Behind(t.Back())` |
+| `s.Inside(t)` | — | `s.AnchorAt(0,0,0).On(t.AnchorAt(0,0,0))` |
 
-All return a `Placement`. The absolute setters — `BottomAt`, `TopAt`, `LeftAt`, `RightAt`, `FrontAt`, `BackAt`, `CenterAt` — each leave the other axes alone and return `*Solid`.
+The `Attach*` sugar takes a `*Solid` (not an `AnchoredSolid`) and defaults the touching faces — e.g., `t.AttachOnTop(s, gap)` uses `t.Top()` and `s.Bottom()` automatically. Reach for the `AnchoredSolid` `Attach*` form when you need different anchors. All return a `Placement`. The absolute setters — `BottomAt`, `TopAt`, `LeftAt`, `RightAt`, `FrontAt`, `BackAt`, `CenterAt` — each leave the other axes alone and return `*Solid`.
 
 > [!TIP]
 > The sugar verbs collapse the two-solid case into one chain, but the underlying anchor form is more flexible — use it when you need cross-axis pairings like "this part's right face on that part's top face" (`s.Right().On(t.Top())`).

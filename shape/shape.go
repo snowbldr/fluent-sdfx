@@ -3,6 +3,7 @@ package shape
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/snowbldr/fluent-sdfx/plane"
 	flrender "github.com/snowbldr/fluent-sdfx/render"
@@ -276,8 +277,126 @@ func (s *Shape) SmoothArray(numX, numY int, step v2.Vec, min sdf.MinFunc) *Shape
 }
 
 // RotateCopy creates N copies of the shape evenly spaced in a full circle.
+//
+// The underlying sdfx fold maps every query point into a single canonical
+// sector centered at angle 0 with half-width 180°/n. Two practical
+// constraints follow:
+//
+//   - The source's angular extent must be < 360°/n. Wider sources alias
+//     onto themselves; use RotateUnion for those.
+//   - The source must sit inside the canonical sector. RotateCopy
+//     auto-recenters by inferring the source's angle from its bounding-box
+//     center and rotating to canonical before the fold. Use RotateCopyAt
+//     for an explicit, intent-preserving variant.
+//
+// Panics if n <= 0 or if the source's angular extent (estimated from its
+// bounding-box corners) exceeds 360°/n — recentering can't save those, and
+// RotateUnion is the right tool.
 func (s *Shape) RotateCopy(n int) *Shape {
-	return &Shape{sdf.RotateCopy2D(s.SDF2, n)}
+	if n <= 0 {
+		panic(fmt.Errorf("shape.RotateCopy: n must be > 0, got %d", n))
+	}
+	bb := s.Bounds()
+	center := bb.Center()
+	// Bbox center on the origin: assume the source is rotationally
+	// symmetric (a ring, a centered disk) — the inferred angle is
+	// meaningless and the bbox-based extent check would falsely panic
+	// (a centered Circle's bbox spans 270° even though the source is
+	// trivially N-fold symmetric). Skip both recenter and check.
+	if isNearOrigin2D(center, bb.Size()) {
+		return &Shape{sdf.RotateCopy2D(s.SDF2, n)}
+	}
+	// Validate angular extent on the incoming bbox. Extent is invariant
+	// under rotation about the origin, so checking before the recenter
+	// rotation avoids the AABB-of-rotated-AABB growth that compounds
+	// every Transform2D and would otherwise produce false positives at
+	// the sector boundary.
+	checkAngularExtent2D("RotateCopy", bb, n)
+	atDeg := math.Atan2(center.Y, center.X) * 180 / math.Pi
+	folded := &Shape{sdf.RotateCopy2D(s.Rotate(-atDeg).SDF2, n)}
+	return folded.Rotate(atDeg)
+}
+
+// RotateCopyAt creates N copies of the shape evenly spaced in a full
+// circle, with the first copy centered at angle atDeg (degrees, CCW from
+// +X). The shape is assumed to already sit in the canonical sector
+// centered at angle 0 — typically because the caller built it that way
+// (e.g., a wedge symmetric about +X). The fold is performed at canonical 0
+// and the resulting union is rotated to atDeg.
+//
+// Prefer this over RotateCopy when expressing "N copies, first one at
+// angle X": it documents intent and avoids relying on the auto-recenter
+// inferring it from the bounding-box center.
+//
+// Panics if n <= 0 or if the source's angular extent (estimated from its
+// bounding-box corners) exceeds 360°/n — see RotateCopy for the
+// constraint.
+func (s *Shape) RotateCopyAt(n int, atDeg float64) *Shape {
+	if n <= 0 {
+		panic(fmt.Errorf("shape.RotateCopyAt: n must be > 0, got %d", n))
+	}
+	bb := s.Bounds()
+	// Bbox-centered-on-origin sources are assumed rotationally symmetric
+	// (see RotateCopy for the same reasoning) — skip the extent check.
+	if !isNearOrigin2D(bb.Center(), bb.Size()) {
+		checkAngularExtent2D("RotateCopyAt", bb, n)
+	}
+	out := &Shape{sdf.RotateCopy2D(s.SDF2, n)}
+	if atDeg == 0 {
+		return out
+	}
+	return out.Rotate(atDeg)
+}
+
+func checkAngularExtent2D(fn string, bb Box2, n int) {
+	if n <= 1 {
+		return
+	}
+	sectorWidth := 360.0 / float64(n)
+	extent := angularExtentDeg(bb.Vertices())
+	if extent > sectorWidth*(1+1e-9)+1e-12 {
+		panic(fmt.Errorf("shape.%s: source angular extent %.3f° exceeds sector width %.3f° (n=%d); use RotateUnion for wider sources", fn, extent, sectorWidth, n))
+	}
+}
+
+// angularExtentDeg returns the angular extent (in degrees) of a set of 2D
+// points as seen from the origin — the width of the smallest arc that
+// covers all of them. Robust across the ±π wrap: angles are sorted and the
+// largest empty gap is removed from the full circle.
+//
+// Returns 0 for the empty/origin-only case (extent is meaningless).
+func angularExtentDeg(pts v2.VecSet) float64 {
+	angles := make([]float64, 0, len(pts))
+	for _, p := range pts {
+		if p.X == 0 && p.Y == 0 {
+			continue
+		}
+		angles = append(angles, math.Atan2(p.Y, p.X))
+	}
+	if len(angles) == 0 {
+		return 0
+	}
+	sort.Float64s(angles)
+	largestGap := 2*math.Pi + angles[0] - angles[len(angles)-1]
+	for i := 1; i < len(angles); i++ {
+		if g := angles[i] - angles[i-1]; g > largestGap {
+			largestGap = g
+		}
+	}
+	return (2*math.Pi - largestGap) * 180 / math.Pi
+}
+
+// isNearOrigin2D reports whether the bbox center is close enough to the
+// origin that atan2 of its position is meaningless — for symmetric rings
+// or shapes already centered on Z, the inferred angle would oscillate on
+// floating-point noise. Threshold is relative to the bbox size.
+func isNearOrigin2D(center, size v2.Vec) bool {
+	const eps = 1e-9
+	scale := size.MaxComponent()
+	if scale < 1 {
+		scale = 1
+	}
+	return center.Length() <= eps*scale
 }
 
 // RotateUnion creates a union of the shape rotated N times by the given step matrix.

@@ -132,10 +132,21 @@ s.TopRight() s.BottomFront() s.FrontLeft() ...                         // 12 edg
 s.TopFrontRight() s.BottomBackLeft() ...                               // 8 corners
 s.AnchorAt(x, y, z int)                                                // arbitrary; each in {-1,0,+1}
 
-// Relative placement (anchor → anchor) — returns Placement
-cap.Bottom().On(body.Top()).Union()         // stack flush, then union (commutative)
+// Relative placement (anchor → anchor) — returns Placement.
+// Each verb has two forms: receiver moves (On/Above/...) and receiver stays
+// (Attach/AttachAbove/...). Pick whichever keeps the chain's subject readable.
+
+// Receiver moves — argument is the fixed reference
+cap.Bottom().On(body.Top()).Union()              // cap moves; stack flush, union (commutative)
 boss.OnTopOf(plate.Top()).SmoothUnion(solid.RoundMin(2)) // smooth fillet at the seam
-m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
+m.Right().LeftOf(host.Left(), 1).Solid()         // returns *Solid (no boolean)
+
+// Receiver stays — argument is the part that moves to meet it.
+// Useful when the receiver is the assembly being built up across multiple steps.
+body.Top().Attach(cap.Bottom()).Union()          // mirror of cap.Bottom().On(body.Top())
+plate.Top().AttachAbove(boss.Bottom(), 2).Union()
+host.Right().AttachRight(m.Left(), 1).Solid()
+// Full set: Attach, AttachAbove, AttachBelow, AttachRight, AttachLeft, AttachBehind, AttachInFront
 
 // Drilling/cutting: the chain's subject is what's kept (matches s.Cut(other)).
 // To drill into a body, START the chain from the body and pass the
@@ -143,7 +154,8 @@ m.Right().LeftOf(host.Left(), 1).Solid()    // returns *Solid (no boolean)
 body.Cut(pocket.Top().On(body.Top()).Solid())  // body kept, pocket carved from top
 body.Cut(hole.Bottom().Above(body.Top(), 2).Solid())  // 2mm gap, then drill
 
-// Sugar on *Solid (same chains, fewer anchors)
+// Sugar on *Solid (same chains, fewer anchors). Each has both readings.
+// Receiver moves (target AnchoredSolid):
 s.OnTopOf(t.Top())          // == s.Bottom().Above(t.Top())
 s.UnderneathOf(t.Bottom())  // == s.Top().Below(t.Bottom())
 s.RightOf(t.Right())        // == s.Left().RightOf(t.Right())
@@ -151,6 +163,13 @@ s.LeftOf(t.Left())          // == s.Right().LeftOf(t.Left())
 s.InFrontOf(t.Front())      // == s.Back().InFrontOf(t.Front())
 s.BehindOf(t.Back())        // == s.Front().Behind(t.Back())
 s.Inside(t)                 // bbox center on bbox center
+// Receiver stays (part *Solid; defaults touching faces):
+t.AttachOnTop(s, gap)       // == t.Top().AttachAbove(s.Bottom(), gap)
+t.AttachUnderneath(s, gap)  // == t.Bottom().AttachBelow(s.Top(), gap)
+t.AttachRight(s, gap)       // == t.Right().AttachRight(s.Left(), gap)
+t.AttachLeft(s, gap)        // == t.Left().AttachLeft(s.Right(), gap)
+t.AttachBehind(s, gap)      // == t.Back().AttachBehind(s.Front(), gap)
+t.AttachInFront(s, gap)     // == t.Front().AttachInFront(s.Back(), gap)
 
 // Absolute (return *Solid directly)
 s.AnchorAt(0,0,1).At(v3.XYZ(0, 0, 50))      // land an anchor on a literal point
@@ -194,7 +213,7 @@ post.Multi(layout.Line(v3.X(0), v3.X(60), 4)...)   // n equally spaced
 
 - `.Translate(v)` — literal vector, unrelated to other geometry.
 - `anchor.At(p)` — land a specific edge/corner on a literal point.
-- `anchor.On(target)` / sugar verbs (`OnTopOf`, ...) — relative to another part.
+- `anchor.On(target)` / sugar verbs (`OnTopOf`, ...) — relative to another part. Use the `Attach*` mirror image (`base.Top().AttachAbove(part.Bottom())`, `chassis.AttachOnTop(motor)`) when the chain's subject should be the assembly being built, not the part being added.
 - `BottomAt(z)` / `LeftAt(x)` / ... — flush a face against an axis plane.
 - `layout.X` + `.Multi(...)` — repeated copies in a regular pattern.
 
@@ -241,14 +260,19 @@ Shell is closed on every face. To make a *cup* or *open box*, Shell first then C
 ```go
 s.Array(nx, ny, nz, v3.XYZ(stepX, stepY, stepZ))    // regular grid
 s.RotateCopyZ(n)                                     // n copies around Z, evenly spaced
+s.RotateCopyAtZ(n, atDeg)                            // explicit "first copy at angle X" form
+s.RotateUnionZ(n, RotateZMatrix(stepDeg))            // arbitrary step (incl. partial-arc gaps)
 s.LineOf(p0, p1, "xxx.xxx")                          // along a line; 'x' = copy, '.' = skip
 s.Multi([]v3.Vec{...})                               // explicit positions
 s.Orient(base, []v3.Vec{...})                        // copies aligned to direction vectors
 
 // Smooth-blended versions: SmoothArray, SmoothRotateUnionZ
+// 2D mirror: shape.RotateCopy(n), shape.RotateCopyAt(n, atDeg), shape.RotateUnion(n, step)
 ```
 
-`RotateCopyZ` orbits *the receiver as-is* around Z. Position the source off-axis (e.g. `.TranslateX(10)`) to get evenly-spaced copies; otherwise all copies overlap at the centre.
+`RotateCopyZ` orbits *the receiver as-is* around Z. Position the source off-axis (e.g. `.TranslateX(10)`) to get evenly-spaced copies; otherwise all copies overlap at the centre. The wrapper auto-recenters by inferring the source's angle from the XY of its bbox center, so `tooth.RotateZ(-150).RotateCopyZ(3)` produces three intact copies (pre-fix it clipped the copy whose bbox straddled the ±180° fold seam).
+
+The fold imposes a hard constraint: the source's angular extent (XY bbox corners as seen from the Z axis) must be < 360°/n. Wider sources alias onto themselves; the wrapper panics with a message recommending `RotateUnionZ`, which composes N rotated copies explicitly without folding (slower per query, no extent constraint, also the right tool when you want a partial-arc / gap pattern). The same constraint applies to the 2D `shape.RotateCopy` / `shape.RotateUnion`.
 
 ## Cross-sections (3D → 2D)
 
@@ -408,11 +432,11 @@ func main() {
 - [/solids-3d](/solids-3d/) — every 3D primitive.
 - [/booleans](/booleans/) — Union, Cut, Intersect.
 - [/transforms](/transforms/) — Translate, Rotate, Scale, Mirror.
-- [/positioning](/positioning/) — anchors (Top, BottomFrontRight, ...), placement verbs (On, Above, OnTopOf, Inside, BottomAt, ...), and `layout` helpers (Polar, Grid, RectCorners). The canonical way to place parts.
+- [/positioning](/positioning/) — anchors (Top, BottomFrontRight, ...), placement verbs in two readings (receiver moves: On / Above / OnTopOf / ...; receiver stays: Attach / AttachAbove / AttachOnTop / ...), Inside, BottomAt, and `layout` helpers (Polar, Grid, RectCorners). The canonical way to place parts.
 - [/2d-to-3d](/2d-to-3d/) — Extrude, Revolve, Loft, SweepHelix, Screw.
 - [/smooth-blends](/smooth-blends/) — RoundMin, ChamferMin, PolyMax, etc.
 - [/modifiers](/modifiers/) — Shell, Offset, Shrink, Grow, Elongate.
-- [/patterns](/patterns/) — Array, RotateCopyZ, LineOf, Multi, Orient.
+- [/patterns](/patterns/) — Array, RotateCopyZ / RotateCopyAtZ (auto-recenter; 360°/n extent constraint), RotateUnionZ (no constraint, supports partial-arc gaps), LineOf, Multi, Orient.
 - [/cross-sections](/cross-sections/) — slicing 3D solids back to 2D.
 - [/text-2d-output](/text-2d-output/) — Text rendering, DXF/SVG/PNG.
 - [/obj-overview](/obj-overview/) — tour of the parametric helpers.

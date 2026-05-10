@@ -139,6 +139,62 @@ func (a AnchoredSolid) InFrontOf(target AnchoredSolid, gap ...float64) Placement
 	return a.On(target.shift(v3.Y(-firstOr0(gap))))
 }
 
+// --- Receiver-stays placement verbs on AnchoredSolid ---
+//
+// These mirror On/Above/Below/RightOf/LeftOf/Behind/InFrontOf with reversed
+// semantics: this anchor is the *base* (stays put) and the argument is the
+// *part* that moves to meet it. The two readings cover the two natural
+// English directions:
+//
+//	cap.Bottom().On(body.Top())      // "cap's bottom is on body's top"   (cap moves)
+//	body.Top().Attach(cap.Bottom())  // "to body's top, attach cap's bottom" (cap moves)
+//
+// Both place the cap on the body. The receiver-stays form is convenient
+// when the receiver is the assembly being built up and you want to keep it
+// as the chain's subject.
+
+// Attach aligns the given part's anchor with this anchor — receiver
+// stays, part moves. Mirror image of On.
+func (a AnchoredSolid) Attach(part AnchoredSolid) Placement {
+	return part.On(a)
+}
+
+// AttachAbove places the part's anchor at this point + (0,0,gap) — part
+// ends up above the receiver. Mirror image of Above.
+func (a AnchoredSolid) AttachAbove(part AnchoredSolid, gap ...float64) Placement {
+	return part.Above(a, gap...)
+}
+
+// AttachBelow places the part's anchor at this point + (0,0,-gap) — part
+// ends up below the receiver. Mirror image of Below.
+func (a AnchoredSolid) AttachBelow(part AnchoredSolid, gap ...float64) Placement {
+	return part.Below(a, gap...)
+}
+
+// AttachRight places the part's anchor at this point + (gap,0,0) — part
+// ends up to the right of the receiver. Mirror image of RightOf.
+func (a AnchoredSolid) AttachRight(part AnchoredSolid, gap ...float64) Placement {
+	return part.RightOf(a, gap...)
+}
+
+// AttachLeft places the part's anchor at this point + (-gap,0,0) — part
+// ends up to the left of the receiver. Mirror image of LeftOf.
+func (a AnchoredSolid) AttachLeft(part AnchoredSolid, gap ...float64) Placement {
+	return part.LeftOf(a, gap...)
+}
+
+// AttachBehind places the part's anchor at this point + (0,gap,0) — part
+// ends up behind the receiver. Mirror image of Behind.
+func (a AnchoredSolid) AttachBehind(part AnchoredSolid, gap ...float64) Placement {
+	return part.Behind(a, gap...)
+}
+
+// AttachInFront places the part's anchor at this point + (0,-gap,0) —
+// part ends up in front of the receiver. Mirror image of InFrontOf.
+func (a AnchoredSolid) AttachInFront(part AnchoredSolid, gap ...float64) Placement {
+	return part.InFrontOf(a, gap...)
+}
+
 // At aligns this anchor with a literal world-space point and returns the moved solid.
 func (a AnchoredSolid) At(target v3.Vec) *Solid {
 	return a.Solid.Translate(target.Sub(a.Point))
@@ -205,6 +261,50 @@ func (s *Solid) BehindOf(target AnchoredSolid, gap ...float64) Placement {
 // Inside places s so its bbox center matches other's bbox center.
 func (s *Solid) Inside(other *Solid) Placement {
 	return s.AnchorAt(0, 0, 0).On(other.AnchorAt(0, 0, 0))
+}
+
+// --- Receiver-stays sugar on Solid ---
+//
+// Mirrors OnTopOf / UnderneathOf / LeftOf / RightOf / InFrontOf / BehindOf
+// but with reversed semantics: s is the base (stays put), part is what moves
+// to attach to s. Each defaults the touching face on both solids — e.g.,
+// AttachOnTop uses s.Top() and part.Bottom() so the part lands flush. Reach
+// for AnchoredSolid.Attach* if you need different anchors.
+
+// AttachOnTop is sugar for s.Top().AttachAbove(part.Bottom(), gap...) —
+// part ends up sitting on top of s.
+func (s *Solid) AttachOnTop(part *Solid, gap ...float64) Placement {
+	return s.Top().AttachAbove(part.Bottom(), gap...)
+}
+
+// AttachUnderneath is sugar for s.Bottom().AttachBelow(part.Top(), gap...) —
+// part ends up underneath s.
+func (s *Solid) AttachUnderneath(part *Solid, gap ...float64) Placement {
+	return s.Bottom().AttachBelow(part.Top(), gap...)
+}
+
+// AttachLeft is sugar for s.Left().AttachLeft(part.Right(), gap...) —
+// part ends up to the left of s.
+func (s *Solid) AttachLeft(part *Solid, gap ...float64) Placement {
+	return s.Left().AttachLeft(part.Right(), gap...)
+}
+
+// AttachRight is sugar for s.Right().AttachRight(part.Left(), gap...) —
+// part ends up to the right of s.
+func (s *Solid) AttachRight(part *Solid, gap ...float64) Placement {
+	return s.Right().AttachRight(part.Left(), gap...)
+}
+
+// AttachInFront is sugar for s.Front().AttachInFront(part.Back(), gap...) —
+// part ends up in front of s.
+func (s *Solid) AttachInFront(part *Solid, gap ...float64) Placement {
+	return s.Front().AttachInFront(part.Back(), gap...)
+}
+
+// AttachBehind is sugar for s.Back().AttachBehind(part.Front(), gap...) —
+// part ends up behind s.
+func (s *Solid) AttachBehind(part *Solid, gap ...float64) Placement {
+	return s.Back().AttachBehind(part.Front(), gap...)
 }
 
 // Absolute scalar setters — leave other axes alone, return *Solid.
