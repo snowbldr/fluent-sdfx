@@ -52,7 +52,7 @@ func main() {
 		return
 	}
 
-	out, m := meshopt.Simplify(verts, n, target, 0.05)
+	out, m, _ := meshopt.Simplify(verts, n, target, 0.05)
 	if m == 0 {
 		fmt.Fprintln(os.Stderr, "decimation produced 0 triangles; copying input")
 		if err := copyFile(inPath, outPath); err != nil {

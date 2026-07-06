@@ -8,7 +8,8 @@ extern "C" size_t meshopt_simplify_unindexed(
     const float* vertices,
     size_t num_triangles,
     size_t target_triangles,
-    float target_error
+    float target_error,
+    float* out_error
 ) {
     size_t vertex_count = num_triangles * 3;
     size_t index_count = vertex_count;
@@ -37,7 +38,7 @@ extern "C" size_t meshopt_simplify_unindexed(
     size_t simplified_count = meshopt_simplify(
         simplified.data(), indices.data(), index_count,
         indexed_verts.data(), unique_vertices, sizeof(float) * 3,
-        target_triangles * 3, target_error, 0, NULL
+        target_triangles * 3, target_error, 0, out_error
     );
 
     // Convert back to unindexed triangle soup

@@ -10,12 +10,15 @@ extern "C" {
 // Simplify an unindexed triangle mesh (3 floats per vertex, 3 vertices per triangle).
 // Returns the number of triangles in the output.
 // out_vertices must be pre-allocated to at least num_triangles * 9 floats.
+// out_error (may be NULL) receives the achieved error, relative to mesh extent
+// (same scale as target_error).
 size_t meshopt_simplify_unindexed(
     float* out_vertices,
     const float* vertices,
     size_t num_triangles,
     size_t target_triangles,
-    float target_error
+    float target_error,
+    float* out_error
 );
 
 #ifdef __cplusplus

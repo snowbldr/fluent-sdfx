@@ -630,8 +630,12 @@ func minCells() int {
 // parts are floored at MinCells cells (see MinCells) so they don't
 // render as empty.
 //
-// Optional decimate (0-1) is the fraction of triangles to remove:
-// 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%). 0 disables decimation.
+// Optional decimate values: decimate[0] (0-1) is the fraction of triangles
+// to remove — 0.1 removes 10% (keeps 90%); 0.9 removes 90% (keeps 10%); 0
+// disables decimation. decimate[1] caps the surface deviation decimation may
+// introduce, in mm (default flrender.DefaultDecimateMaxError). Planar
+// regions collapse at ~zero error, so aggressive ratios stay safe on flat
+// faces; the cap only limits how far curved detail can be simplified.
 func (s *Solid) STL(path string, cellsPerMM float64, decimate ...float64) {
 	flrender.ToSTL(s, path, render.NewMarchingCubesOctree(CellsFor(s, cellsPerMM)), decimate...)
 }
