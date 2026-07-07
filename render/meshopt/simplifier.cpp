@@ -667,16 +667,28 @@ static const size_t kMaxAttributes = 32;
 struct Quadric
 {
 	// a00*x^2 + a11*y^2 + a22*z^2 + 2*a10*xy + 2*a20*xz + 2*a21*yz + 2*b0*x + 2*b1*y + 2*b2*z + c
-	float a00, a11, a22;
-	float a10, a20, a21;
-	float b0, b1, b2, c;
-	float w;
+	//
+	// LOCAL PATCH (snowbldr): double, not float. The expanded-form evaluation
+	// suffers catastrophic cancellation in float32: for a surface at rescaled
+	// coordinate |v| ~ 1, the a/b/c terms are O(w) and their float32 rounding
+	// leaves a noise floor of ~1e-7 in the normalized error — i.e. ~3e-4 in
+	// sqrt/distance terms, which is 0.04mm on a 127mm part. Exactly planar
+	// faces far from the mesh bbox origin then rank ABOVE tight error limits
+	// and never simplify (observed: a mold's +X wall stayed at full render
+	// density at any budget < 0.04mm while the -X wall — near the rescale
+	// origin, hence small coefficients and small rounding — collapsed fully).
+	// Double coefficients drop the noise floor below any practical budget.
+	double a00, a11, a22;
+	double a10, a20, a21;
+	double b0, b1, b2, c;
+	double w;
 };
 
 struct QuadricGrad
 {
 	// gx*x + gy*y + gz*z + gw
-	float gx, gy, gz, gw;
+	// LOCAL PATCH (snowbldr): double, see Quadric.
+	double gx, gy, gz, gw;
 };
 
 struct Reservoir
@@ -747,11 +759,16 @@ static void quadricAdd(QuadricGrad* G, const QuadricGrad* R, size_t attribute_co
 	}
 }
 
-static float quadricEval(const Quadric& Q, const Vector3& v)
+// LOCAL PATCH (snowbldr): quadric construction, accumulation and evaluation
+// run in double precision (see Quadric struct comment). The expanded form
+// r = vᵀAv + 2bᵀv + c cancels catastrophically: float arithmetic leaves a
+// residual of ~1e-7·w·d² for a plane at offset d, i.e. a distance-error
+// noise floor of ~3e-4·extent — far above tight simplification budgets.
+static double quadricEval(const Quadric& Q, const Vector3& v)
 {
-	float rx = Q.b0;
-	float ry = Q.b1;
-	float rz = Q.b2;
+	double rx = Q.b0;
+	double ry = Q.b1;
+	double rz = Q.b2;
 
 	rx += Q.a10 * v.y;
 	ry += Q.a21 * v.z;
@@ -765,7 +782,7 @@ static float quadricEval(const Quadric& Q, const Vector3& v)
 	ry += Q.a11 * v.y;
 	rz += Q.a22 * v.z;
 
-	float r = Q.c;
+	double r = Q.c;
 	r += rx * v.x;
 	r += ry * v.y;
 	r += rz * v.z;
@@ -775,35 +792,35 @@ static float quadricEval(const Quadric& Q, const Vector3& v)
 
 static float quadricError(const Quadric& Q, const Vector3& v)
 {
-	float r = quadricEval(Q, v);
-	float s = Q.w == 0.f ? 0.f : 1.f / Q.w;
+	double r = quadricEval(Q, v);
+	double s = Q.w == 0. ? 0. : 1. / Q.w;
 
-	return fabsf(r) * s;
+	return (float)(fabs(r) * s);
 }
 
 static float quadricError(const Quadric& Q, const QuadricGrad* G, size_t attribute_count, const Vector3& v, const float* va)
 {
-	float r = quadricEval(Q, v);
+	double r = quadricEval(Q, v);
 
 	// see quadricFromAttributes for general derivation; here we need to add the parts of (eval(pos) - attr)^2 that depend on attr
 	for (size_t k = 0; k < attribute_count; ++k)
 	{
-		float a = va[k];
-		float g = v.x * G[k].gx + v.y * G[k].gy + v.z * G[k].gz + G[k].gw;
+		double a = va[k];
+		double g = v.x * G[k].gx + v.y * G[k].gy + v.z * G[k].gz + G[k].gw;
 
 		r += a * (a * Q.w - 2 * g);
 	}
 
 	// note: unlike position error, we do not normalize by Q.w to retain edge scaling as described in quadricFromAttributes
-	return fabsf(r);
+	return (float)fabs(r);
 }
 
-static void quadricFromPlane(Quadric& Q, float a, float b, float c, float d, float w)
+static void quadricFromPlane(Quadric& Q, double a, double b, double c, double d, double w)
 {
-	float aw = a * w;
-	float bw = b * w;
-	float cw = c * w;
-	float dw = d * w;
+	double aw = a * w;
+	double bw = b * w;
+	double cw = c * w;
+	double dw = d * w;
 
 	Q.a00 = a * aw;
 	Q.a11 = b * bw;
@@ -818,7 +835,7 @@ static void quadricFromPlane(Quadric& Q, float a, float b, float c, float d, flo
 	Q.w = w;
 }
 
-static void quadricFromPoint(Quadric& Q, float x, float y, float z, float w)
+static void quadricFromPoint(Quadric& Q, double x, double y, double z, double w)
 {
 	Q.a00 = Q.a11 = Q.a22 = w;
 	Q.a10 = Q.a20 = Q.a21 = 0;
@@ -831,40 +848,55 @@ static void quadricFromPoint(Quadric& Q, float x, float y, float z, float w)
 
 static void quadricFromTriangle(Quadric& Q, const Vector3& p0, const Vector3& p1, const Vector3& p2, float weight)
 {
-	Vector3 p10 = {p1.x - p0.x, p1.y - p0.y, p1.z - p0.z};
-	Vector3 p20 = {p2.x - p0.x, p2.y - p0.y, p2.z - p0.z};
+	// LOCAL PATCH (snowbldr): plane fit in double so the quadric's b/c terms
+	// aren't born rounded (see quadricEval).
+	double p10x = (double)p1.x - p0.x, p10y = (double)p1.y - p0.y, p10z = (double)p1.z - p0.z;
+	double p20x = (double)p2.x - p0.x, p20y = (double)p2.y - p0.y, p20z = (double)p2.z - p0.z;
 
 	// normal = cross(p1 - p0, p2 - p0)
-	Vector3 normal = {p10.y * p20.z - p10.z * p20.y, p10.z * p20.x - p10.x * p20.z, p10.x * p20.y - p10.y * p20.x};
-	float area = normalize(normal);
+	double nx = p10y * p20z - p10z * p20y;
+	double ny = p10z * p20x - p10x * p20z;
+	double nz = p10x * p20y - p10y * p20x;
+	double area = sqrt(nx * nx + ny * ny + nz * nz);
+	double inv = area == 0. ? 0. : 1. / area;
+	nx *= inv;
+	ny *= inv;
+	nz *= inv;
 
-	float distance = normal.x * p0.x + normal.y * p0.y + normal.z * p0.z;
+	double distance = nx * p0.x + ny * p0.y + nz * p0.z;
 
-	// we use sqrtf(area) so that the error is scaled linearly; this tends to improve silhouettes
-	quadricFromPlane(Q, normal.x, normal.y, normal.z, -distance, sqrtf(area) * weight);
+	// we use sqrt(area) so that the error is scaled linearly; this tends to improve silhouettes
+	quadricFromPlane(Q, nx, ny, nz, -distance, sqrt(area) * weight);
 }
 
 static void quadricFromTriangleEdge(Quadric& Q, const Vector3& p0, const Vector3& p1, const Vector3& p2, float weight)
 {
-	Vector3 p10 = {p1.x - p0.x, p1.y - p0.y, p1.z - p0.z};
+	// LOCAL PATCH (snowbldr): double math, see quadricFromTriangle.
+	double p10x = (double)p1.x - p0.x, p10y = (double)p1.y - p0.y, p10z = (double)p1.z - p0.z;
 
 	// edge length; keep squared length around for projection correction
-	float lengthsq = p10.x * p10.x + p10.y * p10.y + p10.z * p10.z;
-	float length = sqrtf(lengthsq);
+	double lengthsq = p10x * p10x + p10y * p10y + p10z * p10z;
+	double length = sqrt(lengthsq);
 
 	// p20p = length of projection of p2-p0 onto p1-p0; note that p10 is unnormalized so we need to correct it later
-	Vector3 p20 = {p2.x - p0.x, p2.y - p0.y, p2.z - p0.z};
-	float p20p = p20.x * p10.x + p20.y * p10.y + p20.z * p10.z;
+	double p20x = (double)p2.x - p0.x, p20y = (double)p2.y - p0.y, p20z = (double)p2.z - p0.z;
+	double p20p = p20x * p10x + p20y * p10y + p20z * p10z;
 
 	// perp = perpendicular vector from p2 to line segment p1-p0
 	// note: since p10 is unnormalized we need to correct the projection; we scale p20 instead to take advantage of normalize below
-	Vector3 perp = {p20.x * lengthsq - p10.x * p20p, p20.y * lengthsq - p10.y * p20p, p20.z * lengthsq - p10.z * p20p};
-	normalize(perp);
+	double px = p20x * lengthsq - p10x * p20p;
+	double py = p20y * lengthsq - p10y * p20p;
+	double pz = p20z * lengthsq - p10z * p20p;
+	double plen = sqrt(px * px + py * py + pz * pz);
+	double pinv = plen == 0. ? 0. : 1. / plen;
+	px *= pinv;
+	py *= pinv;
+	pz *= pinv;
 
-	float distance = perp.x * p0.x + perp.y * p0.y + perp.z * p0.z;
+	double distance = px * p0.x + py * p0.y + pz * p0.z;
 
 	// note: the weight is scaled linearly with edge length; this has to match the triangle weight
-	quadricFromPlane(Q, perp.x, perp.y, perp.z, -distance, length * weight);
+	quadricFromPlane(Q, px, py, pz, -distance, length * weight);
 }
 
 static void quadricFromAttributes(Quadric& Q, QuadricGrad* G, const Vector3& p0, const Vector3& p1, const Vector3& p2, const float* va0, const float* va1, const float* va2, size_t attribute_count)
