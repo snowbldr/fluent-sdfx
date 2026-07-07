@@ -25,9 +25,10 @@ const DefaultDecimateMaxError = 0.05
 // decimation may introduce (default DefaultDecimateMaxError).
 func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
 	fmt.Printf("rendering %s (%s)\n", path, r.Info(s))
+	start := time.Now()
 
 	mesh := render.ToTriangles(s, r)
-	fmt.Printf("  %d triangles", len(mesh))
+	fmt.Printf("  %d triangles in %.1fs", len(mesh), time.Since(start).Seconds())
 
 	removeRatio := 0.0
 	if len(decimate) > 0 {
@@ -62,6 +63,7 @@ func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
 		os.Remove(tmpPath)
 		panic(fmt.Errorf("ToSTL: rename to %s: %w", path, err))
 	}
+	fmt.Printf("  wrote %s in %.1fs total\n", path, time.Since(start).Seconds())
 }
 
 // DecimateMesh simplifies a triangle mesh, moving no surface vertex more
@@ -82,6 +84,7 @@ func ToSTL(s SDF3, path string, r render.Render3, decimate ...float64) {
 // snap's idealization — the snap's adjustments printed as visible defects on
 // thin adaptive layers — so plane snapping was removed.
 func DecimateMesh(mesh []*sdf.Triangle3, keepRatio, maxErrorMM float64) []*sdf.Triangle3 {
+	start := time.Now()
 	n := len(mesh)
 	if n == 0 {
 		return mesh
@@ -117,8 +120,8 @@ func DecimateMesh(mesh []*sdf.Triangle3, keepRatio, maxErrorMM float64) []*sdf.T
 		}
 		result[i] = &tri
 	}
-	fmt.Printf("\n  → %d after decimation (kept %.1f%% of %d, deviation ≤ %.3fmm of %.3fmm budget)",
-		count, 100*float64(count)/float64(n), n, float64(achieved)*extent, maxErrorMM)
+	fmt.Printf("\n  → %d after decimation in %.1fs (kept %.1f%% of %d, deviation ≤ %.3fmm of %.3fmm budget)",
+		count, time.Since(start).Seconds(), 100*float64(count)/float64(n), n, float64(achieved)*extent, maxErrorMM)
 	return result
 }
 
