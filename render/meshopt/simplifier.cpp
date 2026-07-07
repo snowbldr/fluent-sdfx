@@ -2475,6 +2475,9 @@ size_t meshopt_simplifyEdge(unsigned int* destination, const unsigned int* indic
 	size_t pass_count = 0;
 #endif
 
+	// LOCAL PATCH (snowbldr): see stall guard below.
+	size_t stall_count = 0;
+
 	size_t collapse_capacity = boundEdgeCollapses(adjacency, vertex_count, index_count, vertex_kind);
 
 	Collapse* edge_collapses = allocator.allocate<Collapse>(collapse_capacity);
@@ -2510,6 +2513,21 @@ size_t meshopt_simplifyEdge(unsigned int* destination, const unsigned int* indic
 
 		sortEdgeCollapses(collapse_order, edge_collapses, edge_collapse_count);
 
+#if TRACE
+		// LOCAL PATCH (snowbldr): sorted candidate error deciles, to see what
+		// the error distribution looks like when passes stall.
+		if (pass_count <= 1 || edge_collapse_count < 100)
+		{
+			printf("  error deciles:");
+			for (int q = 0; q <= 10; ++q)
+			{
+				size_t idx = (edge_collapse_count - 1) * q / 10;
+				printf(" %.3g", sqrtf(edge_collapses[collapse_order[idx]].error));
+			}
+			printf(" (limit %.3g)\n", sqrtf(error_limit));
+		}
+#endif
+
 		size_t triangle_collapse_goal = (result_count - target_index_count) / 3;
 
 		for (size_t i = 0; i < vertex_count; ++i)
@@ -2521,6 +2539,20 @@ size_t meshopt_simplifyEdge(unsigned int* destination, const unsigned int* indic
 
 		// no edges can be collapsed any more due to hitting the error limit or triangle collapse limit
 		if (collapses == 0)
+			break;
+
+		// LOCAL PATCH (snowbldr): stall guard. Near tight error limits the
+		// mesh can reach a state where nearly every candidate collapse is
+		// flip-rejected and each pass performs a handful of collapses while
+		// evaluating hundreds of thousands of candidates — observed grinding
+		// 6,000+ passes at ~1 collapse per pass (hours of no progress).
+		// When a pass's yield drops below 0.01% of the candidates it walked
+		// for three passes running, this call has converged for practical
+		// purposes: bail. Callers that iterate to a fixed point get a fresh
+		// quadric state on the next call, which unlocks far more collapses
+		// than grinding this one ever would.
+		stall_count = collapses <= 16 ? stall_count + 1 : 0;
+		if (stall_count >= 3)
 			break;
 
 		updateQuadrics(collapse_remap, vertex_count, vertex_quadrics, volume_gradients, attribute_quadrics, attribute_gradients, attribute_count, vertex_positions, remap, vertex_error);
