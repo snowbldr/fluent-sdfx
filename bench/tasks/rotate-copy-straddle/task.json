@@ -1,0 +1,27 @@
+{
+  "name": "rotate-copy-straddle",
+  "category": "api-trap",
+  "tags": ["rotational-pattern", "domain-fold", "order-of-operations", "silent-material-loss"],
+  "mode": "build",
+  "source": "mcweed airway port profile: 'rotating to -150 degrees BEFORE RotateCopy(3) put the cap circles across the -180 degree period boundary, dropping a chunk of each port.' RotateCopy/RotateCopyZ fold the query domain into one 360/n sector centred on 0 degrees.",
+  "summary": "Three radial ports at 120 degree spacing with the first at -150 degrees. Pattern at canonical 0 then rotate the set; do not rotate the source first. NOTE ON THE LIBRARY: RotateCopyZ now auto-recenters (it infers the source angle from its bbox centre), so the literal incident code port.RotateZ(-150).RotateCopyZ(3) is now CORRECT for a simple radial port, and a source too wide for the sector panics loudly instead of aliasing. The failure that is still silent is the explicit-angle form, port.RotateZ(-150).RotateCopyAtZ(3, -150): RotateCopyAtZ assumes the source is already canonical, so the fold never reaches the pre-rotated source and all three ports disappear with no panic. That is what asfailed does. The same silent loss happens if the whole ring+port assembly is patterned (ring.Cut(port).RotateCopyZ(3)): a bbox centred on the Z axis skips both the recentre and the extent check.",
+  "expects_question": false,
+  "align": "center",
+  "grid": 150,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "port-void-at-minus150",             "p": [-9.959, -5.75, 0],  "inside": false },
+    { "name": "port-void-at-minus30",              "p": [9.959, -5.75, 0],   "inside": false },
+    { "name": "port-void-at-plus90",               "p": [0, 11.5, 0],        "inside": false },
+    { "name": "port-void-through-outer-wall",      "p": [-11.691, -6.75, 0], "inside": false },
+    { "name": "port-void-through-inner-wall",      "p": [-8.227, -4.75, 0],  "inside": false },
+    { "name": "wall-solid-between-ports-at-minus90", "p": [0, -11.5, 0],     "inside": true  },
+    { "name": "wall-solid-at-canonical-zero",      "p": [11.5, 0, 0],        "inside": true  },
+    { "name": "wall-solid-at-120",                 "p": [-5.75, 9.959, 0],   "inside": true  },
+    { "name": "wall-solid-above-port-z4",          "p": [-9.959, -5.75, 4],  "inside": true  },
+    { "name": "bore-empty-r5",                     "p": [5, 0, 0],           "inside": false },
+    { "name": "ring-full-height-z5.5",             "p": [11.5, 0, 5.5],      "inside": true  },
+    { "name": "ring-ends-at-z6.5",                 "p": [11.5, 0, 6.5],      "inside": false },
+    { "name": "outside-ring-r15",                  "p": [15, 0, 0],          "inside": false }
+  ]
+}

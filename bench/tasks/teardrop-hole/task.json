@@ -1,0 +1,23 @@
+{
+  "name": "teardrop-hole",
+  "category": "vocabulary",
+  "tags": ["named-form", "printability", "build"],
+  "mode": "build",
+  "source": "mcweed U347-U348 (pressed pins in blind teardrop holes) and the collar pin holes: 'teardrop' mapped first try once the model knew the form.",
+  "summary": "Horizontal through hole with a 45 degree teardrop roof so it prints support-free.",
+  "expects_question": false,
+  "align": "center",
+  "grid": 120,
+  "pass": { "iou_min": 0.985, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "hole-centre",            "p": [0, 0, 0],    "inside": false },
+    { "name": "hole-side-y2.5",         "p": [0, 2.5, 0],  "inside": false },
+    { "name": "teardrop-roof-z3.5",     "p": [0, 0, 3.5],  "inside": false },
+    { "name": "teardrop-apex-z4.1",     "p": [0, 0, 4.1],  "inside": false },
+    { "name": "above-apex-z4.5",        "p": [0, 0, 4.5],  "inside": true },
+    { "name": "roof-flank-y1.5-z3.5",   "p": [0, 1.5, 3.5], "inside": true },
+    { "name": "floor-z-3.5",            "p": [0, 0, -3.5], "inside": true },
+    { "name": "block-corner",           "p": [9, 9, 4],    "inside": true },
+    { "name": "hole-runs-full-x9",      "p": [9, 0, 0],    "inside": false }
+  ]
+}

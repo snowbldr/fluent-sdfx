@@ -1,0 +1,27 @@
+{
+  "name": "intersect-variadic",
+  "category": "api-trap",
+  "tags": ["variadic-boolean", "union-of-arguments", "silent-extra-material"],
+  "mode": "modify",
+  "source": "mcweed 2026-08-26: an agent wrote webs.Intersect(interiors, band) expecting webs ∩ interiors ∩ band. Variadic Intersect unions its arguments first, so it means webs ∩ (interiors ∪ band) and the cavity confinement was silently lost.",
+  "summary": "Trim radial webs to the intersection of two regions. webs.Intersect(cavity, band) is webs ∩ (cavity ∪ band), not webs ∩ cavity ∩ band: a true multi-intersect must be chained .Intersect(a).Intersect(b). The wrong form leaves spokes above and below the band and fins sticking out past the tube wall.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 150,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "web-kept-inside-cavity-and-band",   "p": [4, 0, 0],          "inside": true  },
+    { "name": "web-kept-near-bore-wall-r7.5",      "p": [7.5, 0, 4],        "inside": true  },
+    { "name": "web-removed-above-band-z8",         "p": [4, 0, 8],          "inside": false },
+    { "name": "web-removed-below-band-z-8",        "p": [4, 0, -8],         "inside": false },
+    { "name": "web-removed-outside-tube-r13",      "p": [13, 0, 0],         "inside": false },
+    { "name": "web-removed-outside-tube-r12.5-z3", "p": [12.5, 0, 3],       "inside": false },
+    { "name": "web-removed-outside-tube-y-axis",   "p": [0, 13, 0],         "inside": false },
+    { "name": "nothing-outside-tube-above-band",   "p": [13, 0, 8],         "inside": false },
+    { "name": "tube-wall-kept-r10-diagonal",       "p": [7.07, 7.07, 0],    "inside": true  },
+    { "name": "tube-wall-kept-full-height-z9.5",   "p": [7.07, 7.07, 9.5],  "inside": true  },
+    { "name": "tube-ends-at-z10.5",                "p": [7.07, 7.07, 10.5], "inside": false },
+    { "name": "bore-empty-between-webs",           "p": [2.83, 2.83, 0],    "inside": false },
+    { "name": "bore-empty-between-webs-z8",        "p": [2.83, 2.83, 8],    "inside": false }
+  ]
+}

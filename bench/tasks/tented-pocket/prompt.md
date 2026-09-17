@@ -1,0 +1,1 @@
+cut a pocket 10 wide (X) by 8 tall (Z) by 12 deep into the -Y face, centred on the face, so its floor is at z=4. The part prints on its -Z face and the pocket must print support-free, so give it a 45 degree tented ceiling (a gable roof peaking at the pocket's centre) instead of a flat ceiling.

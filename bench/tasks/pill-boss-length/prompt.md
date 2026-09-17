@@ -1,0 +1,1 @@
+The bosses on the ring are slightly too long and don't quite press into the airway. The width seems ok. Make them a little less long, 0.4 off each end, but keep the rounded ends and don't change anything else.

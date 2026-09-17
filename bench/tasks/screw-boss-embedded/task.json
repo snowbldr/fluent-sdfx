@@ -1,0 +1,27 @@
+{
+  "name": "screw-boss-embedded",
+  "category": "vocabulary",
+  "tags": ["embedded", "flush", "trim-by-parent", "boolean-construction"],
+  "mode": "modify",
+  "source": "mcweed U19/U39/U43/U46: 'what are those bumps on the outsides of the cylinders?... those should be horizontal to the tubes, and embedded in the tubes', 'still popping out of the cylinder in a not nice way... The extra material needs to be sliced off with a cut from a tube or an intersection with a cylinder'. Six turns over four days.",
+  "summary": "Add a horizontal M2 screw boss sunk into a curved tube wall and trimmed by the parent cylinder, so nothing stands proud. The wrong build parks it on the outer surface as a knuckle tower.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 200,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.01 },
+  "probes": [
+    { "name": "boss-trimmed-flush-with-the-outer-surface",   "p": [10.3, 0, 13.5],  "inside": false },
+    { "name": "boss-trimmed-at-its-ends-too",                "p": [9, 5.5, 13.3],   "inside": false },
+    { "name": "boss-does-not-stand-proud-at-the-corner",     "p": [11, 4, 12.8],    "inside": false },
+    { "name": "boss-thickens-the-wall-on-the-inside",        "p": [7, 0, 12],       "inside": true },
+    { "name": "boss-material-sits-beside-the-bore",          "p": [8.5, 0, 13.8],   "inside": true },
+    { "name": "boss-does-not-reach-in-past-r6",              "p": [5.5, 0, 12],     "inside": false },
+    { "name": "screw-bore-is-void-on-its-axis",              "p": [8.5, 0, 12],     "inside": false },
+    { "name": "screw-bore-runs-through-along-y",             "p": [8.5, 4, 12],     "inside": false },
+    { "name": "wall-unchanged-below-the-boss",               "p": [9, 0, 6],        "inside": true },
+    { "name": "no-second-boss-on-the-far-side",              "p": [-7, 0, 12],      "inside": false },
+    { "name": "tube-bore-still-clear-on-the-axis",           "p": [0, 0, 0],        "inside": false },
+    { "name": "tube-outer-surface-unchanged-away-from-the-boss", "p": [10.5, 0, 0], "inside": false },
+    { "name": "tube-top-unchanged-at-z15.5",                 "p": [9, 0, 15.5],     "inside": false }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "thermistor-boss-package",
+  "category": "assumption",
+  "tags": ["clarify", "component-package", "silent-assumption"],
+  "mode": "modify",
+  "source": "mcweed U26-U30: model assumed a radial two-lead thermistor; the part is an axial DO-35 bead with leads at each end. 'The holes need to be far enough apart that they're at the ends of the thermistor.'",
+  "summary": "Boss with lead holes for a thermistor whose package is not stated. Ideal first move is to ask which package; the hidden spec says axial, holes 5 mm apart along the boss.",
+  "expects_question": true,
+  "align": "none",
+  "grid": 140,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "boss-proud-x13.5",         "p": [13.5, 0, 1.2],  "inside": true },
+    { "name": "boss-top-z3.9",            "p": [12, 0, 3.9],    "inside": true },
+    { "name": "boss-ends-z4.5",           "p": [12, 0, 4.5],    "inside": false },
+    { "name": "lead-hole-upper-z2.5",     "p": [13, 0, 2.5],    "inside": false },
+    { "name": "lead-hole-lower-z-2.5",    "p": [13, 0, -2.5],   "inside": false },
+    { "name": "holes-reach-into-core-x8", "p": [8, 0, 2.5],     "inside": false },
+    { "name": "between-holes-solid",      "p": [13, 0, 0],      "inside": true },
+    { "name": "no-side-by-side-hole",     "p": [13, 0.65, 0],   "inside": true },
+    { "name": "core-unchanged",           "p": [0, 0, 14.5],    "inside": true },
+    { "name": "core-outside",             "p": [0, 10.5, 0],    "inside": false }
+  ]
+}

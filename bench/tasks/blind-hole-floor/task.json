@@ -1,0 +1,28 @@
+{
+  "name": "blind-hole-floor",
+  "category": "vocabulary",
+  "tags": ["blind-hole", "cutter-depth", "floor-thickness"],
+  "mode": "modify",
+  "source": "mcweed U23 ('My bug - grooves punched through the 1.25 floor') and the mined4 blind-hole-with-a-floor vocabulary: 'blind' means a closed end, and the depth is measured from the mouth, not the part.",
+  "summary": "Drill a blind hole 5.5 deep into a 7.5 boss leaving a 2 mm floor. Padding the cutter at both ends (the through-hole idiom) destroys the floor and breaks into the plate.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.01 },
+  "probes": [
+    { "name": "hole-void-just-below-mouth-z7.3", "p": [0, 0, 7.3],   "inside": false },
+    { "name": "hole-void-at-mid-depth-z5",       "p": [0, 0, 5.0],   "inside": false },
+    { "name": "hole-void-down-to-z2.1",          "p": [0, 0, 2.1],   "inside": false },
+    { "name": "floor-solid-just-under-hole-z1.9","p": [0, 0, 1.9],   "inside": true },
+    { "name": "floor-solid-at-z1",               "p": [0, 0, 1.0],   "inside": true },
+    { "name": "floor-solid-at-boss-base-z0.1",   "p": [0, 0, 0.1],   "inside": true },
+    { "name": "plate-solid-under-the-boss-z-1.5","p": [0, 0, -1.5],  "inside": true },
+    { "name": "plate-not-breached-at-z-2.9",     "p": [0, 0, -2.9],  "inside": true },
+    { "name": "hole-is-2-diameter-wall-at-x1.2", "p": [1.2, 0, 5.0], "inside": true },
+    { "name": "hole-is-2-diameter-void-at-x0.8", "p": [0.8, 0, 5.0], "inside": false },
+    { "name": "boss-wall-intact-at-x4.8",        "p": [4.8, 0, 5.0], "inside": true },
+    { "name": "boss-radius-unchanged-at-x5.2",   "p": [5.2, 0, 5.0], "inside": false },
+    { "name": "boss-top-unchanged-z7.6",         "p": [3.0, 0, 7.6], "inside": false },
+    { "name": "plate-corner-intact",             "p": [9.5, 9.5, -1.5], "inside": true }
+  ]
+}

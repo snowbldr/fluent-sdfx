@@ -1,0 +1,32 @@
+{
+  "name": "chamfer-under-tab",
+  "category": "printability",
+  "tags": ["overhang", "supportless", "chamfer", "which-edge"],
+  "mode": "modify",
+  "source": "mcweed U69: 'I can't print this without supports. the tab catches need to have a 45 degree chamfer on the bottom'; mined4 I-5 U523 'cuff under shoulder has no chamfer'.",
+  "summary": "Put a 45 degree support wedge under each tab catch's underside -- not a chamfer on its top edge -- so the catches print support-free on the -Z face.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.995, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "wedge-carries-the-upper-catch",         "p": [11, 6, 5.5],   "inside": true },
+    { "name": "wedge-carries-the-lower-catch",         "p": [11, -6, 5.5],  "inside": true },
+    { "name": "wedge-thins-toward-the-catch-tip",      "p": [12.5, 6, 5.9], "inside": true },
+    { "name": "wedge-reaches-3mm-down-the-face",       "p": [10.5, 6, 4],   "inside": true },
+    { "name": "nothing-below-the-45-degree-line-at-tip", "p": [12.5, 6, 5.2], "inside": false },
+    { "name": "nothing-below-the-45-degree-line-at-face", "p": [10.5, 6, 3.2], "inside": false },
+    { "name": "no-wedge-between-the-catches",          "p": [11, 0, 5],     "inside": false },
+    { "name": "no-wedge-outboard-of-the-catches",      "p": [11, 9, 5],     "inside": false },
+    { "name": "upper-catch-top-outer-corner-kept",     "p": [12.5, 6, 7.6], "inside": true },
+    { "name": "lower-catch-top-outer-corner-kept",     "p": [12.5, -6, 7.6], "inside": true },
+    { "name": "catch-still-2-tall-at-the-tip",         "p": [12.8, 6, 7.8], "inside": true },
+    { "name": "catches-still-4-wide",                  "p": [11, 7.8, 7],   "inside": true },
+    { "name": "catch-not-lengthened",                  "p": [13.5, 6, 7],   "inside": false },
+    { "name": "gap-between-the-catches-kept-empty",    "p": [11, 0, 7],     "inside": false },
+    { "name": "above-the-catches-still-empty",         "p": [11, 6, 9],     "inside": false },
+    { "name": "block-face-kept",                       "p": [9.5, 0, 5],    "inside": true },
+    { "name": "block-corner-kept",                     "p": [-9, 9, 9],     "inside": true },
+    { "name": "block-bottom-kept",                     "p": [0, 0, 0.5],    "inside": true }
+  ]
+}

@@ -1,0 +1,3 @@
+connect the two tubes with a rectangular section between them that's flush with both tubes, smooth, sleek. Since the tubes are different sizes it'll need to be an angled piece: its flat side faces should be tangent to both cylinders, not stepped.
+
+So each of the two flat faces is the common external tangent plane of the two cylinders — it touches the big tube on its widest line and the small tube on its widest line, and nothing pokes out past either tube. Run it the full height of the tubes (20, same z range) and end it at the tangent points so it's flush at both ends. Don't change either tube.

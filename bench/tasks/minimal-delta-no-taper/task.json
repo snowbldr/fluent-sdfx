@@ -1,0 +1,27 @@
+{
+  "name": "minimal-delta-no-taper",
+  "category": "over-engineering",
+  "tags": ["minimal-delta", "unrequested-feature", "no-taper"],
+  "mode": "modify",
+  "source": "mcweed U222-U223 (funnel gang-boss saga): the model added a taper nobody asked for -- 'the taper... means that it's not going to fit into the mold', then 'no taper ffs'. The user wants minimal deltas and dislikes unrequested cleverness.",
+  "summary": "Shorten a boss by 0.4 mm and change nothing else: no taper at the top, no fillet at the root, no rounding.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.995, "max_dev_mm": 0.25, "extra_max": 0.005 },
+  "probes": [
+    { "name": "boss-top-lowered-empty-at-z9.7",     "p": [0, 0, 9.7],   "inside": false },
+    { "name": "boss-still-reaches-z9.5",            "p": [0, 0, 9.5],   "inside": true },
+    { "name": "boss-keeps-full-radius-at-the-top",  "p": [3.9, 0, 9.5], "inside": true },
+    { "name": "boss-top-edge-not-tapered-off-axis", "p": [0, 3.9, 9.5], "inside": true },
+    { "name": "boss-keeps-full-radius-mid-height",  "p": [3.9, 0, 7],   "inside": true },
+    { "name": "boss-not-fattened",                  "p": [4.2, 0, 7],   "inside": false },
+    { "name": "no-fillet-at-the-boss-root",         "p": [4.3, 0, 4.2], "inside": false },
+    { "name": "no-fillet-at-the-root-off-axis",     "p": [0, -4.2, 4.2], "inside": false },
+    { "name": "boss-root-still-solid",              "p": [0, 0, 4.5],   "inside": true },
+    { "name": "plate-top-face-kept",                "p": [12, 12, 3.8], "inside": true },
+    { "name": "plate-thickness-kept",               "p": [12, 12, 4.2], "inside": false },
+    { "name": "plate-corner-kept",                  "p": [14.5, 14.5, 2], "inside": true },
+    { "name": "plate-bottom-kept",                  "p": [0, 0, 0.2],   "inside": true }
+  ]
+}
