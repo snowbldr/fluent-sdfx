@@ -39,9 +39,19 @@ of them changes the geometry, and people almost never state them:
    shape by its cross-section and the axis it is swept along, never by the
    problem it solves.
 
-3. **List the unknowns.** Anything from the list above that the description
-   does not settle and a default cannot safely settle. Be honest about which
-   ones actually change the geometry; do not pad.
+3. **List the unknowns.** Two kinds count, and the second is the one that
+   gets missed:
+   - A **fact that is absent**: a dimension, a package, an orientation.
+   - A **word that is ambiguous**: one the person used that has more than one
+     reading, where the readings produce different geometry. Naming the
+     standard form does not resolve this. Knowing that "triangular" means a
+     corner gusset still leaves open whether the gusset is added under the
+     existing member or replaces it, and how far along and down it runs. If
+     you can write two different specs that both honour the sentence, you
+     have an unknown, however strongly you prefer one of them.
+
+   Be honest about which ones actually change the geometry; do not pad. But
+   confidence is not knowledge: a reading you find obvious is still a reading.
 
 4. **Ask, once.** If there are unknowns, reply with a single message beginning
    `QUESTION:` that asks all of them together. Ask for the fact, not for a
