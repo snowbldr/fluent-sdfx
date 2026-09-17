@@ -61,7 +61,9 @@ type taskRun struct {
 	ExpectsQuestion bool         `json:"expects_question"`
 	AskedFirst      bool         `json:"asked_first"`
 	Questions       int          `json:"questions"`
-	Turns           int          `json:"turns"` // model replies consumed
+	Turns           int          `json:"turns"`           // model replies consumed, both stages
+	ArchTurns       int          `json:"architect_turns"` // replies consumed by the architect stage
+	Spec            string       `json:"spec,omitempty"`  // the architect's output, when that stage ran
 	CostUSD         float64      `json:"cost_usd"`
 	ElapsedS        float64      `json:"elapsed_s"`
 	Transcript      []turn       `json:"transcript"`
@@ -82,6 +84,8 @@ var (
 	callTO    = flag.Duration("timeout", 15*time.Minute, "timeout per claude call")
 	dry       = flag.Bool("dry", false, "prepare workspaces and prompts, do not call the model")
 	rescore   = flag.String("rescore", "", "re-score an existing run directory with the current scorer (no model calls) and rewrite its summary")
+	architect = flag.String("architect", "", "path to an architect prompt (e.g. bench/architect.md). When set, a first stage translates the person's description into a spec, and the builder sees ONLY that spec.")
+	archModel = flag.String("architect-model", "", "model for the architect stage (default: -model)")
 )
 
 var fence = regexp.MustCompile("(?s)```(?:go|golang)?\\s*\\n(.*?)```")
@@ -189,8 +193,8 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 		answers = string(b)
 	}
 
-	sys := systemPrompt(*tools, refText)
-	must(os.WriteFile(filepath.Join(ws, "system.md"), []byte(sys), 0o644))
+	builderSysFile := filepath.Join(ws, "system.md")
+	must(os.WriteFile(builderSysFile, []byte(systemPrompt(*tools, refText)), 0o644))
 
 	userMsg := prompt
 	if spec.Mode == "modify" {
@@ -204,10 +208,69 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 		return tr
 	}
 
+	// Architect stage: translate the person's description into a spec. The
+	// builder then sees the spec INSTEAD OF the description, so anything the
+	// translation drops is measured as a build failure.
+	if *architect != "" {
+		archSys, err := os.ReadFile(filepath.Join(rootAbs, *architect))
+		must(err)
+		as := string(archSys)
+		if refText != "" {
+			as += "\n\n--- the library the builder will use, for vocabulary only; you write no code ---\n" + refText
+		}
+		archSysFile := filepath.Join(ws, "architect-system.md")
+		must(os.WriteFile(archSysFile, []byte(as), 0o644))
+		am := *archModel
+		if am == "" {
+			am = *model
+		}
+		archMsg := prompt
+		if spec.Mode == "modify" {
+			archMsg += "\n\nThe part as it exists today is built by this code. Read it as geometry, not as something to edit; your spec describes the part AFTER the change, in full.\n\n```go\n" + startCode + "```\n"
+		}
+		archSession := ""
+		for tr.ArchTurns < *maxTurns {
+			out, raw, err := callClaude(ws, archSysFile, archMsg, archSession, am, "none")
+			tr.Turns++
+			tr.ArchTurns++
+			if err != nil {
+				tr.Error = fmt.Sprintf("architect call failed: %v\n%s", err, raw)
+				break
+			}
+			archSession = out.SessionID
+			tr.CostUSD += out.TotalCostUSD
+			tr.Transcript = append(tr.Transcript, turn{"architect", out.Result})
+			if q, ok := extractQuestion(out.Result); ok {
+				tr.Questions++
+				if tr.ArchTurns == 1 {
+					tr.AskedFirst = true
+				}
+				ans := scriptedUser(ws, prompt, answers, q)
+				tr.Transcript = append(tr.Transcript, turn{"scripted-user", ans})
+				archMsg = ans
+				continue
+			}
+			tr.Spec = out.Result
+			break
+		}
+		if tr.Spec == "" && tr.Error == "" {
+			tr.Error = "architect produced no spec"
+		}
+		must(os.WriteFile(filepath.Join(ws, "spec.md"), []byte(tr.Spec), 0o644))
+		// Hand the builder the spec alone.
+		userMsg = "Build this part exactly as specified.\n\n" + tr.Spec
+		if spec.Mode == "modify" {
+			userMsg += "\n\nHere is the current code, candidate/candidate.go (package candidate). Modify it:\n\n```go\n" + startCode + "```\n"
+		} else {
+			userMsg += "\n\nStart from scratch; the file candidate/candidate.go currently holds a stub.\n"
+		}
+		tr.Transcript = append(tr.Transcript, turn{"builder-input", userMsg})
+	}
+
 	sessionID := ""
 	var final string
-	for tr.Turns < *maxTurns {
-		out, raw, err := callClaude(ws, sys, userMsg, sessionID, *model, *tools)
+	for tr.Turns-tr.ArchTurns < *maxTurns && tr.Error == "" {
+		out, raw, err := callClaude(ws, builderSysFile, userMsg, sessionID, *model, *tools)
 		tr.Turns++
 		if err != nil {
 			tr.Error = fmt.Sprintf("claude call failed: %v\n%s", err, raw)
@@ -218,7 +281,7 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 		tr.Transcript = append(tr.Transcript, turn{"model", out.Result})
 		if q, ok := extractQuestion(out.Result); ok {
 			tr.Questions++
-			if tr.Turns == 1 {
+			if tr.Turns == 1 && *architect == "" {
 				tr.AskedFirst = true
 			}
 			ans := scriptedUser(ws, prompt, answers, q)
@@ -229,7 +292,7 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 		final = out.Result
 		break
 	}
-	if tr.Error == "" && final == "" && tr.Turns >= *maxTurns {
+	if tr.Error == "" && final == "" && tr.Turns-tr.ArchTurns >= *maxTurns {
 		tr.Error = "turn budget exhausted without a final answer"
 	}
 
@@ -278,11 +341,13 @@ Protocol:
 	return b.String()
 }
 
-func callClaude(ws, sys, msg, sessionID, model, tools string) (claudeOut, string, error) {
+// callClaude runs one turn. sysFile is the path to this stage's system
+// prompt: the architect and the builder have different ones, so it must be
+// passed explicitly rather than assumed.
+func callClaude(ws, sysFile, msg, sessionID, model, tools string) (claudeOut, string, error) {
 	args := []string{"-p", msg, "--model", model, "--output-format", "json"}
 	if sessionID == "" {
-		sysPath := filepath.Join(ws, "system.md")
-		args = append(args, "--append-system-prompt-file", sysPath)
+		args = append(args, "--append-system-prompt-file", sysFile)
 	} else {
 		args = append(args, "--resume", sessionID)
 	}
@@ -330,7 +395,10 @@ func scriptedUser(ws, prompt, answers, question string) string {
 	if strings.TrimSpace(answers) == "" {
 		return "Your call, use a sensible default."
 	}
-	sys := "You are the person who wrote the request below. Someone building the part for you has asked one or more questions. The hidden spec below describes the part you want; it is the source of truth. Answer every sub-question the spec covers, plainly and with the spec's numbers, even if the question is framed around another part or drawing you mentioned (a socket, a mockup, an existing nub): those were only comparisons, and the spec's numbers are what you want. Only for a sub-question the spec genuinely does not cover, say: Your call, use a sensible default. Do not volunteer information that was not asked about. Do not write code.\n\n--- your request ---\n" + prompt + "\n\n--- hidden spec ---\n" + answers
+	sys := "You are the person who wrote the request below. Someone building the part for you has asked one or more questions. The hidden spec below describes the part you want; it is the source of truth.\n\n" +
+		"Answer every sub-question the spec covers, using the spec's own numbers AND its own wording for how things are arranged. Reproduce spatial relationships verbatim: if the spec says a pair of features lies in a line along some direction, or that a face is flush with something, or which way a length runs, say exactly that. Do not compress a spatial relationship into a bare number, and do not leave out a relationship because the question did not name it.\n\n" +
+		"Answer questions framed around some other part or drawing you mentioned (a socket, a mockup, an existing nub) using the spec anyway: those were only comparisons, and the spec's numbers are what you want. Only for a sub-question the spec genuinely does not cover, say: Your call, use a sensible default. Do not volunteer information that was not asked about. Do not write code.\n\n" +
+		"--- your request ---\n" + prompt + "\n\n--- hidden spec ---\n" + answers
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "claude", "-p", question, "--model", *userModel, "--tools", "", "--output-format", "json", "--no-session-persistence", "--system-prompt", sys)
@@ -373,7 +441,14 @@ func oneLine(r taskRun) string {
 func writeSummary(outAbs string, rs []taskRun) {
 	saveJSON(filepath.Join(outAbs, "summary.json"), rs)
 	var b strings.Builder
-	fmt.Fprintf(&b, "# bench run\n\nmodel=%s tools=%s tasks=%d\n\n", *model, *tools, len(rs))
+	arch := "none"
+	if *architect != "" {
+		arch = *architect
+		if *archModel != "" {
+			arch += " (" + *archModel + ")"
+		}
+	}
+	fmt.Fprintf(&b, "# bench run\n\nmodel=%s tools=%s architect=%s tasks=%d\n\n", *model, *tools, arch, len(rs))
 	fmt.Fprintf(&b, "| task | category | stage | iou | max_dev | probes | turns | asked | expected | cost |\n|---|---|---|---|---|---|---|---|---|---|\n")
 	pass, compiled, built := 0, 0, 0
 	var turns, cost float64
