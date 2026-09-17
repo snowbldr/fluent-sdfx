@@ -1,5 +1,6 @@
 put six M4 clearance holes through the flange on a bolt circle, evenly
-spaced, first one on the +X axis.
+spaced, first one on the +X axis. Use 4.4 for the clearance diameter —
+that's what I've got the drill for, so don't go looking it up.
 
 Push the bolt circle out as far as it needs to go so the holes clear the
 boss by at least 2 mm — measure from the hole's edge to the boss's outer
