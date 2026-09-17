@@ -117,3 +117,47 @@ See `cmd/run` for the driver flags: model, tool condition (none: code in a
 fenced block, no tools; full: the model may read, write, run Go, render and
 probe inside its workspace), max turns, parallel jobs, and which reference
 material (llms.txt or a skill directory) is appended to the system prompt.
+
+## The architect condition
+
+```bash
+go run ./bench/cmd/run -model fable -tools full -architect bench/architect.md
+```
+
+With `-architect`, the run becomes two stages. The first reads the
+person's description and writes a specification. The second builds from
+that specification and **never sees the person's words**. Anything the
+translation leaves implicit is therefore scored as a build failure rather
+than quietly recovered, which is the point: it measures the translation,
+not the pair.
+
+The spec lands in `spec.md` in each task's run directory, so it can be
+read and argued with. `architect_turns` is recorded separately from
+`turns`, and `turns` counts both stages, so turns-to-pass stays
+comparable with a single-stage run.
+
+`-architect-model` runs the first stage on a different model from the
+second, which is how you find out whether the translation needs the
+expensive model or only the building does.
+
+## Comparing runs
+
+```bash
+go run ./bench/cmd/compare -cols "plain=baseline-fable-full,architect=arch-fable-full"
+```
+
+Each column is a label and a `+`-joined list of run directories; later
+runs override earlier ones for the same task, which is how a re-run of a
+single task after a harness fix replaces its original result without
+redoing the rest.
+
+## A caution about the scripted user
+
+On a clarify task the hidden spec reaches the model through a scripted
+user, which is itself a model. It has twice been the thing under test
+by accident: once answering "your call" to a question the spec fully
+covered, and once reporting two holes as "5 mm apart" while dropping the
+spec's "in a line along the boss", which sent the architect to the wrong
+axis. Before believing a clarify-task result, read the transcript and
+check that the answer actually carried the spec. A harness that
+under-answers measures the harness.

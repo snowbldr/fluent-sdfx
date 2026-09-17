@@ -24,6 +24,6 @@ func Build() *solid.Solid {
 	core := solid.Cylinder(coreH, coreR, 0)
 	boss := solid.Cylinder(bossLen, bossR, 0).Translate(v3.X(coreR))
 	hole := solid.Cylinder(holeLen, holeR, 0).RotateY(90).Translate(v3.X(coreR + bossR - holeLen/2))
-	holes := hole.Translate(v3.Z(holeSep/2)).Union(hole.Translate(v3.Z(-holeSep / 2)))
+	holes := hole.Translate(v3.Z(holeSep / 2)).Union(hole.Translate(v3.Z(-holeSep / 2)))
 	return core.Union(boss).Cut(holes)
 }

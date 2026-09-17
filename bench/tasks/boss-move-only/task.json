@@ -1,0 +1,481 @@
+{
+  "name": "boss-move-only",
+  "category": "over-engineering",
+  "tags": [
+    "minimal-delta",
+    "collateral-damage",
+    "do-not-touch"
+  ],
+  "source": "mcweed I-2 (U209-U225, 'no taper ffs') and mined4: 'features the model invented unasked were the ones that failed'. Five revisions and two wasted prints on one boss because every pass changed something other than the thing the user named.",
+  "summary": "Move one boss 4 mm and change nothing else. The start part has five already-validated features and one shared constant that places both bosses and both holes, so the edit has to be split, not repeated. The boss's own through hole must move with it; the chamfer, the pocket, the other boss and the plate must not shift by so much as a tenth of a millimetre.",
+  "mode": "modify",
+  "expects_question": false,
+  "align": "none",
+  "grid": 280,
+  "pass": {
+    "iou_min": 0.998,
+    "max_dev_mm": 0.12,
+    "extra_max": 0.002
+  },
+  "probes": [
+    {
+      "name": "left-hole-moved-with-its-boss-x-14-z9",
+      "p": [
+        -14,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "left-hole-goes-through-the-plate-too",
+      "p": [
+        -14,
+        0,
+        2.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "left-hole-breaks-out-of-the-underside",
+      "p": [
+        -14,
+        0,
+        0.3
+      ],
+      "inside": false
+    },
+    {
+      "name": "no-hole-left-behind-in-the-plate-x-10",
+      "p": [
+        -10,
+        0,
+        2.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "no-hole-left-behind-in-the-boss-x-10",
+      "p": [
+        -10,
+        0,
+        9
+      ],
+      "inside": true
+    },
+    {
+      "name": "left-boss-reaches-out-to-x-18.5",
+      "p": [
+        -18.5,
+        0,
+        9
+      ],
+      "inside": true
+    },
+    {
+      "name": "left-boss-no-longer-out-at-x-7",
+      "p": [
+        -7,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "left-boss-not-fattened-x-19.5",
+      "p": [
+        -19.5,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "left-boss-height-kept-z12.8",
+      "p": [
+        -17,
+        0,
+        12.8
+      ],
+      "inside": true
+    },
+    {
+      "name": "left-boss-top-still-at-z13",
+      "p": [
+        -17,
+        0,
+        13.2
+      ],
+      "inside": false
+    },
+    {
+      "name": "right-boss-not-moved-x13.5",
+      "p": [
+        13.5,
+        0,
+        9
+      ],
+      "inside": true
+    },
+    {
+      "name": "right-boss-height-kept-z12.8",
+      "p": [
+        13.5,
+        0,
+        12.8
+      ],
+      "inside": true
+    },
+    {
+      "name": "right-boss-top-still-at-z13",
+      "p": [
+        13.5,
+        0,
+        13.2
+      ],
+      "inside": false
+    },
+    {
+      "name": "right-boss-not-fattened-x15.5",
+      "p": [
+        15.5,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "right-hole-still-open",
+      "p": [
+        10,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "right-hole-not-widened-at-x12",
+      "p": [
+        12,
+        0,
+        9
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-floor-still-2-deep-void-z3.5",
+      "p": [
+        0,
+        0,
+        3.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-floor-not-deepened-solid-z2.7",
+      "p": [
+        0,
+        0,
+        2.7
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-wall-void-inside-x2.5",
+      "p": [
+        2.5,
+        0,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-wall-solid-outside-x3.5",
+      "p": [
+        3.5,
+        0,
+        4.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-end-void-inside-y9.5",
+      "p": [
+        0,
+        9.5,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-end-solid-outside-y10.5",
+      "p": [
+        0,
+        10.5,
+        4.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "chamfer-left-top-edge-still-cut",
+      "p": [
+        -21.5,
+        0,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "chamfer-left-edge-material-below-kept",
+      "p": [
+        -21.5,
+        0,
+        2.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "chamfer-not-widened-top-face-at-x-19.5",
+      "p": [
+        -19.5,
+        0,
+        4.7
+      ],
+      "inside": true
+    },
+    {
+      "name": "chamfer-front-top-edge-still-cut",
+      "p": [
+        0,
+        -14.5,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "chamfer-front-edge-material-below-kept",
+      "p": [
+        0,
+        -14.5,
+        2.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "chamfer-not-widened-top-face-at-y-12.5",
+      "p": [
+        0,
+        -12.5,
+        4.7
+      ],
+      "inside": true
+    },
+    {
+      "name": "plate-corner-kept",
+      "p": [
+        -21,
+        -14,
+        1
+      ],
+      "inside": true
+    },
+    {
+      "name": "plate-still-44-wide-nothing-at-x22.5",
+      "p": [
+        22.5,
+        0,
+        2.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "plate-bottom-face-still-at-z0",
+      "p": [
+        0,
+        12,
+        0.2
+      ],
+      "inside": true
+    },
+    {
+      "name": "right-boss-top-exactly-at-z13-solid-12.98",
+      "p": [
+        13.5,
+        0,
+        12.98
+      ],
+      "inside": true
+    },
+    {
+      "name": "right-boss-top-exactly-at-z13-void-13.02",
+      "p": [
+        13.5,
+        0,
+        13.02
+      ],
+      "inside": false
+    },
+    {
+      "name": "left-boss-top-exactly-at-z13-solid-12.98",
+      "p": [
+        -17,
+        0,
+        12.98
+      ],
+      "inside": true
+    },
+    {
+      "name": "left-boss-top-exactly-at-z13-void-13.02",
+      "p": [
+        -17,
+        0,
+        13.02
+      ],
+      "inside": false
+    },
+    {
+      "name": "right-boss-radius-exactly-5-solid-x14.98",
+      "p": [
+        14.98,
+        0,
+        9
+      ],
+      "inside": true
+    },
+    {
+      "name": "right-boss-radius-exactly-5-void-x15.02",
+      "p": [
+        15.02,
+        0,
+        9
+      ],
+      "inside": false
+    },
+    {
+      "name": "plate-top-face-exactly-at-z5-solid-4.98",
+      "p": [
+        16,
+        0,
+        4.98
+      ],
+      "inside": true
+    },
+    {
+      "name": "plate-top-face-exactly-at-z5-void-5.02",
+      "p": [
+        16,
+        0,
+        5.02
+      ],
+      "inside": false
+    },
+    {
+      "name": "plate-edge-exactly-at-x22-solid-21.98",
+      "p": [
+        21.98,
+        0,
+        0.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "plate-edge-exactly-at-x22-void-22.02",
+      "p": [
+        22.02,
+        0,
+        0.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-floor-exactly-at-z3-solid-2.98",
+      "p": [
+        0,
+        0,
+        2.98
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-floor-exactly-at-z3-void-3.02",
+      "p": [
+        0,
+        0,
+        3.02
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-wall-exactly-at-x3-solid-3.02",
+      "p": [
+        3.02,
+        0,
+        4.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-wall-exactly-at-x3-void-2.98",
+      "p": [
+        2.98,
+        0,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "pocket-end-exactly-at-y10-solid-10.02",
+      "p": [
+        0,
+        10.02,
+        4.5
+      ],
+      "inside": true
+    },
+    {
+      "name": "pocket-end-exactly-at-y10-void-9.98",
+      "p": [
+        0,
+        9.98,
+        4.5
+      ],
+      "inside": false
+    },
+    {
+      "name": "chamfer-exactly-2-void-at-x20.1-z4.98",
+      "p": [
+        20.1,
+        0,
+        4.98
+      ],
+      "inside": false
+    },
+    {
+      "name": "chamfer-exactly-2-solid-at-x19.9-z4.98",
+      "p": [
+        19.9,
+        0,
+        4.98
+      ],
+      "inside": true
+    },
+    {
+      "name": "no-fillet-or-pad-at-the-left-boss-root",
+      "p": [
+        -19.2,
+        0,
+        5.2
+      ],
+      "inside": false
+    },
+    {
+      "name": "no-fillet-or-pad-at-the-right-boss-root",
+      "p": [
+        15.2,
+        0,
+        5.2
+      ],
+      "inside": false
+    }
+  ]
+}

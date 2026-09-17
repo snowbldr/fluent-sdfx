@@ -1,0 +1,1 @@
+I need a little L bracket to hang a 20 mm wide strap off the side of a tube. It bolts to the tube with two M3s and the strap threads through a slot in the other leg. 30 wide and 5 thick is about right, PETG. Make it beefy enough to hold, nothing fancy.
