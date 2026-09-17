@@ -1,6 +1,6 @@
 // 2D → 3D: partial revolution — a wedge of a full revolve.
 //
-// angleDeg is in degrees, measured from +X around the Y axis.
+// angleDeg is in degrees, measured from +X around the Z axis.
 package main
 
 import (

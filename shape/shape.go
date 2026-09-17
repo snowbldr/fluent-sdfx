@@ -468,12 +468,13 @@ func (s *Shape) ScaleTwistExtrude(height, twistDeg float64, scale v2.Vec) *solid
 	return solid.ScaleTwistExtrude(s.SDF2, height, twistDeg, scale)
 }
 
-// Revolve rotates the shape around the Y axis to form a solid of revolution.
+// Revolve rotates the shape around the Z axis to form a solid of revolution.
+// +X of the profile is the radius; the profile's Y becomes world Z.
 func (s *Shape) Revolve() *solid.Solid {
 	return solid.Revolve(s.SDF2)
 }
 
-// RevolveAngle creates a partial revolution sweeping angleDeg degrees around the Y axis.
+// RevolveAngle creates a partial revolution sweeping angleDeg degrees around the Z axis.
 func (s *Shape) RevolveAngle(angleDeg float64) *solid.Solid {
 	return solid.RevolveAngle(s.SDF2, angleDeg)
 }

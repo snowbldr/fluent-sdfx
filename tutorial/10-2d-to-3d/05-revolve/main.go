@@ -1,6 +1,7 @@
-// 2D → 3D: full revolution of a 2D profile around the Y axis.
+// 2D → 3D: full revolution of a 2D profile around the Z axis.
 //
-// The profile lives in the XY plane; +X is the radius from the axis.
+// The profile lives in the XY plane; +X is the radius from the axis and the
+// profile's Y becomes world Z.
 package main
 
 import (

@@ -9,7 +9,7 @@ This file is the agent-oriented reference for fluent-sdfx. If you take away one 
 - **Two core types.** `*shape.Shape` wraps `sdf.SDF2` (2D); `*solid.Solid` wraps `sdf.SDF3` (3D). Both are immutable: every method returns a new value. The receiver is never modified.
 - **Degrees everywhere.** All angle parameters in the public API are in degrees, converted to radians internally as needed (`PressureAngleDeg`, `BaseAngleDeg`, `twistDeg`, etc. — anything `…Deg`).
 - **Constructors panic on invalid input.** No `(*Shape, error)` return tuples. CAD-geometry errors are programming bugs, so you chain without `if err != nil` interruptions.
-- **Z is up.** Cylinders, screws, sweeps, and the `RotateCopyZ` pattern all use Z as the axial direction — *except* `Revolve()` and `RevolveAngle()`, which revolve around the Y axis (an sdfx convention). For Z-axis revolutions, rotate the result 90° around X.
+- **Z is up, everywhere.** Cylinders, screws, sweeps, `Revolve()`, `RevolveAngle()` and the `RotateCopyZ` pattern all use Z as the axial direction. For `Revolve`, the 2D profile lives in the XY plane: +X is the radius from the axis and the profile's Y becomes world Z. (Older docs said Y; that was wrong.)
 - **The 2D ↔ 3D direction.** `*shape.Shape` becomes `*solid.Solid` via `.Extrude`, `.Revolve`, `.LoftTo`, `.SweepHelix`, `.Screw`. `*solid.Solid` becomes `*shape.Shape` via `.SliceAt(plane.Plane)` (cross-section).
 - **No build tool, no DSL.** Just Go. Each part is a `package main` with a `func main()` that calls `.STL(path, cellsPerMM)` at the end.
 
@@ -58,7 +58,7 @@ shape.Rect(...).Extrude(8)
 shape.Rect(...).ExtrudeRounded(8, 1.5)       // top/bottom edge fillet
 shape.Star(...).TwistExtrude(20, 90)                // twist in degrees
 shape.Rect(...).ScaleExtrude(20, v2.XY(0.4, 0.4))  // tapered
-profile.Revolve()                            // around Y axis
+profile.Revolve()                            // around Z axis; profile +X = radius, profile Y -> world Z
 profile.RevolveAngle(270)                    // partial, in degrees
 bottom.LoftTo(top, height, round)            // morph between profiles
 profile.SweepHelix(radius, turns, height, flatEnds)

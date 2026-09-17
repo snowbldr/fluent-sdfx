@@ -10,7 +10,7 @@ The fastest path to most 3D parts is "draw a 2D profile, then turn it into a sol
 | `ExtrudeRounded(h, r)` | Linear extrusion with rounded top and bottom edges. |
 | `TwistExtrude(h, twistDeg)` | Extrude while rotating the profile around Z (degrees). |
 | `ScaleExtrude(h, scale)` | Extrude while scaling the profile linearly. |
-| `Revolve()` | Full 360° revolution around the Y axis. |
+| `Revolve()` | Full 360° revolution around the Z axis. |
 | `RevolveAngle(deg)` | Partial revolution. |
 | `LoftTo(top, h, round)` | Smooth transition from this profile to another. |
 | `SweepHelix(r, turns, h, flat)` | Sweep along a helical path. |
@@ -120,13 +120,14 @@ There's also `ScaleTwistExtrude(h, twistDeg, scale)` that does both at once.
 
 ## Revolve
 
-Rotates a 2D profile around the **Y axis** to produce a solid of revolution. The profile lives in the XY plane; +X is the radius from the axis.
+Rotates a 2D profile around the **Z axis** to produce a solid of revolution. The profile lives in the XY plane; +X is the radius from the axis and the profile's Y becomes world Z.
 
 <!-- src: tutorial/10-2d-to-3d/05-revolve/main.go -->
 ```go
-// 2D → 3D: full revolution of a 2D profile around the Y axis.
+// 2D → 3D: full revolution of a 2D profile around the Z axis.
 //
-// The profile lives in the XY plane; +X is the radius from the axis.
+// The profile lives in the XY plane; +X is the radius from the axis and the
+// profile's Y becomes world Z.
 package main
 
 import (
@@ -149,7 +150,7 @@ func main() {
 </figure>
 
 > [!NOTE]
-> The axis is +Y, not +Z. This is an sdfx convention. Most CAD tools use Z; if you have an existing Z-axis profile, rotate it 90° around X first, or build the profile aware of the convention.
+> The axis is Z, like everything else in fluent-sdfx. Draw the profile as an r-z section: X is radius, Y is height. Earlier versions of these docs said the axis was Y; that was a documentation error, the code has always revolved about Z.
 
 ## RevolveAngle
 
@@ -159,7 +160,7 @@ A partial revolution. Useful for wedges, fan blades, and exposing the inside of 
 ```go
 // 2D → 3D: partial revolution — a wedge of a full revolve.
 //
-// angleDeg is in degrees, measured from +X around the Y axis.
+// angleDeg is in degrees, measured from +X around the Z axis.
 package main
 
 import (

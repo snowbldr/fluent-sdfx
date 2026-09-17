@@ -50,7 +50,7 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 | `TwistExtrude(height, twistDeg)` | Twist around Z (degrees) |
 | `ScaleExtrude(height, scale)` | Extrude with linear scaling |
 | `ScaleTwistExtrude(height, twistDeg, scale)` | Both |
-| `Revolve()` | Full revolution around Y |
+| `Revolve()` | Full revolution around Z (profile X = radius, Y = height) |
 | `RevolveAngle(angleDeg)` | Partial revolution |
 | `Screw(height, start, pitch, n)` | Helical screw thread |
 | `SweepHelix(radius, turns, height, flatEnds)` | Sweep along a helix |
@@ -110,7 +110,7 @@ Each returns a `*solid.Solid`. Package-level constructors with the same names al
 | `TwistExtrude(profile, height, twistDeg)` | Twisted (degrees) |
 | `ScaleExtrude(profile, height, scale)` | Linearly scaled |
 | `ScaleTwistExtrude(profile, height, twistDeg, scale)` | Both |
-| `Revolve(profile)` | Full Y-axis revolution |
+| `Revolve(profile)` | Full Z-axis revolution |
 | `RevolveAngle(profile, angle)` | Partial |
 | `Screw(profile, height, start, pitch, n)` | Helical thread |
 | `Loft(bottom, top, height, round)` | Profile transition |

@@ -20,7 +20,9 @@ func Gyroid(scale v3.Vec) *Solid {
 	return New(sdf.Gyroid3D(v3sdf.Vec(scale)))
 }
 
-// Revolve creates a solid of revolution by rotating a 2D profile around the Y axis.
+// Revolve creates a solid of revolution by rotating a 2D profile around the Z axis.
+// The profile lives in the XY plane: +X is the radius from the axis and the
+// profile's Y becomes world Z.
 func Revolve(profile sdf.SDF2) *Solid {
 	return New(sdf.Revolve3D(profile))
 }
