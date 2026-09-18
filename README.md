@@ -16,6 +16,8 @@ fluent-sdfx wraps sdfx's SDF2 and SDF3 types with `shape.Shape` and `solid.Solid
 
 📚 **[Read the docs](https://snowbldr.github.io/fluent-sdfx/)** — install, project setup, the dev loop, foundations, operations, cookbook recipes, and the full API reference.
 
+🤖 **Building with an AI?** `docs/llms.txt` is the probe-verified agent reference and `docs/llms-api.txt` the generated index of every exported symbol. `make install-skill` installs a Claude Code skill that loads them and runs the intake and verification workflow (`.claude/skills/fluent-sdfx/`).
+
 > [!NOTE]
 > **Status: v0.x.** The library is usable today but pre-1.0 — the public API may shift in response to early-user feedback. Watch [releases](https://github.com/snowbldr/fluent-sdfx/releases) for breaking-change notes; pin a tag if you need stability.
 

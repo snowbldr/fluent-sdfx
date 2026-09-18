@@ -6,7 +6,7 @@
 #   make serve       — local SPA-fallback dev server for the docs site.
 #   make screenshots — regenerate every docs figure via f3d (expensive).
 
-.PHONY: build docs-sync llms-index llms-check vet test fmt-check screenshots serve install-hooks help
+.PHONY: build docs-sync llms-index llms-check vet test fmt-check screenshots serve install-hooks install-skill help
 
 build: docs-sync llms-index vet test llms-check
 	@echo "✓ build clean"
@@ -62,3 +62,11 @@ help:
 	@echo "  screenshots   — regenerate every docs figure via f3d"
 	@echo "  serve         — local SPA-fallback dev server on :7174"
 	@echo "  install-hooks — install git pre-commit hook"
+
+# Install the fluent-sdfx Claude Code skill for the current user, so any
+# project that uses the library gets the intake, reference and verification
+# workflow automatically. The canonical copy lives in .claude/skills/.
+install-skill:
+	@mkdir -p "$$HOME/.claude/skills/fluent-sdfx"
+	@cp .claude/skills/fluent-sdfx/SKILL.md .claude/skills/fluent-sdfx/architect.md "$$HOME/.claude/skills/fluent-sdfx/"
+	@echo "installed to $$HOME/.claude/skills/fluent-sdfx"
