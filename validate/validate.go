@@ -29,13 +29,13 @@ import (
 
 // Stats reports validation metrics on a solid's rendered mesh.
 type Stats struct {
-	Triangles     int          // triangle count after marching cubes
-	SurfaceArea   float64      // mm² — sum of triangle areas
-	Volume        float64      // mm³ — signed-tetrahedron volume sum
-	BoundaryEdges int          // edges shared by exactly 1 triangle (0 = closed mesh)
-	Watertight    bool         // BoundaryEdges == 0
-	Bounds        solid.Box3   // axis-aligned bounding box
-	OverhangArea  float64      // mm² overhanging > 45° from vertical (FDM threshold)
+	Triangles     int        // triangle count after marching cubes
+	SurfaceArea   float64    // mm² — sum of triangle areas
+	Volume        float64    // mm³ — signed-tetrahedron volume sum
+	BoundaryEdges int        // edges shared by exactly 1 triangle (0 = closed mesh)
+	Watertight    bool       // BoundaryEdges == 0
+	Bounds        solid.Box3 // axis-aligned bounding box
+	OverhangArea  float64    // mm² overhanging > 45° from vertical (FDM threshold)
 }
 
 // Of computes validation stats by rendering s at cellsPerMM density.

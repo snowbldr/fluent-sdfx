@@ -172,4 +172,3 @@ func TestVolumeInvariantUnderTranslation(t *testing.T) {
 		t.Errorf("translated cube volume changed: %.3f → %.3f", va, vb)
 	}
 }
-
