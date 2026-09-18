@@ -1,0 +1,28 @@
+{
+  "name": "chamfer-print-orientation",
+  "category": "assumption",
+  "tags": ["clarify", "print-orientation", "printability", "silent-assumption"],
+  "mode": "modify",
+  "source": "mcweed U18: 'you have some funny bits on the housing, angled roofs where it's not appropriate. the two halves of the body will print lying down' -- a standing-print assumption carried silently through five revisions; and U69 '45 degree chamfer on the bottom so they print without supports'.",
+  "summary": "Chamfer the bottom of a cantilevered tab. The prompt never says how the part prints; the ideal first move is to ask. The hidden spec says it stands on its -Y face, so 'bottom' is the tab's -Y side, not -Z.",
+  "expects_question": true,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "chamfer-fills-the-minus-y-corner",        "p": [11, -5, 6.5],   "inside": true },
+    { "name": "chamfer-runs-down-to-the-build-plate",    "p": [10.5, -8, 6.5], "inside": true },
+    { "name": "chamfer-spans-the-tabs-full-height-z5.2", "p": [11, -5, 5.2],   "inside": true },
+    { "name": "chamfer-spans-the-tabs-full-height-z7.8", "p": [11, -5, 7.8],   "inside": true },
+    { "name": "chamfer-tapers-out-past-45-degrees",      "p": [14, -7, 6.5],   "inside": false },
+    { "name": "no-chamfer-under-the-minus-z-face",       "p": [11, 0, 3],      "inside": false },
+    { "name": "no-chamfer-in-the-minus-z-corner",        "p": [10.5, 2, 2],    "inside": false },
+    { "name": "no-chamfer-on-the-plus-y-side",           "p": [11, 5, 6.5],    "inside": false },
+    { "name": "tab-body-kept",                           "p": [13, 0, 6.5],    "inside": true },
+    { "name": "tab-tip-kept",                            "p": [15.5, 3.5, 5.2], "inside": true },
+    { "name": "tab-not-lengthened",                      "p": [16.5, 0, 6.5],  "inside": false },
+    { "name": "above-the-tab-still-empty",               "p": [13, 0, 9],      "inside": false },
+    { "name": "block-corner-kept",                       "p": [-9, 9, 9],      "inside": true },
+    { "name": "block-bottom-kept",                       "p": [0, 0, 0.5],     "inside": true }
+  ]
+}

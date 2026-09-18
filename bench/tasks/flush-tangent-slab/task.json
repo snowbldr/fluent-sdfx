@@ -1,0 +1,29 @@
+{
+  "name": "flush-tangent-slab",
+  "category": "vocabulary",
+  "tags": ["flush", "tangent-plane", "two-radii", "non-box-feature"],
+  "mode": "modify",
+  "source": "mcweed U46: 'the rectangular section needs to be flush with the tubes to create a sleek look... we'll need this to be an angled piece since we have two different size tubes... the current look is bad.'",
+  "summary": "Join two unequal cylinders with a slab whose side faces are the common external tangent planes, so the join is stepless. A plain box between the centres leaves a step at the big tube.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.01 },
+  "probes": [
+    { "name": "slab-reaches-the-tangent-plane-at-the-big-tube", "p": [-10, 7.4, 0],  "inside": true },
+    { "name": "slab-reaches-the-tangent-plane-on-the-lower-side","p": [-8, -7.2, 0], "inside": true },
+    { "name": "slab-is-tapered-not-parallel-sided-at-mid-span", "p": [0, 6.3, 0],    "inside": true },
+    { "name": "slab-still-proud-of-the-box-width-near-the-small-tube", "p": [12, 5.2, 0], "inside": true },
+    { "name": "nothing-past-the-tangent-plane-near-the-big-tube","p": [-13, 8.1, 0], "inside": false },
+    { "name": "nothing-past-the-tangent-plane-at-mid-span",     "p": [0, 6.8, 0],    "inside": false },
+    { "name": "nothing-past-the-tangent-plane-near-the-small-tube","p": [12, 5.45, 0],"inside": false },
+    { "name": "no-overhang-past-the-small-tube-end",            "p": [16.5, 4.8, 0], "inside": false },
+    { "name": "gap-between-the-tubes-is-filled",                "p": [5, 0, 0],      "inside": true },
+    { "name": "slab-runs-the-full-tube-height",                 "p": [0, 0, 9],      "inside": true },
+    { "name": "slab-does-not-exceed-the-tube-height",           "p": [0, 0, 10.5],   "inside": false },
+    { "name": "big-tube-body-unchanged",                        "p": [-22, 0, 0],    "inside": true },
+    { "name": "big-tube-radius-unchanged",                      "p": [-23.5, 0, 0],  "inside": false },
+    { "name": "small-tube-body-unchanged",                      "p": [19, 0, 0],     "inside": true },
+    { "name": "small-tube-radius-unchanged",                    "p": [20.5, 0, 0],   "inside": false }
+  ]
+}

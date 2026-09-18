@@ -1,0 +1,24 @@
+{
+  "name": "pill-boss-length",
+  "category": "vocabulary",
+  "tags": ["size-word-axis", "non-box-feature", "minimal-delta"],
+  "mode": "modify",
+  "source": "mcweed U209-U225 (gang-boss fit saga): 'long' on an arc-oriented pill boss meant along the arc; model shortened Z. Five revisions, two wasted prints.",
+  "summary": "Shorten a tangentially oriented stadium boss along its LONG axis, not its height, and change nothing else.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.25, "extra_max": 0.01 },
+  "probes": [
+    { "name": "boss1-tip-removed-x2.75",  "p": [2.75, 12.5, 3.5], "inside": false },
+    { "name": "boss1-tip-removed-x-2.75", "p": [-2.75, 12.5, 3.5], "inside": false },
+    { "name": "boss1-body-kept-x2.4",     "p": [2.4, 12.5, 3.5],  "inside": true },
+    { "name": "boss1-height-kept-z4.8",   "p": [0, 12.5, 4.8],    "inside": true },
+    { "name": "boss1-width-kept-y13.4",   "p": [0, 13.4, 3.5],    "inside": true },
+    { "name": "boss1-width-unchanged-y13.6", "p": [0, 13.6, 3.5], "inside": false },
+    { "name": "boss2-centre-kept",        "p": [-10.825, -6.25, 3.5], "inside": true },
+    { "name": "boss3-centre-kept",        "p": [10.825, -6.25, 3.5],  "inside": true },
+    { "name": "ring-body",                "p": [0, 12.5, 0],      "inside": true },
+    { "name": "ring-bore",                "p": [0, 5, 0],         "inside": false }
+  ]
+}

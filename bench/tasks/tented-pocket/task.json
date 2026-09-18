@@ -1,0 +1,31 @@
+{
+  "name": "tented-pocket",
+  "category": "printability",
+  "tags": ["tent", "overhang", "supportless", "interior-ceiling"],
+  "mode": "modify",
+  "source": "mcweed U189-U192 (tent ceilings) and mined4 I-3: 'tented' pockets, a 45 degree tent/frustum ceiling so an interior prints support-free; the model's flat ceilings survived until the user looked at the slicer's overhang view.",
+  "summary": "Cut a pocket into the -Y face with a 45 degree gable ceiling instead of a flat one, so it prints support-free on the -Z face.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 140,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "gable-void-above-the-flat-ceiling-line", "p": [0, -6, 14],   "inside": false },
+    { "name": "gable-void-just-under-the-ridge",        "p": [0, -6, 16.5], "inside": false },
+    { "name": "gable-void-under-the-slope-at-x4",       "p": [4, -6, 12.5], "inside": false },
+    { "name": "gable-void-under-the-slope-at-x-4",      "p": [-4, -6, 12.5], "inside": false },
+    { "name": "gable-void-near-the-wall-at-x4.5",       "p": [4.5, -6, 12.2], "inside": false },
+    { "name": "roof-above-the-ridge-is-solid",          "p": [0, -6, 17.5], "inside": true },
+    { "name": "slope-is-solid-above-45-degrees-at-x4",  "p": [4, -6, 14],   "inside": true },
+    { "name": "slope-is-solid-above-45-degrees-at-x-4", "p": [-4, -6, 14],  "inside": true },
+    { "name": "ceiling-still-starts-at-z12-at-the-wall", "p": [4.9, -6, 12.3], "inside": true },
+    { "name": "pocket-is-10-wide-void-at-x4.9",         "p": [4.9, -6, 8],  "inside": false },
+    { "name": "material-kept-outside-the-pocket-x5.5",  "p": [5.5, -6, 8],  "inside": true },
+    { "name": "pocket-floor-solid-below-z4",            "p": [0, -6, 3.5],  "inside": true },
+    { "name": "pocket-floor-void-above-z4",             "p": [0, -6, 4.5],  "inside": false },
+    { "name": "pocket-is-12-deep-and-stops-at-y0",      "p": [0, 0.5, 8],   "inside": true },
+    { "name": "pocket-is-open-at-the-minus-y-face",     "p": [0, -11.5, 8], "inside": false },
+    { "name": "block-corner-kept",                      "p": [11, 11, 18],  "inside": true },
+    { "name": "block-bottom-kept",                      "p": [0, 0, 1],     "inside": true }
+  ]
+}

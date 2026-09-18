@@ -1,0 +1,28 @@
+{
+  "name": "buttress-groove",
+  "category": "vocabulary",
+  "tags": ["named-form", "profile", "printability", "r-z-section"],
+  "mode": "modify",
+  "source": "mcweed I-4 U333-U341: 'the profile of the helix should be an L with a 45 degree little roof on the L... Like a staple where one leg is bent at 45 degrees.' Four user turns, three rebuilds, resolved when the model named it a buttress thread form.",
+  "summary": "Cut an internal buttress-thread groove: flat floor, 1 mm vertical back wall 2 mm deep, 45 degree roof rising from the back corner toward the bore so the opening at the bore is 3 tall.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 180,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.01 },
+  "probes": [
+    { "name": "roof-is-solid-above-the-back-corner",        "p": [7.9, 0, 0],     "inside": true },
+    { "name": "roof-is-solid-just-inside-the-back-wall",    "p": [7.5, 0, 0.5],   "inside": true },
+    { "name": "roof-is-solid-at-mid-depth",                 "p": [7, 0, 1.2],     "inside": true },
+    { "name": "roof-runs-all-the-way-round-the-bore",       "p": [-7.5, 0, 0.5],  "inside": true },
+    { "name": "roof-rises-toward-the-bore-void-at-r6.2",    "p": [6.2, 0, 1.2],   "inside": false },
+    { "name": "opening-at-the-bore-is-only-3-tall",         "p": [6.2, 0, 1.6],   "inside": true },
+    { "name": "floor-is-flat-void-at-the-back-of-the-groove","p": [7.9, 0, -1.2], "inside": false },
+    { "name": "floor-is-flat-void-near-the-bore",           "p": [6.2, 0, -1.2],  "inside": false },
+    { "name": "floor-sits-at-z-1.5-solid-below-it",         "p": [7, 0, -1.7],    "inside": true },
+    { "name": "groove-is-only-2-deep-solid-at-r8.3",        "p": [8.3, 0, 0],     "inside": true },
+    { "name": "bore-still-clear-away-from-the-groove",      "p": [5, 0, 5],       "inside": false },
+    { "name": "tube-wall-unchanged-away-from-the-groove",   "p": [9, 0, 5],       "inside": true },
+    { "name": "tube-outer-radius-unchanged",                "p": [10.5, 0, 0],    "inside": false },
+    { "name": "tube-height-unchanged-at-z10.5",             "p": [9, 0, 10.5],    "inside": false }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "gusset-triangular",
+  "category": "vocabulary",
+  "tags": ["shape-word", "printability", "corbel", "clarify"],
+  "mode": "modify",
+  "source": "mcweed I-12 U290-U313: 'I meant like a solid corner gusset when I said triangular.' The model had given the spokes a gabled cross-section instead. Six user corrections over ~24h for one small PLA part.",
+  "summary": "'Triangular' on a cantilevered spoke means a 45 degree corner gusset under it, not a triangular spoke section. Ideal first move is to ask which one; the hidden spec says corbel.",
+  "expects_question": true,
+  "align": "none",
+  "grid": 170,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.01 },
+  "probes": [
+    { "name": "gusset-fills-corner-under-spoke-near-hub", "p": [7, 0, 2],        "inside": true },
+    { "name": "gusset-runs-out-to-mid-spoke",             "p": [11, 0, 6],       "inside": true },
+    { "name": "gusset-root-reaches-the-build-plate",      "p": [6.2, 0, 0.5],    "inside": true },
+    { "name": "gusset-added-on-the-120-degree-spoke-too", "p": [-4, 6.928, 3.5], "inside": true },
+    { "name": "gusset-face-is-a-45-slope-not-a-block",    "p": [12, 0, 4],       "inside": false },
+    { "name": "nothing-hangs-below-the-spoke-tip",        "p": [15.5, 0, 2],     "inside": false },
+    { "name": "spoke-top-corner-still-square-y1.2",       "p": [11, 1.2, 12.8],  "inside": true },
+    { "name": "spoke-top-corner-still-square-y-1.2",      "p": [11, -1.2, 12.8], "inside": true },
+    { "name": "spoke-still-full-thickness-at-its-edge",   "p": [11, 1.4, 11],    "inside": true },
+    { "name": "spoke-still-reaches-its-tip",              "p": [15.5, 0, 11.5],  "inside": true },
+    { "name": "spoke-not-made-longer",                    "p": [16.5, 0, 11.5],  "inside": false },
+    { "name": "hub-unchanged-solid-above-the-spokes",     "p": [0, 0, 18],       "inside": true },
+    { "name": "hub-radius-unchanged-at-r7",               "p": [7, 0, 18],       "inside": false },
+    { "name": "hub-top-unchanged-at-z20.5",               "p": [0, 0, 20.5],     "inside": false }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "front-slot-anchor",
+  "category": "anchor",
+  "tags": ["front-back-inversion", "anchor-verbs", "minimal-delta"],
+  "mode": "modify",
+  "source": "mcweed 2026-07-11 (bit twice): FrontAt(v) pins a solid's LOW-Y face at v, BackAt(v) its HIGH-Y face; intuition inverts it. Struck the stem wire flats (buried grooves that never reached the surface) and the housing key block/keyway (pocket floated over the bay).",
+  "summary": "Cut a 4 x 2 slot across the FRONT (low-Y) face of a block. The trap is FrontAt/BackAt: FrontAt pins the LOW-Y face, so a model with inverted intuition puts the slot on the +Y face instead.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 150,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.25, "extra_max": 0.01 },
+  "probes": [
+    { "name": "slot-void-on-front-face-y-9",      "p": [0, -9, 0],     "inside": false },
+    { "name": "slot-runs-full-width-x14",         "p": [14, -9, 0],    "inside": false },
+    { "name": "slot-runs-full-width-x-14",        "p": [-14, -9, 0],   "inside": false },
+    { "name": "slot-floor-solid-y-7.5",           "p": [0, -7.5, 0],   "inside": true  },
+    { "name": "slot-full-4-wide-z1.5",            "p": [0, -9, 1.5],   "inside": false },
+    { "name": "slot-no-wider-than-4-z2.5",        "p": [0, -9, 2.5],   "inside": true  },
+    { "name": "back-face-untouched-y9",           "p": [0, 9, 0],      "inside": true  },
+    { "name": "back-face-untouched-y9-z1.5",      "p": [0, 9, 1.5],    "inside": true  },
+    { "name": "top-face-intact-z4.5",             "p": [0, 0, 4.5],    "inside": true  },
+    { "name": "corner-kept-x14-y9-z4.5",          "p": [14, 9, 4.5],   "inside": true  },
+    { "name": "block-core-solid",                 "p": [0, 0, 0],      "inside": true  },
+    { "name": "outside-block-x16",                "p": [16, 0, 0],     "inside": false }
+  ]
+}

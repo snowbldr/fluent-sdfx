@@ -1,0 +1,27 @@
+{
+  "name": "spoke-root-weld",
+  "category": "verification",
+  "tags": ["flat-into-curved", "weld", "false-verification", "model-blind"],
+  "mode": "modify",
+  "source": "mcweed I-12 / U304-U308: flat slab spoke welded into a curved hub. Root face placed on the hub radius touched only at the midplane; the edges left a notch. The model's midplane section 'proved' the weld sound; the user zoomed the model's own render and found the gap. Fix: rootR = sqrt(hubR^2 - (ws/2)^2) - 0.35.",
+  "summary": "Weld a flat 3 mm slab into a curved hub so the WHOLE root face is buried, not just the midplane. Starting the slab on the hub radius leaves a 0.14 mm wedge notch at the root corners.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 200,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.1, "extra_max": 0.01 },
+  "probes": [
+    { "name": "root-notch-filled-at-y1.45",        "p": [7.93, 1.45, 5.0],  "inside": true },
+    { "name": "root-notch-filled-at-y-1.45",       "p": [7.93, -1.45, 5.0], "inside": true },
+    { "name": "root-notch-filled-near-top-z9.5",   "p": [7.93, 1.45, 9.5],  "inside": true },
+    { "name": "root-notch-filled-near-bottom-z0.5","p": [7.93, -1.45, 0.5], "inside": true },
+    { "name": "spoke-reaches-tip-x17.9",           "p": [17.9, 0, 5.0],     "inside": true },
+    { "name": "spoke-stops-at-tip-x18.1",          "p": [18.1, 0, 5.0],     "inside": false },
+    { "name": "spoke-thickness-kept-y1.4",         "p": [14.0, 1.4, 5.0],   "inside": true },
+    { "name": "spoke-not-thicker-than-3-y1.6",     "p": [14.0, 1.6, 5.0],   "inside": false },
+    { "name": "spoke-full-height-at-z0.2",         "p": [14.0, 0, 0.2],     "inside": true },
+    { "name": "spoke-full-height-at-z9.8",         "p": [14.0, 0, 9.8],     "inside": true },
+    { "name": "hub-core-untouched",                "p": [0, 0, 5.0],        "inside": true },
+    { "name": "hub-radius-untouched-at-y8.2",      "p": [0, 8.2, 5.0],      "inside": false },
+    { "name": "nothing-above-hub-z10.2",           "p": [0, 0, 10.2],       "inside": false }
+  ]
+}

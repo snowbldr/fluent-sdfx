@@ -1,0 +1,28 @@
+{
+  "name": "cutter-overshoot-floor",
+  "category": "verification",
+  "tags": ["cutter-overshoot", "depth-not-through", "check-the-other-side"],
+  "mode": "modify",
+  "source": "mcweed heating-core tube: 'What are these huge holes on the bottom of the heating core tube?' A generously oversized groove cutter, centred on the face it entered, punched the grooves clean through the 1.25 mm floor. Nobody looked at the underside until the print.",
+  "summary": "Six 1 mm deep, 2 mm wide radial grooves in the top face of a 4 mm disc. The trap is the 'always make cutters bigger than the body' reflex: a tall cutter centred on the top face spans the whole thickness and turns the grooves into through slots. Overshoot belongs only where nothing has to survive - radially past the rim and upwards above the top face - with the cutter bottomed at z = discH - depth.",
+  "expects_question": false,
+  "align": "none",
+  "grid": 160,
+  "pass": { "iou_min": 0.99, "max_dev_mm": 0.3, "extra_max": 0.02 },
+  "probes": [
+    { "name": "groove-void-in-top-face-r10",        "p": [10, 0, 3.5],     "inside": false },
+    { "name": "groove-void-reaches-rim-r14.5",      "p": [14.5, 0, 3.5],   "inside": false },
+    { "name": "groove-void-at-inner-end-r5.5",      "p": [5.5, 0, 3.5],    "inside": false },
+    { "name": "floor-solid-under-groove-z2",        "p": [10, 0, 2],       "inside": true  },
+    { "name": "floor-solid-just-under-groove-z2.9", "p": [10, 0, 2.9],     "inside": true  },
+    { "name": "bottom-face-intact-under-groove",    "p": [10, 0, 0.3],     "inside": true  },
+    { "name": "bottom-face-intact-at-rim-r14",      "p": [14, 0, 0.3],     "inside": true  },
+    { "name": "groove-full-2mm-wide-y0.8",          "p": [10, 0.8, 3.5],   "inside": false },
+    { "name": "groove-no-wider-than-2mm-y1.5",      "p": [10, 1.5, 3.5],   "inside": true  },
+    { "name": "land-between-grooves-at-30deg",      "p": [8.66, 5.0, 3.5], "inside": true  },
+    { "name": "groove-at-60deg-void",               "p": [5.0, 8.66, 3.5], "inside": false },
+    { "name": "top-face-solid-inside-r5",           "p": [3.5, 0, 3.5],    "inside": true  },
+    { "name": "disc-centre-solid",                  "p": [0, 0, 2],        "inside": true  },
+    { "name": "outside-disc-r16",                   "p": [16, 0, 2],       "inside": false }
+  ]
+}

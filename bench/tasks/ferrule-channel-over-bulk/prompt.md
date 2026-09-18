@@ -1,0 +1,1 @@
+add a channel for the ferrule wire along the top face from the hole out to the +X edge: the ferrule is 2.4 diameter so a 2.4 wide, 2.4 deep groove is all we need. Just a small groove where the wire is, not a huge lane.
