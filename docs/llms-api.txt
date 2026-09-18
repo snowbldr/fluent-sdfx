@@ -251,6 +251,7 @@ Functions:
 - `shape.FlatFlankCam(distance, baseRadius, noseRadius float64) *Shape` — FlatFlankCam returns a 2D cam profile made from a base circle, a nose circle, and tangential flats.
 - `shape.GearRack(p GearRackParams) *Shape` — GearRack returns the 2D profile for a linear gear rack.
 - `shape.Hexagon(radius float64) *Shape` — Hexagon returns a regular hexagon centered on the origin, with radius as the circumradius (center to vertex) and a vertex on +X. Vertices sit every 60 degrees starting on +X, so flats face +Y and -Y and the across-flats distance is radius*sqrt(3): Hexagon(10) spans X -10..10 and Y -8.660..8.660.
+- `shape.Hole(diameter float64) *Shape` — Hole returns a circle of the given DIAMETER, centred on the origin.
 - `shape.ISOThread(radius, pitch float64, external bool) *Shape` — ISOThread returns the 2D profile of an ISO/UTS metric thread.
 - `shape.Identity2d() M33` — Identity2d returns the 3x3 identity matrix.
 - `shape.Line(length, round float64) *Shape` — Line returns a line segment from (-l/2,0) to (l/2,0) with optional rounding.
@@ -423,6 +424,7 @@ Functions:
 - `.SmoothUnion(min sdf.MinFunc, other ...*Shape) *Shape` — SmoothUnion blends s with other shapes using a smooth min function.
 - `.Split(a, dir v2.Vec) (*Shape, *Shape)` — Split cuts the shape along a line through point a in direction dir and returns both halves.
 - `.SweepHelix(radius, turns, height float64, flatEnds bool) *solid.Solid` — SweepHelix sweeps the shape along a helix of the given radius.
+- `.Through(target *solid.Solid, dir v3.Vec, pad float64) *solid.Solid` — Through extrudes the profile into a cutting tool that passes entirely through target along dir, standing pad millimetres proud at each end.
 - `.ToDXF(path string, meshCells int)` — ToDXF renders the shape to a DXF file using the quadtree marching-squares renderer.
 - `.ToPNG(path string, width, height int)` — ToPNG rasterizes the shape to a PNG file of the given pixel dimensions, centered on the shape's bounding box.
 - `.ToPNGBox(path string, bb Box2, width, height int)` — ToPNGBox rasterizes the shape to a PNG file for the given bounding box and pixel dimensions.
@@ -640,6 +642,7 @@ Functions:
 - `validate.LinearPoses(dir v3.Vec, from, to, step float64) []Pose` — LinearPoses returns pure translations of the moving body along the unit direction of dir, by from, from+step, ...
 - `validate.Manifest(parts []Part, cellsPerMM float64) string` — Manifest summarises parts as a markdown table — name, bounding-box min and max, size, volume and body count — for a build log, a PR comment, or a model deciding whether the part it just wrote is the size it meant.
 - `validate.MinWall(s *solid.Solid, region v3.Box, step, max float64) WallReport` — MinWall scans region on a grid of `step` mm and reports the thinnest material run found through any interior grid point along each of the three axes, searching at most max mm either side.
+- `validate.Moldability(s *solid.Solid, draw v3.Vec, cellsPerMM float64, o MoldOptions) MoldReport` — Moldability audits s along draw at mesh density cellsPerMM.
 - `validate.Of(s *solid.Solid, cellsPerMM float64) Stats` — Of computes validation stats by rendering s at cellsPerMM density.
 - `validate.OfMesh(tris []mesh.Triangle3) Stats` — OfMesh computes validation stats from a precomputed triangle mesh.
 - `validate.Opening(s *solid.Solid, p, dir v3.Vec, max float64) (float64, bool)` — Opening measures the clear void span (mm) through p along ±dir: p must be in air (At >= 0), and the result is the distance between the two material surfaces found within max mm either side.
@@ -658,6 +661,7 @@ Functions:
 - `validate.RequireInterference(t testing.TB, a, b *solid.Solid, cellsPerMM, atLeast float64)` — RequireInterference fails the test unless a penetrates b by at least atLeast mm somewhere (g.Min <= -atLeast).
 - `validate.RequireMaxOverhang(t *testing.T, s *solid.Solid, cellsPerMM, maxAngleDeg float64, tinyArea ...float64)` — RequireMaxOverhang fails the test if any face overhangs more than maxAngleDeg — i.e. the part would need supports when FDM-printed in default Z-up orientation.
 - `validate.RequireMinWall(t testing.TB, s *solid.Solid, region v3.Box, step, max, wantMin float64)` — RequireMinWall runs MinWall over region and calls t.Errorf if the thinnest material run found is below wantMin mm, or if the region contained no interior sample at all (which would otherwise pass vacuously).
+- `validate.RequireMoldable(t testing.TB, s *solid.Solid, draw v3.Vec, cellsPerMM float64, o MoldOptions, areaBudget float64)` — RequireMoldable logs the audit and fails the test when the failing area (undercut plus under-drafted) exceeds areaBudget in mm².
 - `validate.RequireNear(t testing.TB, name string, got, want, tol float64)` — RequireNear logs "name = got (want w ± tol)" and calls t.Errorf when |got-want| > tol — the standard dimension assertion for measurements read back out of a solid with SurfaceR, SurfaceZ, Opening or WallThickness.
 - `validate.RequireNoContact(t testing.TB, a, b *solid.Solid, cellsPerMM float64)` — RequireNoContact fails the test unless a's surface is strictly outside b everywhere (g.Min > 0): the two bodies do not touch at the sampled density.
 - `validate.RequireOneBody(t testing.TB, s *solid.Solid, cellsPerMM float64)` — RequireOneBody fails the test when s renders as anything other than a single connected body at cellsPerMM — the guard against a boolean that quietly severed a part, or a cut that left an island.
@@ -693,6 +697,12 @@ Functions:
 
 `validate.IdentityResult` — IdentityResult is the outcome of comparing two fields point by point: the largest absolute difference found (mm), where it was found, how many points were compared, and whether the largest difference was within tolerance.
 - `.String() string` — String returns the one-line report, e.g.
+
+`validate.MoldOptions` — MoldOptions controls the moldability audit.
+
+`validate.MoldReport` — MoldReport is the result of a moldability audit along one draw direction.
+- `.Moldable() bool` — Moldable reports whether the part pulls out of a one-part mold along Draw: no undercuts and nothing below the minimum draft.
+- `.String() string` — String renders the audit as one log line: the draw direction, the two failing areas, and the worst draft angle with where it is.
 
 `validate.NamedProbe` — NamedProbe is a Probe that also names which solid of a set it applies to, for tables that check several parts of an assembly at once.
 

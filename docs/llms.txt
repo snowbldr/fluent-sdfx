@@ -45,6 +45,7 @@ solid.Gyroid(...).WithBounds(box)     // Gyroid has a zero bounding box; WithBou
 // 2D primitives — centred on the origin
 shape.Rect(v2.XY(30, 20), 3)          // size, corner round
 shape.Circle(15)
+shape.Hole(6)                         // a circle given its DIAMETER: holes are specified as diameters, so the halving happens here
 shape.Polygon([]v2.Vec{...})          // either winding order is fine
 shape.Hexagon(12)                     // CIRCUMradius (centre to vertex), a vertex on +X; across-flats = 12*sqrt(3)
 shape.Triangle(10)                    // equilateral, inscribed radius 10, apex on +Y, flat base at y = -5
@@ -108,6 +109,14 @@ a.SmoothCut(solid.PolyMax(2.0), pocket)   // smooth-max for cuts and intersects
 a.SmoothIntersect(solid.PolyMax(k), b)
 // Other kernels: PolyMin, ExpMin, PowMin. A large k near a thin feature deforms the feature.
 ```
+
+A cut that has to go all the way through sizes its tool from the target, never by hand:
+
+```go
+body.Cut(shape.Hole(3.2).TranslateX(12).Through(body, v3.Z(1), 1))   // profile, target, direction, pad
+```
+
+`Through` extrudes the profile to span the target's bounding box along the direction with `pad` proud at each end, so the tool cannot leave a skin and the length cannot go stale when a thickness changes. The profile lies in the plane perpendicular to the direction, and the tool is centred on the target along that direction only, so a profile positioned before the call keeps its position.
 
 Cut in one variadic call, `body.Cut(t1, t2, t3)`, never chained: it is faster (the field is sampled once) and it reads as one operation. Smooth blends on non-exact fields (a difference, a twist) can close narrow gaps silently; confine the blend to a region, or check the gap with a probe afterwards.
 
@@ -273,7 +282,7 @@ Each of these has produced a wrong part in the record this file comes from.
 8. **`Shrink`, `Grow` and smooth blends on twisted or scaled fields** overshoot or close gaps. Work on the 2D profile before the sweep.
 9. **`Intersect(a, b)` is a ∩ (a ∪ b)**. Chain for a true multi-intersection.
 10. **`RotateCopyAtZ` on a pre-rotated source is empty**, silently.
-11. **Coincident faces.** A union across a shared face is safe. A subtraction whose face lies exactly on the body's face leaves a zero-thickness skin; make cutting tools 1 to 2 mm longer than the body, always.
+11. **Coincident faces.** A union across a shared face is safe. A subtraction whose face lies exactly on the body's face leaves a zero-thickness skin; make cutting tools 1 to 2 mm longer than the body, always, or let `Shape.Through` size the tool from the target for you.
 12. **A flat face welded into a curved one** meets it only at the midline; the edges float. Extend the flat part past the chord into the curved body.
 13. **Bounding-box placement of a composite part** puts a feature at the bbox, not at the feature. Place relative to the real face (probe for it) when the part has protrusions.
 14. **Renders lie by omission.** A single view hides a sealed window, a floating body, a mirrored stamp. Look from six directions and section through the feature under discussion; better, probe.
@@ -319,6 +328,12 @@ validate.RequireSweepBlocked(t, flippedKey, socket, validate.LinearPoses(v3.Z(-1
 validate.RequireOverhangArea(t, part.RotateX(90), 8, validate.OverhangOptions{MaxDeg: 45}, 2.0)
 validate.RequireStandsOn(t, part, 0, 0.01)
 
+// Moldability along a draw direction: can a mold half pull away from this?
+// The direction is an argument, so a part is scored along candidates without being rotated.
+rep := validate.Moldability(part, v3.Z(1), 5, validate.MoldOptions{})
+rep.Moldable()                                                   // no undercuts, nothing under-drafted
+validate.RequireMoldable(t, part, v3.Z(1), 5, validate.MoldOptions{}, 2.0)  // last argument is the mm² budget
+
 // Regression guards: a refactor that should change nothing, proven pointwise; a change that should be local, proven local.
 validate.RequireIdentical(t, before, after, validate.GridPoints(before.Bounds().Box, 1), 1e-6)
 validate.RequireUnchangedOutside(t, before, after, editedRegion, 8, 0.01)
@@ -337,6 +352,8 @@ validate.RequireWatertight(t, part, 5)
 validate.RequireOneBody(t, part, 5)
 validate.RequireVolumeNear(t, part, 5, 12500, 0.02)
 ```
+
+The two moldability verdicts are different repairs and are reported separately. An **undercut** face looks back against the draw, or points along it but sits under a lip that the ray march finds — either way the part needs another mold part. An **under-drafted** face releases in principle but is shallower than `MinDraftDeg` (default 1°), and the repair is to taper it. Faces lying in the parting plane at the back of the draw are the mold's opening, not undercuts, which is what lets a flat-backed part pass in one piece; `OpenFaceTol` defaults to one mesh cell and switching it negative audits the part as a closed two-part mold instead.
 
 To look at a part, render it from the standard views: `go run github.com/snowbldr/fluent-sdfx/tools/inspect part.stl` writes six PNGs (four isometric, top, bottom) with f3d, opaque and unlabelled, so a person or a model can read them. For a section, cut the solid with `CutPlane` and inspect that STL.
 
@@ -365,7 +382,7 @@ obj.ImportSTL(path, 20, 3, 5)                                      // an existin
 
 ## Common idioms
 
-- **Cutting tools longer than the body, always.** Pad by 1 to 2 mm; an exact-height hole leaves a skin.
+- **Cutting tools longer than the body, always.** `shape.Hole(d).Through(body, v3.Z(1), 1)` sizes the tool from the target; by hand, pad by 1 to 2 mm. An exact-height hole leaves a skin.
 - **Shrinkage compensation** at the very end: `part.ScaleUniform(1 / 0.996)` for a 0.4 percent shrink, before `.STL`, after every placement (scale is about the origin).
 - **Mating gears** share `Module` and `PressureAngleDeg`; centre distance is `(N1 + N2) × Module / 2`. Extrude them with `Extrude`, not `ExtrudeRounded`.
 - **Text**: `shape.Text(...).Cache()` before you use it twice.
