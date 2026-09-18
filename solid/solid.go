@@ -25,6 +25,11 @@ func requireSDF3(name string, s sdf.SDF3) {
 	}
 }
 
+// Solid is an immutable 3D solid: a signed distance field (sdf.SDF3) plus
+// the fluent API. Every method returns a new *Solid and leaves the receiver
+// unchanged, so a chain can be branched and reused freely. Coordinates are
+// world space in whatever unit the model uses (mm by convention): +X right,
+// +Y back, +Z up.
 type Solid struct {
 	sdf.SDF3
 }
@@ -143,34 +148,66 @@ func (s *Solid) Bounds() Box3 {
 
 // --- Transform methods ---
 
+// ZeroZ translates the solid along Z so its bounding box minimum Z lands at 0.
+// X and Y are untouched. This is the "sit it on the print bed" move: a solid
+// spanning Z 4..10 comes back spanning 0..6.
 func (s *Solid) ZeroZ() *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec{Z: -s.SDF3.BoundingBox().Min.Z}))}
 }
 
+// Translate moves the solid by v, adding v.X, v.Y and v.Z to every point.
 func (s *Solid) Translate(v v3.Vec) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Translate3d(v3sdf.Vec(v)))}
 }
 
-func (s *Solid) TranslateX(x float64) *Solid         { return s.Translate(v3.X(x)) }
-func (s *Solid) TranslateY(y float64) *Solid         { return s.Translate(v3.Y(y)) }
-func (s *Solid) TranslateZ(z float64) *Solid         { return s.Translate(v3.Z(z)) }
-func (s *Solid) TranslateXY(x, y float64) *Solid     { return s.Translate(v3.XY(x, y)) }
-func (s *Solid) TranslateXZ(x, z float64) *Solid     { return s.Translate(v3.XZ(x, z)) }
-func (s *Solid) TranslateYZ(y, z float64) *Solid     { return s.Translate(v3.YZ(y, z)) }
+// TranslateX moves the solid x along X; Y and Z are unchanged.
+func (s *Solid) TranslateX(x float64) *Solid { return s.Translate(v3.X(x)) }
+
+// TranslateY moves the solid y along Y; X and Z are unchanged.
+func (s *Solid) TranslateY(y float64) *Solid { return s.Translate(v3.Y(y)) }
+
+// TranslateZ moves the solid z along Z; X and Y are unchanged.
+func (s *Solid) TranslateZ(z float64) *Solid { return s.Translate(v3.Z(z)) }
+
+// TranslateXY moves the solid x along X and y along Y; Z is unchanged.
+func (s *Solid) TranslateXY(x, y float64) *Solid { return s.Translate(v3.XY(x, y)) }
+
+// TranslateXZ moves the solid x along X and z along Z; Y is unchanged.
+func (s *Solid) TranslateXZ(x, z float64) *Solid { return s.Translate(v3.XZ(x, z)) }
+
+// TranslateYZ moves the solid y along Y and z along Z; X is unchanged.
+func (s *Solid) TranslateYZ(y, z float64) *Solid { return s.Translate(v3.YZ(y, z)) }
+
+// TranslateXYZ moves the solid x along X, y along Y and z along Z.
 func (s *Solid) TranslateXYZ(x, y, z float64) *Solid { return s.Translate(v3.XYZ(x, y, z)) }
 
+// RotateX rotates the solid angleDeg degrees about the world X axis, by the
+// right-hand rule: RotateX(90) sends +Y to +Z and +Z to -Y. The rotation is
+// about the axis through the origin, so an off-axis solid swings around it
+// rather than spinning in place.
 func (s *Solid) RotateX(angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateX(angleDeg*math.Pi/180))}
 }
 
+// RotateY rotates the solid angleDeg degrees about the world Y axis, by the
+// right-hand rule: RotateY(90) sends +Z to +X and +X to -Z. The rotation is
+// about the axis through the origin, so an off-axis solid swings around it
+// rather than spinning in place.
 func (s *Solid) RotateY(angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateY(angleDeg*math.Pi/180))}
 }
 
+// RotateZ rotates the solid angleDeg degrees about the world Z axis, by the
+// right-hand rule: RotateZ(90) sends +X to +Y and +Y to -X. The rotation is
+// about the axis through the origin, so an off-axis solid swings around it
+// rather than spinning in place.
 func (s *Solid) RotateZ(angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateZ(angleDeg*math.Pi/180))}
 }
 
+// RotateAxis rotates the solid angleDeg degrees about the line through the
+// origin along axis, by the right-hand rule. axis is normalized internally,
+// so it need not be a unit vector, but it must be non-zero.
 func (s *Solid) RotateAxis(axis v3.Vec, angleDeg float64) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Rotate3d(v3sdf.Vec(axis), angleDeg*math.Pi/180))}
 }
@@ -180,6 +217,11 @@ func (s *Solid) RotateToVector(from, to v3.Vec) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.RotateToVector(v3sdf.Vec(from), v3sdf.Vec(to)))}
 }
 
+// Scale multiplies each coordinate by the matching component of v, about the
+// world origin. A solid away from the origin therefore moves as well as
+// grows: a 2x2x2 box centered at x=10 scaled by (2,1,1) ends up 4 wide and
+// centered at x=20. Non-uniform scaling also breaks the exact-distance
+// property of the field; use ScaleUniform when distance must be preserved.
 func (s *Solid) Scale(v v3.Vec) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.Scale3d(v3sdf.Vec(v)))}
 }
@@ -189,6 +231,9 @@ func (s *Solid) ScaleUniform(k float64) *Solid {
 	return &Solid{sdf.ScaleUniform3D(s.SDF3, k)}
 }
 
+// Transform applies the 4x4 homogeneous matrix m to the solid in world space.
+// Build m with the package helpers (Translate3d, RotateXMatrix, Scale3d,
+// MirrorXY, Rotate3dMatrix, ...) and compose them with M44.Mul.
 func (s *Solid) Transform(m M44) *Solid {
 	return &Solid{sdf.Transform3D(s.SDF3, sdf.M44(m))}
 }

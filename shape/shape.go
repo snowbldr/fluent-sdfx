@@ -16,6 +16,12 @@ import (
 	v2isdf "github.com/snowbldr/sdfx/vec/v2i"
 )
 
+// Shape is an immutable 2D shape: a signed distance field (sdf.SDF2) in the
+// XY plane plus the fluent API. Every method returns a new *Shape and leaves
+// the receiver unchanged, so a chain can be branched and reused freely.
+// Extrude or Revolve a Shape to get a *solid.Solid; on extrusion the shape's
+// X and Y become world X and Y, on revolution its X is the radius from the Z
+// axis and its Y becomes world Z.
 type Shape struct {
 	sdf.SDF2
 }
@@ -106,18 +112,32 @@ func (s *Shape) Bounds() Box2 {
 
 // --- Transform methods ---
 
+// Translate moves the shape by v, adding v.X to X and v.Y to Y.
 func (s *Shape) Translate(v v2.Vec) *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.Translate2d(v2sdf.Vec(v)))}
 }
 
-func (s *Shape) TranslateX(x float64) *Shape     { return s.Translate(v2.X(x)) }
-func (s *Shape) TranslateY(y float64) *Shape     { return s.Translate(v2.Y(y)) }
+// TranslateX moves the shape x along X; Y is unchanged.
+func (s *Shape) TranslateX(x float64) *Shape { return s.Translate(v2.X(x)) }
+
+// TranslateY moves the shape y along Y; X is unchanged.
+func (s *Shape) TranslateY(y float64) *Shape { return s.Translate(v2.Y(y)) }
+
+// TranslateXY moves the shape x along X and y along Y.
 func (s *Shape) TranslateXY(x, y float64) *Shape { return s.Translate(v2.XY(x, y)) }
 
+// Rotate rotates the shape angleDeg degrees counter-clockwise about the
+// origin, turning +X toward +Y: Rotate(90) sends a feature at (4,0) to (0,4).
+// Negative angles turn clockwise. Rotation is about the origin, not the
+// shape's center, so an off-center shape swings around.
 func (s *Shape) Rotate(angleDeg float64) *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.Rotate2d(angleDeg*math.Pi/180))}
 }
 
+// Scale multiplies X by v.X and Y by v.Y, about the origin, so a shape away
+// from the origin moves as well as grows: a 1x1 square centered at x=4
+// scaled by (2,1) ends up 2 wide and centered at x=8. Non-uniform scaling
+// breaks the exact-distance property; use ScaleUniform to preserve it.
 func (s *Shape) Scale(v v2.Vec) *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.Scale2d(v2sdf.Vec(v)))}
 }
@@ -127,18 +147,32 @@ func (s *Shape) ScaleUniform(k float64) *Shape {
 	return &Shape{sdf.ScaleUniform2D(s.SDF2, k)}
 }
 
+// MirrorX reflects the shape across the X axis, negating Y: a feature at
+// (0,4) lands at (0,-4) and X is untouched. The name is sdfx's — it names
+// the mirror line, not the coordinate that flips. Use MirrorY to negate X.
 func (s *Shape) MirrorX() *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.MirrorX())}
 }
 
+// MirrorY reflects the shape across the Y axis, negating X: a feature at
+// (4,0) lands at (-4,0) and Y is untouched. As with MirrorX, the name is the
+// mirror line, not the coordinate that flips.
 func (s *Shape) MirrorY() *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.MirrorY())}
 }
 
+// Transform applies the 3x3 homogeneous matrix m to the shape in the XY plane.
+// Build m with the package helpers (Translate2d, Rotate2d, Scale2d, MirrorX,
+// MirrorY) and compose them with M33.Mul.
 func (s *Shape) Transform(m M33) *Shape {
 	return &Shape{sdf.Transform2D(s.SDF2, sdf.M33(m))}
 }
 
+// Offset grows the shape outward by amount in every direction; a negative
+// amount shrinks it inward. The dilation is rounded, so convex corners come
+// back as arcs of radius amount: a 10x10 square offset by 1 spans -6..6 but
+// its corner at (5.9,5.9) is outside. Offsetting inward by more than the
+// shape's half-thickness makes it vanish.
 func (s *Shape) Offset(amount float64) *Shape {
 	return &Shape{sdf.Offset2D(s.SDF2, amount)}
 }

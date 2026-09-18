@@ -6,6 +6,15 @@ import (
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 )
 
+// WireGroove returns the cross-section of a channel that captures a wire of
+// radius r, centered on the origin and opening toward +X.
+// The wire seat is a full circle of radius r at the origin; the channel runs
+// from there out to x = depth with a flat floor at y = -r (tangent to the
+// bottom of the wire) and a roof that is tangent to the circle and rises
+// toward +X at (90 - angleDeg) degrees from horizontal. angleDeg = 90 gives
+// a parallel-sided slot 2r tall (WireGroove(1,3,90) spans Y -1..1); smaller
+// angles flare the mouth (WireGroove(1,3,60) reaches Y 2.887). The roof is
+// clamped at y = 3.5*r so a shallow tail angle cannot run away.
 func WireGroove(r float64, depth float64, angleDeg float64) *Shape {
 	alpha := (90.0 - angleDeg) * math.Pi / 180.0
 

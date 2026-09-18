@@ -60,37 +60,91 @@ func (p Placement) Solid() *Solid { return p.Moved }
 
 // --- Anchor selectors on Solid (the full 27) ---
 
-// 6 face centers.
-func (s *Solid) Top() AnchoredSolid    { return s.anchor(0, 0, 1) }
+// The 6 face centers. Each names the bounding box face it sits on: top is
+// max Z, bottom min Z, right max X, left min X, back max Y, front min Y.
+
+// Top returns the anchor at the center of the bounding box's maximum-Z face (+Z).
+func (s *Solid) Top() AnchoredSolid { return s.anchor(0, 0, 1) }
+
+// Bottom returns the anchor at the center of the bounding box's minimum-Z face (-Z).
 func (s *Solid) Bottom() AnchoredSolid { return s.anchor(0, 0, -1) }
-func (s *Solid) Right() AnchoredSolid  { return s.anchor(1, 0, 0) }
-func (s *Solid) Left() AnchoredSolid   { return s.anchor(-1, 0, 0) }
-func (s *Solid) Back() AnchoredSolid   { return s.anchor(0, 1, 0) }
-func (s *Solid) Front() AnchoredSolid  { return s.anchor(0, -1, 0) }
 
-// 12 edge midpoints.
-func (s *Solid) TopRight() AnchoredSolid    { return s.anchor(1, 0, 1) }
-func (s *Solid) TopLeft() AnchoredSolid     { return s.anchor(-1, 0, 1) }
-func (s *Solid) TopFront() AnchoredSolid    { return s.anchor(0, -1, 1) }
-func (s *Solid) TopBack() AnchoredSolid     { return s.anchor(0, 1, 1) }
+// Right returns the anchor at the center of the bounding box's maximum-X face (+X).
+func (s *Solid) Right() AnchoredSolid { return s.anchor(1, 0, 0) }
+
+// Left returns the anchor at the center of the bounding box's minimum-X face (-X).
+func (s *Solid) Left() AnchoredSolid { return s.anchor(-1, 0, 0) }
+
+// Back returns the anchor at the center of the bounding box's maximum-Y face (+Y).
+func (s *Solid) Back() AnchoredSolid { return s.anchor(0, 1, 0) }
+
+// Front returns the anchor at the center of the bounding box's minimum-Y face (-Y).
+func (s *Solid) Front() AnchoredSolid { return s.anchor(0, -1, 0) }
+
+// The 12 edge midpoints. Each pins two axes to a bounding box extreme and
+// stays centered on the third.
+
+// TopRight returns the anchor at the midpoint of the max-Z, max-X edge, centered in Y.
+func (s *Solid) TopRight() AnchoredSolid { return s.anchor(1, 0, 1) }
+
+// TopLeft returns the anchor at the midpoint of the max-Z, min-X edge, centered in Y.
+func (s *Solid) TopLeft() AnchoredSolid { return s.anchor(-1, 0, 1) }
+
+// TopFront returns the anchor at the midpoint of the max-Z, min-Y edge, centered in X.
+func (s *Solid) TopFront() AnchoredSolid { return s.anchor(0, -1, 1) }
+
+// TopBack returns the anchor at the midpoint of the max-Z, max-Y edge, centered in X.
+func (s *Solid) TopBack() AnchoredSolid { return s.anchor(0, 1, 1) }
+
+// BottomRight returns the anchor at the midpoint of the min-Z, max-X edge, centered in Y.
 func (s *Solid) BottomRight() AnchoredSolid { return s.anchor(1, 0, -1) }
-func (s *Solid) BottomLeft() AnchoredSolid  { return s.anchor(-1, 0, -1) }
-func (s *Solid) BottomFront() AnchoredSolid { return s.anchor(0, -1, -1) }
-func (s *Solid) BottomBack() AnchoredSolid  { return s.anchor(0, 1, -1) }
-func (s *Solid) FrontRight() AnchoredSolid  { return s.anchor(1, -1, 0) }
-func (s *Solid) FrontLeft() AnchoredSolid   { return s.anchor(-1, -1, 0) }
-func (s *Solid) BackRight() AnchoredSolid   { return s.anchor(1, 1, 0) }
-func (s *Solid) BackLeft() AnchoredSolid    { return s.anchor(-1, 1, 0) }
 
-// 8 corners.
-func (s *Solid) TopFrontRight() AnchoredSolid    { return s.anchor(1, -1, 1) }
-func (s *Solid) TopFrontLeft() AnchoredSolid     { return s.anchor(-1, -1, 1) }
-func (s *Solid) TopBackRight() AnchoredSolid     { return s.anchor(1, 1, 1) }
-func (s *Solid) TopBackLeft() AnchoredSolid      { return s.anchor(-1, 1, 1) }
+// BottomLeft returns the anchor at the midpoint of the min-Z, min-X edge, centered in Y.
+func (s *Solid) BottomLeft() AnchoredSolid { return s.anchor(-1, 0, -1) }
+
+// BottomFront returns the anchor at the midpoint of the min-Z, min-Y edge, centered in X.
+func (s *Solid) BottomFront() AnchoredSolid { return s.anchor(0, -1, -1) }
+
+// BottomBack returns the anchor at the midpoint of the min-Z, max-Y edge, centered in X.
+func (s *Solid) BottomBack() AnchoredSolid { return s.anchor(0, 1, -1) }
+
+// FrontRight returns the anchor at the midpoint of the min-Y, max-X edge, centered in Z.
+func (s *Solid) FrontRight() AnchoredSolid { return s.anchor(1, -1, 0) }
+
+// FrontLeft returns the anchor at the midpoint of the min-Y, min-X edge, centered in Z.
+func (s *Solid) FrontLeft() AnchoredSolid { return s.anchor(-1, -1, 0) }
+
+// BackRight returns the anchor at the midpoint of the max-Y, max-X edge, centered in Z.
+func (s *Solid) BackRight() AnchoredSolid { return s.anchor(1, 1, 0) }
+
+// BackLeft returns the anchor at the midpoint of the max-Y, min-X edge, centered in Z.
+func (s *Solid) BackLeft() AnchoredSolid { return s.anchor(-1, 1, 0) }
+
+// The 8 corners. Each pins all three axes to a bounding box extreme.
+
+// TopFrontRight returns the anchor at the bounding box corner (max X, min Y, max Z).
+func (s *Solid) TopFrontRight() AnchoredSolid { return s.anchor(1, -1, 1) }
+
+// TopFrontLeft returns the anchor at the bounding box corner (min X, min Y, max Z).
+func (s *Solid) TopFrontLeft() AnchoredSolid { return s.anchor(-1, -1, 1) }
+
+// TopBackRight returns the anchor at the bounding box corner (max X, max Y, max Z).
+func (s *Solid) TopBackRight() AnchoredSolid { return s.anchor(1, 1, 1) }
+
+// TopBackLeft returns the anchor at the bounding box corner (min X, max Y, max Z).
+func (s *Solid) TopBackLeft() AnchoredSolid { return s.anchor(-1, 1, 1) }
+
+// BottomFrontRight returns the anchor at the bounding box corner (max X, min Y, min Z).
 func (s *Solid) BottomFrontRight() AnchoredSolid { return s.anchor(1, -1, -1) }
-func (s *Solid) BottomFrontLeft() AnchoredSolid  { return s.anchor(-1, -1, -1) }
-func (s *Solid) BottomBackRight() AnchoredSolid  { return s.anchor(1, 1, -1) }
-func (s *Solid) BottomBackLeft() AnchoredSolid   { return s.anchor(-1, 1, -1) }
+
+// BottomFrontLeft returns the anchor at the bounding box corner (min X, min Y, min Z).
+func (s *Solid) BottomFrontLeft() AnchoredSolid { return s.anchor(-1, -1, -1) }
+
+// BottomBackRight returns the anchor at the bounding box corner (max X, max Y, min Z).
+func (s *Solid) BottomBackRight() AnchoredSolid { return s.anchor(1, 1, -1) }
+
+// BottomBackLeft returns the anchor at the bounding box corner (min X, max Y, min Z).
+func (s *Solid) BottomBackLeft() AnchoredSolid { return s.anchor(-1, 1, -1) }
 
 // AnchorAt returns the anchor for an arbitrary unit-cube coordinate; each
 // component is min at -1, center at 0, max at +1.
@@ -212,7 +266,13 @@ func (a AnchoredSolid) AtZ(z float64) *Solid { return a.Solid.TranslateZ(z - a.P
 // ShiftX moves the anchor point d along X without moving the solid;
 // useful when chaining a target like "body's top, but 2mm up".
 func (a AnchoredSolid) ShiftX(d float64) AnchoredSolid { return a.shift(v3.X(d)) }
+
+// ShiftY moves the anchor point d along Y without moving the solid;
+// positive d shifts the point toward +Y (the back).
 func (a AnchoredSolid) ShiftY(d float64) AnchoredSolid { return a.shift(v3.Y(d)) }
+
+// ShiftZ moves the anchor point d along Z without moving the solid;
+// positive d shifts the point toward +Z (up).
 func (a AnchoredSolid) ShiftZ(d float64) AnchoredSolid { return a.shift(v3.Z(d)) }
 
 func (a AnchoredSolid) shift(d v3.Vec) AnchoredSolid {
@@ -307,13 +367,32 @@ func (s *Solid) AttachBehind(part *Solid, gap ...float64) Placement {
 	return s.Back().AttachBehind(part.Front(), gap...)
 }
 
-// Absolute scalar setters — leave other axes alone, return *Solid.
+// Absolute scalar setters — each translates along one axis only and leaves
+// the other two alone.
+
+// BottomAt translates the solid along Z so its minimum-Z face (the bottom) lies at z.
+// X and Y are unchanged.
 func (s *Solid) BottomAt(z float64) *Solid { return s.Bottom().AtZ(z) }
-func (s *Solid) TopAt(z float64) *Solid    { return s.Top().AtZ(z) }
-func (s *Solid) LeftAt(x float64) *Solid   { return s.Left().AtX(x) }
-func (s *Solid) RightAt(x float64) *Solid  { return s.Right().AtX(x) }
-func (s *Solid) FrontAt(y float64) *Solid  { return s.Front().AtY(y) }
-func (s *Solid) BackAt(y float64) *Solid   { return s.Back().AtY(y) }
+
+// TopAt translates the solid along Z so its maximum-Z face (the top) lies at z.
+// X and Y are unchanged.
+func (s *Solid) TopAt(z float64) *Solid { return s.Top().AtZ(z) }
+
+// LeftAt translates the solid along X so its minimum-X face (the left, -X) lies at x.
+// Y and Z are unchanged.
+func (s *Solid) LeftAt(x float64) *Solid { return s.Left().AtX(x) }
+
+// RightAt translates the solid along X so its maximum-X face (the right, +X) lies at x.
+// Y and Z are unchanged.
+func (s *Solid) RightAt(x float64) *Solid { return s.Right().AtX(x) }
+
+// FrontAt translates the solid along Y so its minimum-Y face (the front, -Y) lies at y.
+// X and Z are unchanged.
+func (s *Solid) FrontAt(y float64) *Solid { return s.Front().AtY(y) }
+
+// BackAt translates the solid along Y so its maximum-Y face (the back, +Y) lies at y.
+// X and Z are unchanged.
+func (s *Solid) BackAt(y float64) *Solid { return s.Back().AtY(y) }
 
 // CenterAt translates s so its bounding box center lands at p.
 func (s *Solid) CenterAt(p v3.Vec) *Solid { return s.AnchorAt(0, 0, 0).At(p) }

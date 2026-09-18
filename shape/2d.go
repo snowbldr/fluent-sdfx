@@ -6,6 +6,12 @@ import (
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 )
 
+// Star returns a star polygon with the given number of points, tips at
+// radius outer and valleys at radius inner, centered on the origin.
+// The first tip points along +X and the tips are spaced 360/points degrees
+// apart. The polygon is then offset outward by outer/10 to round the
+// corners, so the finished tips actually reach 1.1*outer and the valleys sit
+// near inner+outer/10: Star(10, 5, 5) has a tip at (11,0), not (10,0).
 func Star(outer, inner float64, points int) *Shape {
 	var pts []v2.Vec
 	for i := 0; i < points*2; i++ {
@@ -19,6 +25,11 @@ func Star(outer, inner float64, points int) *Shape {
 	return Polygon(pts).Offset(outer / 10)
 }
 
+// Hexagon returns a regular hexagon centered on the origin, with radius as
+// the circumradius (center to vertex) and a vertex on +X.
+// Vertices sit every 60 degrees starting on +X, so flats face +Y and -Y and
+// the across-flats distance is radius*sqrt(3): Hexagon(10) spans X -10..10
+// and Y -8.660..8.660.
 func Hexagon(radius float64) *Shape {
 	var pts []v2.Vec
 	for i := 0; i < 6; i++ {
@@ -28,6 +39,11 @@ func Hexagon(radius float64) *Shape {
 	return Polygon(pts)
 }
 
+// Triangle returns an equilateral triangle centered on the origin and
+// inscribed in a circle of the given radius, with its apex on +Y.
+// The base is horizontal at y = -radius/2 and the base corners are at
+// x = +/-radius*sqrt(3)/2, so Triangle(10) spans X -8.660..8.660 and
+// Y -5..10.
 func Triangle(radius float64) *Shape {
 	var pts []v2.Vec
 	for i := 0; i < 3; i++ {
@@ -37,6 +53,10 @@ func Triangle(radius float64) *Shape {
 	return Polygon(pts)
 }
 
+// Cross returns a plus sign centered on the origin: two bars of length
+// width and the given thickness, one along X and one along Y.
+// The bounding box is width by width, so Cross(10, 2) spans -5..5 on both
+// axes with arms 2 wide.
 func Cross(width, thickness float64) *Shape {
 	vBar := Rect(v2.Vec{X: thickness, Y: width}, 0)
 	hBar := Rect(v2.Vec{X: width, Y: thickness}, 0)

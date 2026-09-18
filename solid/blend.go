@@ -8,6 +8,11 @@ import (
 // Use ChamferMin, RoundMin, ExpMin, PowMin, PolyMin for smooth unions.
 // Use PolyMax for smooth differences/intersections.
 type MinFunc = sdf.MinFunc
+
+// MaxFunc is the blend function for smooth differences and intersections: it
+// combines two signed distances into a rounded maximum. Build one with
+// PolyMax and pass it to SmoothCut, SmoothDifference, SmoothIntersect or
+// SmoothIntersection; the plain MaxFunc for a hard boolean is math.Max.
 type MaxFunc = sdf.MaxFunc
 
 // RoundMin returns a smooth min function that rounds the inner edge with radius k.
