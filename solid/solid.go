@@ -75,6 +75,9 @@ func Cylinder(height, radius, round float64) *Solid {
 // Panics if any size component is negative or if round exceeds half the
 // smallest dimension.
 func Box(size v3.Vec, round float64) *Solid {
+	if half := math.Min(size.X, math.Min(size.Y, size.Z)) / 2; round > half {
+		panic(fmt.Sprintf("solid.Box: round %g exceeds half the smallest dimension (%g); the fillets would overlap", round, half))
+	}
 	return New(sdf.Box3D(v3sdf.Vec(size), round))
 }
 

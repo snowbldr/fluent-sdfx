@@ -32,7 +32,7 @@ Functions:
 - `solid.PolyMax(k float64) MaxFunc` — PolyMax returns a polynomial smooth max with parameter k.
 - `solid.PolyMin(k float64) MinFunc` — PolyMin returns a polynomial smooth min with parameter k.
 - `solid.PowMin(k float64) MinFunc` — PowMin returns a power-based smooth min with exponent k.
-- `solid.PyramidFrustum(halfBase, halfTop, h float64) *Solid` — PyramidFrustum is an exact square frustum, half-width halfBase at z=0 to halfTop at z=h (a Box trimmed by four planes).
+- `solid.PyramidFrustum(halfBase, halfTop, h float64) *Solid` — PyramidFrustum is an exact square frustum sitting on z=0: half-width halfBase at z=0 tapering (or widening) linearly to halfTop at z=h, made as a Box trimmed by four planes.
 - `solid.Revolve(profile sdf.SDF2) *Solid` — Revolve creates a solid of revolution by rotating a 2D profile around the Z axis.
 - `solid.RevolveAngle(profile sdf.SDF2, angleDeg float64) *Solid` — RevolveAngle creates a partial solid of revolution (theta in degrees).
 - `solid.Rotate3dMatrix(axis v3.Vec, deg float64) M44` — Rotate3dMatrix returns a 4x4 rotation matrix around an arbitrary axis (degrees).
@@ -277,7 +277,7 @@ Functions:
 - `shape.SmoothCut(max sdf.MaxFunc, s *Shape, tools ...*Shape) *Shape` — SmoothCut subtracts the union of tools from s, blended with a smooth max function.
 - `shape.SmoothIntersect(max sdf.MaxFunc, s *Shape, others ...*Shape) *Shape` — SmoothIntersect intersects s with the union of others, blended with a smooth max function.
 - `shape.SmoothUnion(min sdf.MinFunc, shapes ...*Shape) *Shape` — SmoothUnion blends shapes with a smooth min function (see solid.RoundMin etc for Mins).
-- `shape.Star(outer, inner float64, points int) *Shape` — Star returns a star polygon with the given number of points, tips at radius outer and valleys at radius inner, centered on the origin.
+- `shape.Star(outer, inner float64, points int) *Shape` — Star returns a star polygon with the given number of points, tips exactly at radius outer and valleys exactly at radius inner, centered on the origin.
 - `shape.Text(font *Font, text string, height float64) *Shape` — Text renders a string as a 2D Shape using the given font and total text height.
 - `shape.ThreadLookup(name string) *ThreadParams` — ThreadLookup looks up a standard thread by name (e.g. "M4x0.7", "unc_1/4", "npt_1/2").
 - `shape.ThreeArcCam(distance, baseRadius, noseRadius, flankRadius float64) *Shape` — ThreeArcCam returns a 2D cam profile made from a base circle, nose circle, and circular flank arcs.

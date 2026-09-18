@@ -85,3 +85,37 @@ func TestPyramidFrustumEqualRadiiIsABox(t *testing.T) {
 		}
 	}
 }
+
+// A frustum whose top is wider than its base must actually widen. An
+// earlier version sized its blank by halfBase alone, so PyramidFrustum(4, 10,
+// 12) came out as an 8 mm prism with no error.
+func TestPyramidFrustumWidens(t *testing.T) {
+	f := PyramidFrustum(4, 10, 12)
+	if b := f.Bounds(); b.Max.X < 10-1e-9 {
+		t.Fatalf("widening frustum clipped to %v", b)
+	}
+	in := func(x, z float64) bool { return f.Evaluate(v3sdf.Vec{X: x, Y: 0, Z: z}) < 0 }
+	if !in(9, 11.5) {
+		t.Error("(9, 0, 11.5) should be inside the wide top")
+	}
+	if in(9, 0.5) {
+		t.Error("(9, 0, 0.5) should be outside the narrow base")
+	}
+	// Half-width is linear in z: at z = 6 it is 7.
+	if !in(6.9, 6) || in(7.1, 6) {
+		t.Error("half-width at z=6 is not 7")
+	}
+}
+
+func TestPyramidFrustumRejectsNonPositive(t *testing.T) {
+	for _, c := range [][3]float64{{0, 5, 10}, {5, 0, 10}, {5, 5, 0}, {-1, 5, 10}} {
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("PyramidFrustum%v did not panic", c)
+				}
+			}()
+			PyramidFrustum(c[0], c[1], c[2])
+		}()
+	}
+}

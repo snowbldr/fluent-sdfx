@@ -6,12 +6,11 @@ import (
 	v2 "github.com/snowbldr/fluent-sdfx/vec/v2"
 )
 
-// Star returns a star polygon with the given number of points, tips at
-// radius outer and valleys at radius inner, centered on the origin.
-// The first tip points along +X and the tips are spaced 360/points degrees
-// apart. The polygon is then offset outward by outer/10 to round the
-// corners, so the finished tips actually reach 1.1*outer and the valleys sit
-// near inner+outer/10: Star(10, 5, 5) has a tip at (11,0), not (10,0).
+// Star returns a star polygon with the given number of points, tips exactly
+// at radius outer and valleys exactly at radius inner, centered on the
+// origin. The first tip points along +X and the tips are spaced 360/points
+// degrees apart. Corners are sharp; round them with Offset if you want, and
+// remember Offset changes the size.
 func Star(outer, inner float64, points int) *Shape {
 	var pts []v2.Vec
 	for i := 0; i < points*2; i++ {
@@ -22,7 +21,7 @@ func Star(outer, inner float64, points int) *Shape {
 		angle := float64(i) * math.Pi / float64(points)
 		pts = append(pts, v2.Vec{X: r * math.Cos(angle), Y: r * math.Sin(angle)})
 	}
-	return Polygon(pts).Offset(outer / 10)
+	return Polygon(pts)
 }
 
 // Hexagon returns a regular hexagon centered on the origin, with radius as

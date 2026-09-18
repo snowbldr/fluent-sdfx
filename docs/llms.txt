@@ -12,7 +12,7 @@ If you take away one thing: **a fluent-sdfx program is one expression that descr
 - **The field is the truth.** A solid is a function from a point to a signed distance: negative inside material, positive in air, zero on the surface. Anything you want to know about a part can be asked of that function at a point, and the `validate` package exists to ask it well. The mesh is a rendering of the field, not the part.
 - **Degrees everywhere, with two exceptions.** Every angle parameter is degrees (`RotateZ(45)`, `TwistExtrude(20, 90)`, `PressureAngleDeg`). The exceptions are `p2.RT(r, theta)` and `PolyVertex.Polar()`, which take radians.
 - **Z is up, and every axial thing uses Z.** Cylinders, cones, screws, helices, `Revolve` and the `RotateCopyZ` pattern all take Z as their axis. For `Revolve`, the 2D profile lives in the XY plane: profile +X is the radius from the axis and profile Y becomes world Z.
-- **Constructors panic on nonsense, mostly.** No `(*Shape, error)` tuples; a negative sphere radius or an empty `UnionAll` panics. But a negative `Cone` radius, a negative `Rect` size, and a `Box` round larger than half a side are silently accepted. Do not rely on a panic to catch a bad number; probe the result.
+- **Constructors panic on nonsense, mostly.** No `(*Shape, error)` tuples; a negative sphere radius, an empty `UnionAll`, a `Box` round larger than half a side, or a non-positive `PyramidFrustum` dimension panics. But a negative `Cone` radius and a negative `Rect` size are silently accepted. Do not rely on a panic to catch a bad number; probe the result.
 - **2D becomes 3D** through `.Extrude`, `.ExtrudeRounded`, `.TwistExtrude`, `.ScaleExtrude`, `.Revolve`, `.LoftTo`, `.SweepHelix`, `.Screw`. **3D becomes 2D** through `shape.SliceAt(solid, plane)`, which returns a `*shape.Shape`. (`Solid.SliceAt` returns a raw `sdf.SDF2`; wrap it with `shape.Wrap2D` if you call it.)
 - **No build tool, no DSL.** Each part is a `package main` whose `main` ends in `.STL(path, cellsPerMM)`.
 
@@ -39,7 +39,7 @@ solid.Sphere(12)
 solid.Cone(18, 10, 4, 0.5)            // height, bottom radius, top radius, round
 solid.Capsule(20, 6)                  // OVERALL length end to end (the cylinder body is 20 - 2*6 = 8), radius
 solid.Torus(12, 3)                    // major (ring centre) radius, minor radius
-solid.PyramidFrustum(8, 5, 12)        // half-base, half-top, height; SITS ON z=0; only narrows upward (see traps)
+solid.PyramidFrustum(8, 5, 12)        // half-base, half-top, height; SITS ON z=0; either end may be the wider one
 solid.Gyroid(...).WithBounds(box)     // Gyroid has a zero bounding box; WithBounds is the only way to render it
 
 // 2D primitives — centred on the origin
@@ -48,7 +48,7 @@ shape.Circle(15)
 shape.Polygon([]v2.Vec{...})          // either winding order is fine
 shape.Hexagon(12)                     // CIRCUMradius (centre to vertex), a vertex on +X; across-flats = 12*sqrt(3)
 shape.Triangle(10)                    // equilateral, inscribed radius 10, apex on +Y, flat base at y = -5
-shape.Star(15, 7, 5)                  // outer, inner, points — BUT tips land at 1.1*outer (an internal offset); measure, do not assume
+shape.Star(15, 7, 5)                  // outer, inner, points; tips exactly at outer, first tip on +X, sharp corners
 shape.Cross(10, 2)                    // two bars: length, thickness
 shape.Text(font, "hello", 10)         // needs shape.LoadFont(path); call .Cache() on the result before reusing it
 
