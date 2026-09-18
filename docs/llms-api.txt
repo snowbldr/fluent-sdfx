@@ -1,0 +1,997 @@
+# fluent-sdfx API index
+
+Every exported symbol, generated from the source by tools/llms-check; do not edit by hand. Read docs/llms.txt first for the mental model and the traps; use this file to look up a signature or find a symbol you did not know existed. Each entry is the signature followed by the synopsis of the symbol's doc comment. Import paths are `github.com/snowbldr/fluent-sdfx/<package>`; the vector packages are `vec/v3`, `vec/v2`, `vec/p2`, `vec/v3i`, `vec/v2i`.
+
+### solid — 3D solids: primitives, transforms, booleans, blends, patterns, modifiers, anchors, output.
+
+Constants and variables:
+- `solid.MinCells` — MinCells is the floor applied by CellsFor so sub-mm parts (e.g. a 1 mm sphere at 3 cells/mm, which would otherwise give 3 cells and render as an empty mesh) still produce a recognizable shape.
+
+Functions:
+- `solid.Box(size v3.Vec, round float64) *Solid` — Box returns an axis-aligned box of the given size, centered at the origin.
+- `solid.Capsule(height, radius float64) *Solid` — Capsule returns a cylinder with hemispherical end caps.
+- `solid.CellsFor(s *Solid, cellsPerMM float64) int` — CellsFor returns the cell count along the longest bounding-box axis for a given mesh density, floored at MinCells.
+- `solid.ChamferMin(k float64) MinFunc` — ChamferMin returns a min function that produces a 45° chamfer of size k at the union seam.
+- `solid.Cone(height, r0, r1, round float64) *Solid` — Cone returns a truncated cone of the given height with bottom radius r0 and top radius r1, centered at the origin and oriented along Z. Pass r1=0 for a tip; r0==r1 reduces to a cylinder.
+- `solid.Cylinder(height, radius, round float64) *Solid` — Cylinder returns a cylinder of the given height and radius, centered at the origin and oriented along Z. round adds a fillet of that radius where the cylindrical surface meets the end caps; pass 0 for sharp edges.
+- `solid.ExpMin(k float64) MinFunc` — ExpMin returns an exponential smooth min with strength k.
+- `solid.Extrude(profile sdf.SDF2, height float64) *Solid` — Extrude linearly extrudes a 2D profile to a solid of the given height.
+- `solid.ExtrudeRounded(profile sdf.SDF2, height, round float64) *Solid` — ExtrudeRounded extrudes a 2D profile with rounded edges.
+- `solid.Gyroid(scale v3.Vec) *Solid` — Gyroid returns an infinite gyroid surface with the given period scale per axis.
+- `solid.Identity3d() M44` — Identity3d returns the 4x4 identity matrix.
+- `solid.Loft(bottom, top sdf.SDF2, height, round float64) *Solid` — Loft transitions between two 2D profiles over a given height with optional rounding.
+- `solid.Mesh(triangles []*v3.Triangle3) *Solid` — Mesh builds an SDF from a triangle mesh (fast, r-tree accelerated).
+- `solid.MeshSlow(triangles []*v3.Triangle3) *Solid` — MeshSlow builds an SDF from a triangle mesh using the slow, brute-force method.
+- `solid.MirrorXY() M44` — MirrorXY returns a 4x4 mirror matrix about the XY plane.
+- `solid.MirrorXZ() M44` — MirrorXZ returns a 4x4 mirror matrix about the XZ plane.
+- `solid.MirrorXeqY() M44` — MirrorXeqY returns a 4x4 mirror matrix about the X=Y plane.
+- `solid.MirrorYZ() M44` — MirrorYZ returns a 4x4 mirror matrix about the YZ plane.
+- `solid.New(sdf sdf.SDF3, err error) *Solid` — New wraps a raw SDF3 (with optional error) into a Solid.
+- `solid.NewBox3(center, size v3.Vec) Box3` — NewBox3 returns a Box3 with the given center and size.
+- `solid.NewM44(x [16]float64) M44` — NewM44 returns a 4x4 matrix from a row-major 16-element array.
+- `solid.PolyMax(k float64) MaxFunc` — PolyMax returns a polynomial smooth max with parameter k.
+- `solid.PolyMin(k float64) MinFunc` — PolyMin returns a polynomial smooth min with parameter k.
+- `solid.PowMin(k float64) MinFunc` — PowMin returns a power-based smooth min with exponent k.
+- `solid.PyramidFrustum(halfBase, halfTop, h float64) *Solid` — PyramidFrustum is an exact square frustum, half-width halfBase at z=0 to halfTop at z=h (a Box trimmed by four planes).
+- `solid.Revolve(profile sdf.SDF2) *Solid` — Revolve creates a solid of revolution by rotating a 2D profile around the Z axis.
+- `solid.RevolveAngle(profile sdf.SDF2, angleDeg float64) *Solid` — RevolveAngle creates a partial solid of revolution (theta in degrees).
+- `solid.Rotate3dMatrix(axis v3.Vec, deg float64) M44` — Rotate3dMatrix returns a 4x4 rotation matrix around an arbitrary axis (degrees).
+- `solid.RotateToVector(a, b v3.Vec) M44` — RotateToVector returns a 4x4 matrix rotating a onto b.
+- `solid.RotateXMatrix(deg float64) M44` — RotateXMatrix returns a 4x4 rotation matrix around the X axis (degrees).
+- `solid.RotateYMatrix(deg float64) M44` — RotateYMatrix returns a 4x4 rotation matrix around the Y axis (degrees).
+- `solid.RotateZMatrix(deg float64) M44` — RotateZMatrix returns a 4x4 rotation matrix around the Z axis (degrees).
+- `solid.RoundMin(k float64) MinFunc` — RoundMin returns a smooth min function that rounds the inner edge with radius k.
+- `solid.SampleGridBoundsInfo(s *Solid, bb Box3, cells int) (*Solid, GridInfo)` — SampleGridBoundsInfo is SampleGridBounds and the grid's cost.
+- `solid.SampleGridInfo(s *Solid, cells int) (*Solid, GridInfo)` — SampleGridInfo is SampleGrid and the grid's cost.
+- `solid.Scale3d(v v3.Vec) M44` — Scale3d returns a 4x4 scale matrix.
+- `solid.ScaleExtrude(profile sdf.SDF2, height float64, scale v2.Vec) *Solid` — ScaleExtrude extrudes a 2D profile while scaling it over the height.
+- `solid.ScaleTwistExtrude(profile sdf.SDF2, height, twistDeg float64, scale v2.Vec) *Solid` — ScaleTwistExtrude extrudes a 2D profile while scaling and twisting it twistDeg degrees over the height.
+- `solid.Screw(profile sdf.SDF2, height, start, pitch float64, num int) *Solid` — Screw sweeps a 2D thread profile along a helical path.
+- `solid.SetMinCells(n int)` — SetMinCells atomically updates the MinCells floor used by CellsFor.
+- `solid.Slice(s *Solid, origin, normal v3.Vec) sdf.SDF2` — Slice cuts a planar cross-section through a solid and returns it as a raw sdf.SDF2.
+- `solid.SmoothAdd(min MinFunc, solids ...*Solid) *Solid` — SmoothAdd is an alias for SmoothUnion.
+- `solid.SmoothCut(max MaxFunc, s *Solid, tools ...*Solid) *Solid` — SmoothCut is an alias for SmoothDifference.
+- `solid.SmoothDifference(max MaxFunc, s *Solid, tools ...*Solid) *Solid` — SmoothDifference subtracts the union of tools from s, blended with the given MaxFunc.
+- `solid.SmoothIntersection(max MaxFunc, s *Solid, others ...*Solid) *Solid` — SmoothIntersection intersects s with the union of others, blended with the given MaxFunc.
+- `solid.SmoothUnion(min MinFunc, solids ...*Solid) *Solid` — SmoothUnion returns a union of solids blended with the given MinFunc.
+- `solid.Sphere(radius float64) *Solid` — Sphere returns a sphere of the given radius, centered at the origin.
+- `solid.SweepHelix(profile sdf.SDF2, radius, turns, height float64, flatEnds bool) *Solid` — SweepHelix sweeps a 2D profile along a helix at the given radius.
+- `solid.Torus(majorR, minorR float64) *Solid` — Torus creates a torus (donut) centered at the origin in the XY plane.
+- `solid.Translate3d(v v3.Vec) M44` — Translate3d returns a 4x4 translation matrix.
+- `solid.TwistExtrude(profile sdf.SDF2, height, twistDeg float64) *Solid` — TwistExtrude linearly extrudes a 2D profile to the given height while rotating it twistDeg degrees from bottom to top — useful for twisted columns, fluted bars, and helical decorative shapes.
+- `solid.UnionAll(solids ...*Solid) *Solid` — UnionAll combines multiple solids into one.
+- `solid.Wrap(sdf sdf.SDF3) *Solid` — Wrap wraps a raw SDF3 into a Solid (no error).
+
+`solid.AnchoredSolid` — AnchoredSolid is a *Solid paired with a marker point on (or inside) its bounding box.
+- `.Above(target AnchoredSolid, gap ...float64) Placement` — Above places this anchor at target.Point + (0,0,gap).
+- `.At(target v3.Vec) *Solid` — At aligns this anchor with a literal world-space point and returns the moved solid.
+- `.AtX(x float64) *Solid` — AtX moves only along X so this anchor lands at x.
+- `.AtY(y float64) *Solid` — AtY moves only along Y so this anchor lands at y.
+- `.AtZ(z float64) *Solid` — AtZ moves only along Z so this anchor lands at z.
+- `.Attach(part AnchoredSolid) Placement` — Attach aligns the given part's anchor with this anchor — receiver stays, part moves.
+- `.AttachAbove(part AnchoredSolid, gap ...float64) Placement` — AttachAbove places the part's anchor at this point + (0,0,gap) — part ends up above the receiver.
+- `.AttachBehind(part AnchoredSolid, gap ...float64) Placement` — AttachBehind places the part's anchor at this point + (0,gap,0) — part ends up behind the receiver.
+- `.AttachBelow(part AnchoredSolid, gap ...float64) Placement` — AttachBelow places the part's anchor at this point + (0,0,-gap) — part ends up below the receiver.
+- `.AttachInFront(part AnchoredSolid, gap ...float64) Placement` — AttachInFront places the part's anchor at this point + (0,-gap,0) — part ends up in front of the receiver.
+- `.AttachLeft(part AnchoredSolid, gap ...float64) Placement` — AttachLeft places the part's anchor at this point + (-gap,0,0) — part ends up to the left of the receiver.
+- `.AttachRight(part AnchoredSolid, gap ...float64) Placement` — AttachRight places the part's anchor at this point + (gap,0,0) — part ends up to the right of the receiver.
+- `.Behind(target AnchoredSolid, gap ...float64) Placement` — Behind places this anchor at target.Point + (0,gap,0).
+- `.Below(target AnchoredSolid, gap ...float64) Placement` — Below places this anchor at target.Point + (0,0,-gap).
+- `.InFrontOf(target AnchoredSolid, gap ...float64) Placement` — InFrontOf places this anchor at target.Point + (0,-gap,0).
+- `.LeftOf(target AnchoredSolid, gap ...float64) Placement` — LeftOf places this anchor at target.Point + (-gap,0,0).
+- `.On(target AnchoredSolid) Placement` — On aligns this anchor's point with the target's point and returns a Placement carrying the moved solid and the target's owner.
+- `.RightOf(target AnchoredSolid, gap ...float64) Placement` — RightOf places this anchor at target.Point + (gap,0,0).
+- `.ShiftX(d float64) AnchoredSolid` — ShiftX moves the anchor point d along X without moving the solid; useful when chaining a target like "body's top, but 2mm up".
+- `.ShiftY(d float64) AnchoredSolid` — ShiftY moves the anchor point d along Y without moving the solid; positive d shifts the point toward +Y (the back).
+- `.ShiftZ(d float64) AnchoredSolid` — ShiftZ moves the anchor point d along Z without moving the solid; positive d shifts the point toward +Z (up).
+
+`solid.Box3` — Box3 is a 3D axis-aligned bounding box.
+- `.Cube() Box3` — Cube returns the smallest cubic box containing b.
+- `.Enlarge(v v3.Vec) Box3` — Enlarge grows the box by v on each side.
+- `.Equals(o Box3, delta float64) bool` — Equals reports whether b and o are within delta of each other.
+- `.Extend(o Box3) Box3` — Extend returns the bounding box containing both b and o.
+- `.Include(v v3.Vec) Box3` — Include returns a box extended to include v.
+- `.ScaleAboutCenter(k float64) Box3` — ScaleAboutCenter scales the box about its center by k.
+- `.Solid() *Solid` — Solid returns the bounding box as a *Solid (a Box of the same size, translated so its center matches this box's center).
+- `.Translate(v v3.Vec) Box3` — Translate returns a translated box.
+
+`solid.GridField` — GridField is a solid's signed distance sampled once onto a dense, axis-aligned grid and reconstructed by trilinear interpolation.
+- `.BoundingBox() sdf.Box3` — BoundingBox is the source solid's box: the padding is an implementation detail, and reporting it would grow every neighbour that sizes itself off Bounds().
+- `.Evaluate(p v3sdf.Vec) float64` — Evaluate reconstructs the field at p.
+
+`solid.GridInfo` — GridInfo reports what a GridField cost.
+
+`solid.M44` — M44 is a 4x4 homogeneous transformation matrix.
+- `.Determinant() float64` — Determinant returns the matrix determinant.
+- `.Equals(b M44, tolerance float64) bool` — Equals reports whether a and b are within tolerance of each other.
+- `.Inverse() M44` — Inverse returns the inverse matrix.
+- `.Mul(b M44) M44` — Mul returns a * b.
+- `.MulBox(box Box3) Box3` — MulBox transforms a bounding box.
+- `.MulPosition(v v3.Vec) v3.Vec` — MulPosition transforms a position vector.
+- `.Values() [16]float64` — Values returns the matrix as a 16-element array.
+
+`solid.MaxFunc` — MaxFunc is the blend function for smooth differences and intersections: it combines two signed distances into a rounded maximum.
+
+`solid.MinFunc` — Blend controls how unions/differences/intersections are combined.
+
+`solid.Placement` — Placement is the intermediate produced by relative placement verbs.
+- `.Add() *Solid` — Add alias for Union
+- `.Cut() *Solid` — Cut alias for Difference.
+- `.Difference() *Solid` — Difference subtracts the base from the moved (active) solid and returns the moved.
+- `.Intersect() *Solid` — Intersect intersects the base with the moved solid (commutative).
+- `.SmoothAdd(min MinFunc) *Solid` — SmoothAdd alias for SmoothUnion
+- `.SmoothCut(max MaxFunc) *Solid` — SmoothCut alias for SmoothDifference.
+- `.SmoothDifference(max MaxFunc) *Solid` — SmoothDifference smoothly subtracts the base from the moved solid and returns the moved.
+- `.SmoothIntersect(max MaxFunc) *Solid` — SmoothIntersect smoothly intersects the base with the moved solid (commutative).
+- `.SmoothUnion(min MinFunc) *Solid` — SmoothUnion smoothly unions the moved solid into the base.
+- `.Solid() *Solid` — Solid returns the moved (active) solid alone, discarding the boolean partner.
+- `.Union() *Solid` — Union unions the moved solid into the base.
+
+`solid.Solid` — Solid is an immutable 3D solid: a signed distance field (sdf.SDF3) plus the fluent API.
+- `.Add(other ...*Solid) *Solid` — Add is an alias for Union.
+- `.AnchorAt(x, y, z int) AnchoredSolid` — AnchorAt returns the anchor for an arbitrary unit-cube coordinate; each component is min at -1, center at 0, max at +1.
+- `.Array(numX, numY, numZ int, step v3.Vec) *Solid` — Array creates an XYZ grid array of the solid.
+- `.AttachBehind(part *Solid, gap ...float64) Placement` — AttachBehind is sugar for s.Back().AttachBehind(part.Front(), gap...) — part ends up behind s.
+- `.AttachInFront(part *Solid, gap ...float64) Placement` — AttachInFront is sugar for s.Front().AttachInFront(part.Back(), gap...) — part ends up in front of s.
+- `.AttachLeft(part *Solid, gap ...float64) Placement` — AttachLeft is sugar for s.Left().AttachLeft(part.Right(), gap...) — part ends up to the left of s.
+- `.AttachOnTop(part *Solid, gap ...float64) Placement` — AttachOnTop is sugar for s.Top().AttachAbove(part.Bottom(), gap...) — part ends up sitting on top of s.
+- `.AttachRight(part *Solid, gap ...float64) Placement` — AttachRight is sugar for s.Right().AttachRight(part.Left(), gap...) — part ends up to the right of s.
+- `.AttachUnderneath(part *Solid, gap ...float64) Placement` — AttachUnderneath is sugar for s.Bottom().AttachBelow(part.Top(), gap...) — part ends up underneath s.
+- `.Back() AnchoredSolid` — Back returns the anchor at the center of the bounding box's maximum-Y face (+Y).
+- `.BackAt(y float64) *Solid` — BackAt translates the solid along Y so its maximum-Y face (the back, +Y) lies at y.
+- `.BackLeft() AnchoredSolid` — BackLeft returns the anchor at the midpoint of the max-Y, min-X edge, centered in Z.
+- `.BackRight() AnchoredSolid` — BackRight returns the anchor at the midpoint of the max-Y, max-X edge, centered in Z.
+- `.BehindOf(target AnchoredSolid, gap ...float64) Placement` — BehindOf is sugar for s.Front().Behind(target, gap...).
+- `.Benchmark(description string)` — Benchmark reports the evaluation speed of the solid's SDF3.
+- `.Bottom() AnchoredSolid` — Bottom returns the anchor at the center of the bounding box's minimum-Z face (-Z).
+- `.BottomAt(z float64) *Solid` — BottomAt translates the solid along Z so its minimum-Z face (the bottom) lies at z.
+- `.BottomBack() AnchoredSolid` — BottomBack returns the anchor at the midpoint of the min-Z, max-Y edge, centered in X.
+- `.BottomBackLeft() AnchoredSolid` — BottomBackLeft returns the anchor at the bounding box corner (min X, max Y, min Z).
+- `.BottomBackRight() AnchoredSolid` — BottomBackRight returns the anchor at the bounding box corner (max X, max Y, min Z).
+- `.BottomFront() AnchoredSolid` — BottomFront returns the anchor at the midpoint of the min-Z, min-Y edge, centered in X.
+- `.BottomFrontLeft() AnchoredSolid` — BottomFrontLeft returns the anchor at the bounding box corner (min X, min Y, min Z).
+- `.BottomFrontRight() AnchoredSolid` — BottomFrontRight returns the anchor at the bounding box corner (max X, min Y, min Z).
+- `.BottomLeft() AnchoredSolid` — BottomLeft returns the anchor at the midpoint of the min-Z, min-X edge, centered in Y.
+- `.BottomRight() AnchoredSolid` — BottomRight returns the anchor at the midpoint of the min-Z, max-X edge, centered in Y.
+- `.Bounds() Box3` — Bounds returns the solid's 3D axis-aligned bounding box as a fluent v3.Box.
+- `.Center() *Solid` — Center translates the solid so its bounding box center is at the origin.
+- `.CenterAt(p v3.Vec) *Solid` — CenterAt translates s so its bounding box center lands at p.
+- `.Correct(factor float64) *Solid` — Correct scales an SDF's distance values without changing the shape.
+- `.Cut(other ...*Solid) *Solid` — Cut subtracts the union of any number of other solids from s.
+- `.CutPlane(point, normal v3.Vec) *Solid` — CutPlane cuts the solid along a plane.
+- `.Difference(other ...*Solid) *Solid` — Difference is an alias for Cut.
+- `.Elongate(h v3.Vec) *Solid` — Elongate stretches the solid by the given amounts along each axis.
+- `.Front() AnchoredSolid` — Front returns the anchor at the center of the bounding box's minimum-Y face (-Y).
+- `.FrontAt(y float64) *Solid` — FrontAt translates the solid along Y so its minimum-Y face (the front, -Y) lies at y.
+- `.FrontLeft() AnchoredSolid` — FrontLeft returns the anchor at the midpoint of the min-Y, min-X edge, centered in Z.
+- `.FrontRight() AnchoredSolid` — FrontRight returns the anchor at the midpoint of the min-Y, max-X edge, centered in Z.
+- `.Grow(amount float64) *Solid` — Grow returns a new solid expanded by the given amount on all surfaces.
+- `.InFrontOf(target AnchoredSolid, gap ...float64) Placement` — InFrontOf is sugar for s.Back().InFrontOf(target, gap...).
+- `.Inside(other *Solid) Placement` — Inside places s so its bbox center matches other's bbox center.
+- `.Intersect(other ...*Solid) *Solid` — Intersect returns the intersection of s with any number of other solids.
+- `.Left() AnchoredSolid` — Left returns the anchor at the center of the bounding box's minimum-X face (-X).
+- `.LeftAt(x float64) *Solid` — LeftAt translates the solid along X so its minimum-X face (the left, -X) lies at x.
+- `.LeftOf(target AnchoredSolid, gap ...float64) Placement` — LeftOf is sugar for s.Right().LeftOf(target, gap...).
+- `.LineOf(p0, p1 v3.Vec, pattern string) *Solid` — LineOf creates a union of the solid along a line from p0 to p1.
+- `.MirrorXY() *Solid` — MirrorXY mirrors across the XY plane (negates Z).
+- `.MirrorXZ() *Solid` — MirrorXZ mirrors across the XZ plane (negates Y).
+- `.MirrorXeqY() *Solid` — MirrorXeqY mirrors across the X==Y plane (swaps X and Y).
+- `.MirrorYZ() *Solid` — MirrorYZ mirrors across the YZ plane (negates X).
+- `.Multi(positions ...v3.Vec) *Solid` — Multi creates a union of the solid at the given positions.
+- `.Normal(p v3.Vec, eps float64) v3.Vec` — Normal returns the surface normal at point p, computed via finite differences with sample step eps.
+- `.Offset(distance float64) *Solid` — Offset expands (positive) or contracts (negative) the solid by the given distance along its surface normal.
+- `.OnTopOf(target AnchoredSolid, gap ...float64) Placement` — OnTopOf is sugar for s.Bottom().Above(target, gap...).
+- `.Orient(base v3.Vec, directions []v3.Vec) *Solid` — Orient creates a union of the solid oriented along each direction vector.
+- `.Raycast(from, dir v3.Vec, scaleAndSigmoid, stepScale, epsilon, maxDist float64, maxSteps int) (v3.Vec, float64, int)` — Raycast sphere-traces a ray from `from` in direction `dir` until it hits the solid's surface.
+- `.Right() AnchoredSolid` — Right returns the anchor at the center of the bounding box's maximum-X face (+X).
+- `.RightAt(x float64) *Solid` — RightAt translates the solid along X so its maximum-X face (the right, +X) lies at x.
+- `.RightOf(target AnchoredSolid, gap ...float64) Placement` — RightOf is sugar for s.Left().RightOf(target, gap...).
+- `.RotateAxis(axis v3.Vec, angleDeg float64) *Solid` — RotateAxis rotates the solid angleDeg degrees about the line through the origin along axis, by the right-hand rule.
+- `.RotateCopyAtZ(n int, atDeg float64) *Solid` — RotateCopyAtZ creates N copies of the solid evenly spaced around the Z axis, with the first copy centered at angle atDeg (degrees, CCW about +Z).
+- `.RotateCopyZ(n int) *Solid` — RotateCopyZ creates N copies of the solid evenly spaced around the Z axis.
+- `.RotateToVector(from, to v3.Vec) *Solid` — RotateToVector rotates the solid so that the 'from' direction aligns with the 'to' direction.
+- `.RotateUnionZ(n int, step M44) *Solid` — RotateUnionZ creates a union of the solid rotated N times by the given step matrix.
+- `.RotateX(angleDeg float64) *Solid` — RotateX rotates the solid angleDeg degrees about the world X axis, by the right-hand rule: RotateX(90) sends +Y to +Z and +Z to -Y. The rotation is about the axis through the origin, so an off-axis solid swings around it rather than spinning in place.
+- `.RotateY(angleDeg float64) *Solid` — RotateY rotates the solid angleDeg degrees about the world Y axis, by the right-hand rule: RotateY(90) sends +Z to +X and +X to -Z. The rotation is about the axis through the origin, so an off-axis solid swings around it rather than spinning in place.
+- `.RotateZ(angleDeg float64) *Solid` — RotateZ rotates the solid angleDeg degrees about the world Z axis, by the right-hand rule: RotateZ(90) sends +X to +Y and +Y to -X. The rotation is about the axis through the origin, so an off-axis solid swings around it rather than spinning in place.
+- `.STL(path string, cellsPerMM float64, decimate ...float64)` — STL renders the solid to an STL file using the parallel octree renderer.
+- `.SampleGrid(cells int) *Solid` — SampleGrid samples s onto a GridField with `cells` voxels along its longest axis (the other axes scale to keep voxels cubic), padded by two voxels on every side so the surface never touches the sampled boundary.
+- `.SampleGridBounds(bb Box3, cells int) *Solid` — SampleGridBounds samples s over the region bb — which should cover everywhere the field will be evaluated, and must contain s's bounds — with `cells` voxels along bb's longest axis.
+- `.Scale(v v3.Vec) *Solid` — Scale multiplies each coordinate by the matching component of v, about the world origin.
+- `.ScaleUniform(k float64) *Solid` — ScaleUniform scales uniformly on all axes.
+- `.Shell(thickness float64) *Solid` — Shell hollows out the solid, leaving a shell of the given thickness.
+- `.Shrink(amount float64) *Solid` — Shrink returns a new solid inset by the given amount on all surfaces.
+- `.Slice2D(origin, normal v3.Vec) sdf.SDF2` — Slice2D cuts a planar cross-section through the solid and returns it as a raw sdf.SDF2.
+- `.SliceAt(p plane.Plane) sdf.SDF2` — SliceAt cuts a cross-section at the given plane.
+- `.SmoothAdd(min MinFunc, other ...*Solid) *Solid` — SmoothAdd is an alias for SmoothUnion.
+- `.SmoothArray(numX, numY, numZ int, step v3.Vec, min sdf.MinFunc) *Solid` — SmoothArray creates an XYZ grid array using min for blending adjacent copies.
+- `.SmoothCut(max MaxFunc, tools ...*Solid) *Solid` — SmoothCut subtracts the union of tools from s, blended with the given MaxFunc.
+- `.SmoothDifference(max MaxFunc, tools ...*Solid) *Solid` — SmoothDifference is an alias for SmoothCut.
+- `.SmoothIntersect(max MaxFunc, other ...*Solid) *Solid` — SmoothIntersect intersects s with the union of others, blended with the given MaxFunc.
+- `.SmoothRotateUnionZ(n int, step M44, min sdf.MinFunc) *Solid` — SmoothRotateUnionZ creates N rotated copies blended with min.
+- `.SmoothUnion(min MinFunc, other ...*Solid) *Solid` — SmoothUnion blends s with other solids using the given MinFunc.
+- `.Split(p plane.Plane) (*Solid, *Solid)` — Split cuts the solid along a plane and returns both halves.
+- `.StraightenBelow(z0 float64) *Solid` — StraightenBelow returns s with everything below z0 replaced by the straight prismatic extension of its z0 cross-section, ending at the solid's own bottom.
+- `.ThreeMF(path string, cellsPerMM float64)` — ThreeMF renders the solid to a 3MF file using the parallel octree renderer.
+- `.Top() AnchoredSolid` — Top returns the anchor at the center of the bounding box's maximum-Z face (+Z).
+- `.TopAt(z float64) *Solid` — TopAt translates the solid along Z so its maximum-Z face (the top) lies at z.
+- `.TopBack() AnchoredSolid` — TopBack returns the anchor at the midpoint of the max-Z, max-Y edge, centered in X.
+- `.TopBackLeft() AnchoredSolid` — TopBackLeft returns the anchor at the bounding box corner (min X, max Y, max Z).
+- `.TopBackRight() AnchoredSolid` — TopBackRight returns the anchor at the bounding box corner (max X, max Y, max Z).
+- `.TopFront() AnchoredSolid` — TopFront returns the anchor at the midpoint of the max-Z, min-Y edge, centered in X.
+- `.TopFrontLeft() AnchoredSolid` — TopFrontLeft returns the anchor at the bounding box corner (min X, min Y, max Z).
+- `.TopFrontRight() AnchoredSolid` — TopFrontRight returns the anchor at the bounding box corner (max X, min Y, max Z).
+- `.TopLeft() AnchoredSolid` — TopLeft returns the anchor at the midpoint of the max-Z, min-X edge, centered in Y.
+- `.TopRight() AnchoredSolid` — TopRight returns the anchor at the midpoint of the max-Z, max-X edge, centered in Y.
+- `.Transform(m M44) *Solid` — Transform applies the 4x4 homogeneous matrix m to the solid in world space.
+- `.Translate(v v3.Vec) *Solid` — Translate moves the solid by v, adding v.X, v.Y and v.Z to every point.
+- `.TranslateX(x float64) *Solid` — TranslateX moves the solid x along X; Y and Z are unchanged.
+- `.TranslateXY(x, y float64) *Solid` — TranslateXY moves the solid x along X and y along Y; Z is unchanged.
+- `.TranslateXYZ(x, y, z float64) *Solid` — TranslateXYZ moves the solid x along X, y along Y and z along Z.
+- `.TranslateXZ(x, z float64) *Solid` — TranslateXZ moves the solid x along X and z along Z; Y is unchanged.
+- `.TranslateY(y float64) *Solid` — TranslateY moves the solid y along Y; X and Z are unchanged.
+- `.TranslateYZ(y, z float64) *Solid` — TranslateYZ moves the solid y along Y and z along Z; X is unchanged.
+- `.TranslateZ(z float64) *Solid` — TranslateZ moves the solid z along Z; X and Y are unchanged.
+- `.UnderneathOf(target AnchoredSolid, gap ...float64) Placement` — UnderneathOf is sugar for s.Top().Below(target, gap...).
+- `.Union(other ...*Solid) *Solid` — Union returns the union of s and any number of other solids.
+- `.Voxel(meshCells int, progress chan float64) *Solid` — Voxel samples the solid into a voxel grid and returns an SDF3 that trilinearly interpolates it.
+- `.WithBounds(bb Box3) *Solid` — WithBounds returns s evaluating exactly as before but reporting bb as its bounding box.
+- `.ZeroZ() *Solid` — ZeroZ translates the solid along Z so its bounding box minimum Z lands at 0.
+
+### shape — 2D shapes: primitives, builders, transforms, booleans, threads, cams, text, and the 2D-to-3D operations.
+
+Functions:
+- `shape.ANSIButtressThread(radius, pitch float64) *Shape` — ANSIButtressThread returns an ANSI 45/7 buttress thread profile.
+- `shape.AcmeThread(radius, pitch float64) *Shape` — AcmeThread returns the 2D profile of an ACME thread of the given radius and pitch.
+- `shape.ArcSpiral(a, k, startDeg, endDeg, d float64) *Shape` — ArcSpiral returns a 2D Archimedean spiral (r = a + k*theta).
+- `shape.Circle(radius float64) *Shape` — Circle returns a circle of the given radius, centered at the origin.
+- `shape.Cross(width, thickness float64) *Shape` — Cross returns a plus sign centered on the origin: two bars of length width and the given thickness, one along X and one along Y. The bounding box is width by width, so Cross(10, 2) spans -5..5 on both axes with arms 2 wide.
+- `shape.CubicSpline(knots []v2.Vec) *Shape` — CubicSpline returns a 2D SDF approximation of a closed cubic spline through the given knots.
+- `shape.Flange1(distance, centerRadius, sideRadius float64) *Shape` — Flange1 returns a 2D flange profile built from a center circle and two side circles connected by tangent lines.
+- `shape.FlatFlankCam(distance, baseRadius, noseRadius float64) *Shape` — FlatFlankCam returns a 2D cam profile made from a base circle, a nose circle, and tangential flats.
+- `shape.GearRack(p GearRackParams) *Shape` — GearRack returns the 2D profile for a linear gear rack.
+- `shape.Hexagon(radius float64) *Shape` — Hexagon returns a regular hexagon centered on the origin, with radius as the circumradius (center to vertex) and a vertex on +X. Vertices sit every 60 degrees starting on +X, so flats face +Y and -Y and the across-flats distance is radius*sqrt(3): Hexagon(10) spans X -10..10 and Y -8.660..8.660.
+- `shape.ISOThread(radius, pitch float64, external bool) *Shape` — ISOThread returns the 2D profile of an ISO/UTS metric thread.
+- `shape.Identity2d() M33` — Identity2d returns the 3x3 identity matrix.
+- `shape.Line(length, round float64) *Shape` — Line returns a line segment from (-l/2,0) to (l/2,0) with optional rounding.
+- `shape.LoadFont(path string) *Font` — LoadFont loads a truetype font (*.ttf) from disk.
+- `shape.MakeFlatFlankCam(lift, durationDeg, maxDiameter float64) *Shape` — MakeFlatFlankCam builds a flat-flank cam profile from follower-design parameters.
+- `shape.MakeThreeArcCam(lift, durationDeg, maxDiameter, k float64) *Shape` — MakeThreeArcCam builds a three-arc cam from follower-design parameters.
+- `shape.Mesh2D(m []*Line2) *Shape` — Mesh2D builds a Shape from a set of 2D line segments.
+- `shape.Mesh2DSlow(m []*Line2) *Shape` — Mesh2DSlow is a naive-algorithm Mesh2D reference implementation for testing.
+- `shape.MirrorX() M33` — MirrorX returns a 3x3 matrix mirroring across the X axis.
+- `shape.MirrorY() M33` — MirrorY returns a 3x3 matrix mirroring across the Y axis.
+- `shape.Nagon(n int, radius float64) []v2.Vec` — Nagon returns the vertices of a regular n-gon inscribed in a circle of the given radius.
+- `shape.NewBezier() *Bezier` — NewBezier starts a new bezier curve builder.
+- `shape.NewBox2(center, size v2.Vec) Box2` — NewBox2 returns a Box2 with the given center and size.
+- `shape.NewM33(x [9]float64) M33` — NewM33 returns a 3x3 matrix from a row-major 9-element array.
+- `shape.NewPoly() *Poly` — NewPoly starts a new polygon builder.
+- `shape.PlasticButtressThread(radius, pitch float64) *Shape` — PlasticButtressThread returns a plastic-screw-top-style buttress thread profile.
+- `shape.Polygon(pts []v2.Vec) *Shape` — Polygon returns a flat (sharp-corner) polygon from the given vertex list.
+- `shape.Rect(size v2.Vec, round float64) *Shape` — Rect returns an axis-aligned rectangle of the given size, centered at the origin.
+- `shape.Rotate2d(deg float64) M33` — Rotate2d returns a 3x3 rotation matrix around the origin (degrees).
+- `shape.Scale2d(v v2.Vec) M33` — Scale2d returns a 3x3 scale matrix.
+- `shape.SliceAt(s *solid.Solid, p plane.Plane) *Shape` — SliceAt cuts a cross-section at the given plane and wraps as *Shape.
+- `shape.SliceOf(s *solid.Solid, origin, normal v3.Vec) *Shape` — SliceOf cuts a planar cross-section through s and wraps the result as a fluent *Shape, ready for ToDXF/ToSVG/ToPNG and further 2D operations.
+- `shape.SmoothAdd(min sdf.MinFunc, shapes ...*Shape) *Shape` — SmoothAdd is an alias for SmoothUnion.
+- `shape.SmoothCut(max sdf.MaxFunc, s *Shape, tools ...*Shape) *Shape` — SmoothCut subtracts the union of tools from s, blended with a smooth max function.
+- `shape.SmoothIntersect(max sdf.MaxFunc, s *Shape, others ...*Shape) *Shape` — SmoothIntersect intersects s with the union of others, blended with a smooth max function.
+- `shape.SmoothUnion(min sdf.MinFunc, shapes ...*Shape) *Shape` — SmoothUnion blends shapes with a smooth min function (see solid.RoundMin etc for Mins).
+- `shape.Star(outer, inner float64, points int) *Shape` — Star returns a star polygon with the given number of points, tips at radius outer and valleys at radius inner, centered on the origin.
+- `shape.Text(font *Font, text string, height float64) *Shape` — Text renders a string as a 2D Shape using the given font and total text height.
+- `shape.ThreadLookup(name string) *ThreadParams` — ThreadLookup looks up a standard thread by name (e.g. "M4x0.7", "unc_1/4", "npt_1/2").
+- `shape.ThreeArcCam(distance, baseRadius, noseRadius, flankRadius float64) *Shape` — ThreeArcCam returns a 2D cam profile made from a base circle, nose circle, and circular flank arcs.
+- `shape.Translate2d(v v2.Vec) M33` — Translate2d returns a 3x3 translation matrix.
+- `shape.Triangle(radius float64) *Shape` — Triangle returns an equilateral triangle centered on the origin and inscribed in a circle of the given radius, with its apex on +Y. The base is horizontal at y = -radius/2 and the base corners are at x = +/-radius*sqrt(3)/2, so Triangle(10) spans X -8.660..8.660 and Y -5..10.
+- `shape.UnionAll(shapes ...*Shape) *Shape` — UnionAll combines multiple shapes into one.
+- `shape.WireGroove(r float64, depth float64, angleDeg float64) *Shape` — WireGroove returns the cross-section of a channel that captures a wire of radius r, centered on the origin and opening toward +X. The wire seat is a full circle of radius r at the origin; the channel runs from there out to x = depth with a flat floor at y = -r (tangent to the bottom of the wire) and a roof that is tangent to the circle and rises toward +X at (90 - angleDeg) degrees from horizontal.
+- `shape.Wrap2D(s sdf.SDF2) *Shape` — Wrap wraps a raw SDF2 into a Shape.
+
+`shape.AnchoredShape` — AnchoredShape is a *Shape paired with a marker point on (or inside) its bounding box.
+- `.Above(target AnchoredShape, gap ...float64) Placement2D` — Above places this anchor at target.Point + (0, gap).
+- `.At(target v2.Vec) *Shape` — At aligns this anchor with a literal world-space point and returns the moved shape.
+- `.AtX(x float64) *Shape` — AtX moves only along X so this anchor lands at x.
+- `.AtY(y float64) *Shape` — AtY moves only along Y so this anchor lands at y.
+- `.Below(target AnchoredShape, gap ...float64) Placement2D` — Below places this anchor at target.Point + (0, -gap).
+- `.LeftOf(target AnchoredShape, gap ...float64) Placement2D` — LeftOf places this anchor at target.Point + (-gap, 0).
+- `.On(target AnchoredShape) Placement2D` — On aligns this anchor's point with the target's point and returns a Placement2D carrying the moved shape and the target's owner.
+- `.RightOf(target AnchoredShape, gap ...float64) Placement2D` — RightOf places this anchor at target.Point + (gap, 0).
+- `.ShiftX(d float64) AnchoredShape` — ShiftX moves the anchor point d along X without moving the shape; useful when chaining a target like "body's right edge, but 2mm out".
+- `.ShiftY(d float64) AnchoredShape` — ShiftY moves the anchor point d along Y without moving the shape.
+
+`shape.Bezier` — Bezier is a fluent wrapper over sdf.Bezier for building bezier curves.
+- `.Add(x, y float64) *BezierVertex` — Add appends an endpoint vertex at (x,y).
+- `.AddV2(v v2.Vec) *BezierVertex` — AddV2 appends an endpoint vertex at v.
+- `.Build() *Shape` — Build returns a Shape from the bezier curve using a polygon SDF.
+- `.Close() *Bezier` — Close marks the curve as closed (end connects to start).
+- `.Polygon() *sdf.Polygon` — Polygon converts the bezier curve into a (sampled) sdf.Polygon.
+- `.Vertices() []v2.Vec` — Vertices returns the resolved vertices of the bezier curve (after sampling).
+
+`shape.BezierVertex` — BezierVertex wraps sdf.BezierVertex with fluent, degree-based handle modifiers.
+- `.Handle(thetaDeg, fwd, rev float64) *BezierVertex` — Handle sets both slope handles: forward at theta + r_fwd, reverse at (theta+180) + r_rev.
+- `.HandleFwd(thetaDeg, r float64) *BezierVertex` — HandleFwd sets the forward slope handle (thetaDeg in degrees, r in length).
+- `.HandleRev(thetaDeg, r float64) *BezierVertex` — HandleRev sets the reverse slope handle (thetaDeg in degrees, r in length).
+- `.Mid() *BezierVertex` — Mid marks this vertex as a midpoint (control point between endpoints).
+
+`shape.Box2` — Box2 is a 2D axis-aligned bounding box.
+
+`shape.Font` — Font is an opaque truetype font handle for text rendering.
+
+`shape.GearRackParams` — GearRackParams defines the parameters for a 2D gear rack.
+
+`shape.Line2` — Line2 is a 2D line segment.
+
+`shape.M33` — M33 is a 3x3 homogeneous transformation matrix for 2D.
+- `.Add(b M33) M33` — Add returns a + b.
+- `.Determinant() float64` — Determinant returns the matrix determinant.
+- `.Equals(b M33, tolerance float64) bool` — Equals reports whether a and b are within tolerance of each other.
+- `.Inverse() M33` — Inverse returns the inverse matrix.
+- `.Mul(b M33) M33` — Mul returns a * b.
+- `.MulBox(box Box2) Box2` — MulBox transforms a bounding box.
+- `.MulPosition(v v2.Vec) v2.Vec` — MulPosition transforms a position vector.
+- `.MulScalar(k float64) M33` — MulScalar multiplies every entry by k.
+- `.Values() [9]float64` — Values returns the matrix as a 9-element array.
+
+`shape.Placement2D` — Placement2D is the intermediate produced by relative placement verbs in 2D. It carries the moved active shape and the implicit boolean partner (the target's owner), and is finalized with Union/Cut/Intersect/Shape — the chain's subject (the moved shape) is what's kept, matching s.Cut(other).
+- `.Add() *Shape` — Add is an alias for Union.
+- `.Cut() *Shape` — Cut subtracts the base from the moved shape; the moved (subject) is kept.
+- `.Difference() *Shape` — Difference is an alias for Cut.
+- `.Intersect() *Shape` — Intersect intersects the moved with the base (commutative).
+- `.Shape() *Shape` — Shape returns the moved shape alone, discarding the boolean partner.
+- `.SmoothAdd(min sdf.MinFunc) *Shape` — SmoothAdd is an alias for SmoothUnion.
+- `.SmoothCut(max sdf.MaxFunc) *Shape` — SmoothCut smoothly subtracts the base from the moved shape.
+- `.SmoothDifference(max sdf.MaxFunc) *Shape` — SmoothDifference is an alias for SmoothCut.
+- `.SmoothIntersect(max sdf.MaxFunc) *Shape` — SmoothIntersect smoothly intersects the moved with the base.
+- `.SmoothUnion(min sdf.MinFunc) *Shape` — SmoothUnion smoothly unions the moved shape with the base.
+- `.Union() *Shape` — Union unions the moved shape with the base (commutative).
+
+`shape.Poly` — Poly is a fluent wrapper over sdf.Polygon that supports smoothed, chamfered, arc-filleted, and polar-relative vertices.
+- `.Add(x, y float64) *PolyVertex` — Add appends a cartesian vertex and returns a handle for chained modifiers.
+- `.AddV2(v v2.Vec) *PolyVertex` — AddV2 appends a cartesian vertex from a v2.Vec.
+- `.AddV2Set(pts []v2.Vec) *Poly` — AddV2Set appends a sequence of cartesian vertices.
+- `.Build() *Shape` — Build returns a Shape using the cache-friendly FlatPolygon2D backend.
+- `.Close() *Poly` — Close marks the polygon as closed (open polygons have their start/end joined automatically for SDF use).
+- `.Drop() *Poly` — Drop removes the last vertex.
+- `.Mesh2D() *Shape` — Mesh2D materializes the polygon as a Shape (SDF2).
+- `.Raw() *sdf.Polygon` — Raw exposes the underlying sdf.Polygon for advanced use.
+- `.Reverse() *Poly` — Reverse reverses the vertex order.
+- `.Vertices() []v2.Vec` — Vertices returns the resolved cartesian vertices (after smoothing, arcs, etc).
+
+`shape.PolyVertex` — PolyVertex wraps sdf.PolygonVertex with fluent modifiers that return the vertex for chaining.
+- `.Arc(radius float64, facets int) *PolyVertex` — Arc replaces the straight edge from the previous vertex with an arc of the given radius.
+- `.Chamfer(size float64) *PolyVertex` — Chamfer cuts the corner at this vertex with a 45° chamfer of the given size.
+- `.Polar() *PolyVertex` — Polar marks this vertex as polar (x=radius, y=angleRadians).
+- `.Rel() *PolyVertex` — Rel marks this vertex as relative to the previous one.
+- `.Smooth(radius float64, facets int) *PolyVertex` — Smooth rounds the corner at this vertex with the given radius and number of facets.
+
+`shape.Shape` — Shape is an immutable 2D shape: a signed distance field (sdf.SDF2) in the XY plane plus the fluent API.
+- `.Add(other ...*Shape) *Shape` — Add is an alias for Union.
+- `.AnchorAt(x, y int) AnchoredShape` — AnchorAt returns the anchor for an arbitrary unit-square coordinate; each component is min at -1, center at 0, max at +1.
+- `.Array(numX, numY int, step v2.Vec) *Shape` — Array creates an XY grid array of the shape.
+- `.Benchmark(description string)` — Benchmark reports the evaluation speed of the shape's SDF2.
+- `.Bottom() AnchoredShape` — Bottom returns the anchor at the middle of the shape's bottom edge (min Y).
+- `.BottomAt(y float64) *Shape` — BottomAt translates s so the bottom edge lands at y.
+- `.BottomLeft() AnchoredShape` — BottomLeft returns the anchor at the shape's bottom-left corner.
+- `.BottomRight() AnchoredShape` — BottomRight returns the anchor at the shape's bottom-right corner.
+- `.Bounds() Box2` — Bounds returns the shape's 2D axis-aligned bounding box as a fluent v2.Box.
+- `.Cache() *Shape` — Cache wraps the shape in a distance-value cache, trading memory for faster repeated evaluation (useful for slow-to-evaluate SDFs like text or meshes).
+- `.Center() *Shape` — Center translates the shape so its bounding box center is at the origin.
+- `.CenterAndScale(k float64) *Shape` — CenterAndScale centers on the bounding box then scales uniformly.
+- `.CenterAt(p v2.Vec) *Shape` — CenterAt translates s so its bounding box center lands at p.
+- `.Cut(other ...*Shape) *Shape` — Cut subtracts the union of any number of other shapes from s.
+- `.CutLine(a, dir v2.Vec) *Shape` — CutLine cuts the shape along a line from point a in direction v.
+- `.Difference(other ...*Shape) *Shape` — Difference is an alias for Cut.
+- `.Elongate(h v2.Vec) *Shape` — Elongate stretches the shape by the given amounts along each axis.
+- `.Extrude(height float64) *solid.Solid` — Extrude linearly extrudes the shape to a solid of the given height.
+- `.ExtrudeRounded(height, round float64) *solid.Solid` — ExtrudeRounded extrudes the shape to a solid with rounded top and bottom edges.
+- `.GenerateMesh(grid v2i.Vec) (v2.VecSet, error)` — GenerateMesh samples the shape's interior on the given integer grid and returns the set of mesh points.
+- `.Inside(other *Shape) Placement2D` — Inside places s so its bbox center matches other's bbox center.
+- `.Intersect(other ...*Shape) *Shape` — Intersect returns the intersection of s with any number of other shapes.
+- `.Left() AnchoredShape` — Left returns the anchor at the middle of the shape's left edge (min X).
+- `.LeftAt(x float64) *Shape` — LeftAt translates s so the left edge lands at x.
+- `.LeftOf(target AnchoredShape, gap ...float64) Placement2D` — LeftOf is sugar for s.Right().LeftOf(target, gap...).
+- `.LineOf(p0, p1 v2.Vec, pattern string) *Shape` — LineOf creates a union of the shape along a line from p0 to p1.
+- `.LoftTo(top *Shape, height, round float64) *solid.Solid` — LoftTo transitions from this shape (bottom) to top over the given height with optional rounding.
+- `.MeshBoxes() []Box2` — MeshBoxes returns the acceleration-structure boxes of a mesh-backed Shape.
+- `.MirrorX() *Shape` — MirrorX reflects the shape across the X axis, negating Y: a feature at (0,4) lands at (0,-4) and X is untouched.
+- `.MirrorY() *Shape` — MirrorY reflects the shape across the Y axis, negating X: a feature at (4,0) lands at (-4,0) and Y is untouched.
+- `.Multi(positions ...v2.Vec) *Shape` — Multi creates a union of the shape at the given positions.
+- `.Normal(p v2.Vec, eps float64) v2.Vec` — Normal returns the surface normal at point p, computed via finite differences with sample step eps.
+- `.Offset(amount float64) *Shape` — Offset grows the shape outward by amount in every direction; a negative amount shrinks it inward.
+- `.OnTopOf(target AnchoredShape, gap ...float64) Placement2D` — OnTopOf is sugar for s.Bottom().Above(target, gap...).
+- `.Raycast(from, dir v2.Vec, scaleAndSigmoid, stepScale, epsilon, maxDist float64, maxSteps int) (v2.Vec, float64, int)` — Raycast sphere-traces a ray from `from` in direction `dir` until it hits the shape's surface.
+- `.Revolve() *solid.Solid` — Revolve rotates the shape around the Z axis to form a solid of revolution.
+- `.RevolveAngle(angleDeg float64) *solid.Solid` — RevolveAngle creates a partial revolution sweeping angleDeg degrees around the Z axis.
+- `.Right() AnchoredShape` — Right returns the anchor at the middle of the shape's right edge (max X).
+- `.RightAt(x float64) *Shape` — RightAt translates s so the right edge lands at x.
+- `.RightOf(target AnchoredShape, gap ...float64) Placement2D` — RightOf is sugar for s.Left().RightOf(target, gap...).
+- `.Rotate(angleDeg float64) *Shape` — Rotate rotates the shape angleDeg degrees counter-clockwise about the origin, turning +X toward +Y: Rotate(90) sends a feature at (4,0) to (0,4).
+- `.RotateCopy(n int) *Shape` — RotateCopy creates N copies of the shape evenly spaced in a full circle.
+- `.RotateCopyAt(n int, atDeg float64) *Shape` — RotateCopyAt creates N copies of the shape evenly spaced in a full circle, with the first copy centered at angle atDeg (degrees, CCW from +X).
+- `.RotateUnion(n int, step M33) *Shape` — RotateUnion creates a union of the shape rotated N times by the given step matrix.
+- `.Scale(v v2.Vec) *Shape` — Scale multiplies X by v.X and Y by v.Y, about the origin, so a shape away from the origin moves as well as grows: a 1x1 square centered at x=4 scaled by (2,1) ends up 2 wide and centered at x=8.
+- `.ScaleExtrude(height float64, scale v2.Vec) *solid.Solid` — ScaleExtrude extrudes while scaling the profile linearly over the height.
+- `.ScaleTwistExtrude(height, twistDeg float64, scale v2.Vec) *solid.Solid` — ScaleTwistExtrude extrudes while scaling and twisting the profile over the height.
+- `.ScaleUniform(k float64) *Shape` — ScaleUniform scales uniformly on both axes.
+- `.Screw(height, start, pitch float64, num int) *solid.Solid` — Screw sweeps the shape helically to produce a threaded solid.
+- `.SmoothAdd(min sdf.MinFunc, other ...*Shape) *Shape` — SmoothAdd is an alias for SmoothUnion.
+- `.SmoothArray(numX, numY int, step v2.Vec, min sdf.MinFunc) *Shape` — SmoothArray creates an XY grid array using min for blending adjacent copies.
+- `.SmoothCut(max sdf.MaxFunc, tools ...*Shape) *Shape` — SmoothCut subtracts the union of tools from s, blended with a smooth max function.
+- `.SmoothDifference(max sdf.MaxFunc, tools ...*Shape) *Shape` — SmoothDifference is an alias for SmoothCut.
+- `.SmoothIntersect(max sdf.MaxFunc, other ...*Shape) *Shape` — SmoothIntersect intersects s with the union of others, blended with a smooth max function.
+- `.SmoothRotateUnion(n int, step M33, min sdf.MinFunc) *Shape` — SmoothRotateUnion creates N rotated copies blended with min.
+- `.SmoothUnion(min sdf.MinFunc, other ...*Shape) *Shape` — SmoothUnion blends s with other shapes using a smooth min function.
+- `.Split(a, dir v2.Vec) (*Shape, *Shape)` — Split cuts the shape along a line through point a in direction dir and returns both halves.
+- `.SweepHelix(radius, turns, height float64, flatEnds bool) *solid.Solid` — SweepHelix sweeps the shape along a helix of the given radius.
+- `.ToDXF(path string, meshCells int)` — ToDXF renders the shape to a DXF file using the quadtree marching-squares renderer.
+- `.ToPNG(path string, width, height int)` — ToPNG rasterizes the shape to a PNG file of the given pixel dimensions, centered on the shape's bounding box.
+- `.ToPNGBox(path string, bb Box2, width, height int)` — ToPNGBox rasterizes the shape to a PNG file for the given bounding box and pixel dimensions.
+- `.ToSVG(path string, meshCells int)` — ToSVG renders the shape to an SVG file using the quadtree marching-squares renderer.
+- `.Top() AnchoredShape` — Top returns the anchor at the middle of the shape's top edge (max Y).
+- `.TopAt(y float64) *Shape` — TopAt translates s so the top edge lands at y.
+- `.TopLeft() AnchoredShape` — TopLeft returns the anchor at the shape's top-left corner.
+- `.TopRight() AnchoredShape` — TopRight returns the anchor at the shape's top-right corner.
+- `.Transform(m M33) *Shape` — Transform applies the 3x3 homogeneous matrix m to the shape in the XY plane.
+- `.Translate(v v2.Vec) *Shape` — Translate moves the shape by v, adding v.X to X and v.Y to Y.
+- `.TranslateX(x float64) *Shape` — TranslateX moves the shape x along X; Y is unchanged.
+- `.TranslateXY(x, y float64) *Shape` — TranslateXY moves the shape x along X and y along Y.
+- `.TranslateY(y float64) *Shape` — TranslateY moves the shape y along Y; X is unchanged.
+- `.TwistExtrude(height, twistDeg float64) *solid.Solid` — TwistExtrude extrudes while rotating the profile about the Z axis over the height.
+- `.UnderneathOf(target AnchoredShape, gap ...float64) Placement2D` — UnderneathOf is sugar for s.Top().Below(target, gap...).
+- `.Union(other ...*Shape) *Shape` — Union returns the union of s and any number of other shapes.
+
+`shape.ThreadParams` — ThreadParams reexposes the sdfx ThreadParameters struct for thread lookup.
+
+### layout — Position lists for Multi: polar, grid, line, corners.
+
+Functions:
+- `layout.BoxCorners(size v3.Vec) []v3.Vec` — BoxCorners returns the 8 corners of a box of the given size, centered on the origin.
+- `layout.Grid(stepX, stepY float64, nx, ny int) []v3.Vec` — Grid returns nx*ny positions on an XY grid centered on the origin (z = 0), with stepX between columns and stepY between rows.
+- `layout.Grid2(stepX, stepY float64, nx, ny int) []v2.Vec` — Grid2 returns nx*ny positions on an XY grid centered on the origin.
+- `layout.Line(p0, p1 v3.Vec, n int) []v3.Vec` — Line returns n equally spaced positions from p0 to p1 inclusive.
+- `layout.Line2(p0, p1 v2.Vec, n int) []v2.Vec` — Line2 returns n equally spaced positions from p0 to p1 inclusive.
+- `layout.Polar(radius float64, n int) []v3.Vec` — Polar returns n positions evenly spaced on a circle of the given radius in the XY plane (z = 0).
+- `layout.Polar2(radius float64, n int) []v2.Vec` — Polar2 returns n positions evenly spaced on a circle of the given radius.
+- `layout.PolarArc(radius float64, n int, startDeg, sweepDeg float64) []v3.Vec` — PolarArc returns n positions evenly spaced along an arc of sweepDeg degrees beginning at startDeg, on a circle of the given radius in the XY plane (z = 0).
+- `layout.PolarArc2(radius float64, n int, startDeg, sweepDeg float64) []v2.Vec` — PolarArc2 returns n positions evenly spaced along an arc of sweepDeg degrees beginning at startDeg, on a circle of the given radius.
+- `layout.RectCorners(width, depth float64) []v3.Vec` — RectCorners returns the 4 XY corners of a rectangle of the given width (X) and depth (Y), centered on the origin (z = 0).
+- `layout.RectCorners2(width, depth float64) []v2.Vec` — RectCorners2 returns the 4 XY corners of a rectangle of the given width (X) and depth (Y), centered on the origin.
+- `layout.SetGridLimit(n int)` — SetGridLimit overrides the maximum nx*ny accepted by Grid / Grid2.
+
+### plane — Planes for cross-sections.
+
+Constants and variables:
+- `plane.X` — Axis-aligned unit normals.
+- `plane.XY` — XY returns the XY plane at the origin (normal = Z).
+- `plane.XZ` — XZ returns the XZ plane at the origin (normal = Y).
+- `plane.Y` — Axis-aligned unit normals.
+- `plane.YZ` — YZ returns the YZ plane at the origin (normal = X).
+- `plane.Z` — Axis-aligned unit normals.
+
+Functions:
+- `plane.At(origin, normal v3.Vec) Plane` — At returns a Plane passing through origin with the given normal.
+- `plane.AtX(x float64) Plane` — AtX returns the YZ plane at x.
+- `plane.AtY(y float64) Plane` — AtY returns the XZ plane at y.
+- `plane.AtZ(z float64) Plane` — AtZ returns the XY plane at z.
+
+`plane.Plane` — Plane is an oriented plane defined by a point on the plane and a normal.
+
+### obj — Parametric parts: bolts, nuts, panels, gears, keyed holes, pipes, and more. Each takes a parameter struct.
+
+Functions:
+- `obj.AddTabs(s *solid.Solid, tab Tab, upper bool, mset []solid.M44) *solid.Solid` — AddTabs adds tab geometry to s at the given transforms.
+- `obj.Angle2D(p AngleParams) *shape.Shape` — Angle2D returns the 2D cross-section of an L-profile angle bracket.
+- `obj.Angle3D(p AngleParams) *solid.Solid` — Angle3D returns an extruded L-profile angle bracket.
+- `obj.Arrow3D(p ArrowParms) *solid.Solid` — Arrow3D returns a 3D arrow aligned with the Z axis.
+- `obj.Axes3D(p0, p1 v3.Vec) *solid.Solid` — Axes3D returns XYZ coordinate axes with arrowheads.
+- `obj.Bolt(p BoltParms) *solid.Solid` — Bolt returns a 3D bolt with a hex or socket cap head.
+- `obj.BoltCircle2D(holeRadius, circleRadius float64, numHoles int) *shape.Shape` — BoltCircle2D returns a 2D bolt circle pattern.
+- `obj.BoltCircle3D(holeDepth, holeRadius, circleRadius float64, numHoles int) *solid.Solid` — BoltCircle3D returns a 3D bolt circle hole pattern.
+- `obj.ChamferedCylinder(s *solid.Solid, kb, kt float64) *solid.Solid` — ChamferedCylinder chamfers the top (kt) and bottom (kb) of a cylinder.
+- `obj.ChamferedHole3D(l, r, chRadius float64) *solid.Solid` — ChamferedHole3D returns a chamfered hole.
+- `obj.CircleGrille2D(p CircleGrilleParms) *shape.Shape` — CircleGrille2D returns the 2D profile of a circle grille.
+- `obj.CircleGrille3D(p CircleGrilleParms) *solid.Solid` — CircleGrille3D returns a 3D extruded circle grille.
+- `obj.CounterBoredHole3D(l, r, cbRadius, cbDepth float64) *solid.Solid` — CounterBoredHole3D returns a counterbored hole through a given length.
+- `obj.CounterSunkHole3D(l, r float64) *solid.Solid` — CounterSunkHole3D returns a countersunk hole.
+- `obj.DirectedArrow3D(p ArrowParms, head, tail v3.Vec) *solid.Solid` — DirectedArrow3D returns an arrow from head to tail.
+- `obj.Display(p DisplayParms, negative bool) *solid.Solid` — Display returns a 3D display bezel.
+- `obj.DrainCover(p DrainCoverParms) *solid.Solid` — DrainCover returns a 3D drain cover.
+- `obj.DroneMotorArm(p DroneArmParms) *solid.Solid` — DroneMotorArm returns a 3D drone motor arm.
+- `obj.DroneMotorArmSocket(p DroneArmSocketParms) *solid.Solid` — DroneMotorArmSocket returns a 3D drone motor arm socket.
+- `obj.EuroRackPanel2D(p EuroRackParms) *shape.Shape` — EuroRackPanel2D returns a 2D Eurorack module panel.
+- `obj.EuroRackPanel3D(p EuroRackParms) *solid.Solid` — EuroRackPanel3D returns a 3D Eurorack module panel.
+- `obj.FingerButton2D(p FingerButtonParms) *shape.Shape` — FingerButton2D returns the 2D profile of a finger button.
+- `obj.Geneva2D(p GenevaParms) (driver, driven *shape.Shape)` — Geneva2D returns the driver and driven 2D profiles of a Geneva drive.
+- `obj.GridfinityBase(p GridfinityBaseParms) *solid.Solid` — GridfinityBase returns a Gridfinity base plate of the given grid size.
+- `obj.GridfinityBody(p GridfinityBodyParms) *solid.Solid` — GridfinityBody returns a Gridfinity bin / container of the given grid size.
+- `obj.Hex2D(radius, round float64) *shape.Shape` — Hex2D returns a 2D regular hexagon with optional corner rounding.
+- `obj.Hex3D(radius, height, round float64) *solid.Solid` — Hex3D returns a 3D hex prism.
+- `obj.HexHead3D(radius, height float64, round string) *solid.Solid` — HexHead3D returns a hex head with chamfered or rounded top/bottom.
+- `obj.ImportSTL(path string, numNeighbors, minChildren, maxChildren int) *solid.Solid` — ImportSTL loads a binary or ASCII STL file and returns an SDF3 for the mesh.
+- `obj.ImportTriMesh(mesh []*sdf.Triangle3, numNeighbors, minChildren, maxChildren int) *solid.Solid` — ImportTriMesh builds an SDF3 from triangle mesh data with a BVH using the given neighbor/child counts.
+- `obj.InvoluteGear(p InvoluteGearParms) *shape.Shape` — InvoluteGear returns a 2D involute gear profile.
+- `obj.IsocelesTrapezoid2D(base0, base1, height float64) *shape.Shape` — IsocelesTrapezoid2D returns a 2D isoceles trapezoid.
+- `obj.IsocelesTriangle2D(base, height float64) *shape.Shape` — IsocelesTriangle2D returns a 2D isoceles triangle.
+- `obj.KeyedHole2D(p KeyedHoleParms) *shape.Shape` — KeyedHole2D returns a 2D keyed hole.
+- `obj.KeyedHole3D(p KeyedHoleParms) *solid.Solid` — KeyedHole3D returns a 3D keyed hole.
+- `obj.Keyway2D(p KeywayParameters) *shape.Shape` — Keyway2D returns the 2D cross-section of a shaft with a keyway.
+- `obj.Keyway3D(p KeywayParameters) *solid.Solid` — Keyway3D returns a 3D shaft with a keyway.
+- `obj.Knurl3D(p KnurlParms) *solid.Solid` — Knurl3D returns a knurled cylindrical surface.
+- `obj.KnurledHead3D(r, h, pitch float64) *solid.Solid` — KnurledHead3D returns a knurled head (e.g. thumb screw).
+- `obj.NewAngleTab(size v3.Vec, clearance float64) Tab` — NewAngleTab creates an angled (triangular) tab with the given size and clearance.
+- `obj.NewScrewTab(p ScrewTab) Tab` — NewScrewTab creates a screw-style tab.
+- `obj.NewStraightTab(size v3.Vec, clearance float64) Tab` — NewStraightTab creates a straight (rectangular) tab with the given size and clearance.
+- `obj.Nut(p NutParms) *solid.Solid` — Nut returns a 3D nut.
+- `obj.Panel2D(p PanelParms) *shape.Shape` — Panel2D returns a 2D panel profile with mounting holes.
+- `obj.Panel3D(p PanelParms) *solid.Solid` — Panel3D returns a 3D panel with mounting holes.
+- `obj.PanelBox3D(p PanelBoxParms) []*solid.Solid` — PanelBox3D returns the set of solids making up a panel box enclosure.
+- `obj.PanelHole3D(p PanelHoleParms) *solid.Solid` — PanelHole3D returns a 3D panel hole with optional indent.
+- `obj.Pipe3D(oRadius, iRadius, length float64) *solid.Solid` — Pipe3D returns a 3D pipe section.
+- `obj.PipeConnector3D(p PipeConnectorParms) *solid.Solid` — PipeConnector3D returns a 3D pipe connector with up to 6 port recesses.
+- `obj.PipeLookup(name, units string) *PipeParameters` — PipeLookup returns the parameters for a named standard pipe.
+- `obj.Servo2D(p ServoParms, holeRadius float64) *shape.Shape` — Servo2D returns a 2D mounting profile for a servo.
+- `obj.Servo3D(p ServoParms) *solid.Solid` — Servo3D returns a 3D servo body.
+- `obj.ServoHorn(p ServoHornParms) *shape.Shape` — ServoHorn returns a 2D servo horn profile.
+- `obj.ServoLookup(name string) *ServoParms` — ServoLookup returns parameters for a named standard servo.
+- `obj.Spring2D(p SpringParms) *shape.Shape` — Spring2D returns the 2D profile of a flat planar spring.
+- `obj.Spring3D(p SpringParms) *solid.Solid` — Spring3D returns a 3D extruded flat planar spring.
+- `obj.SpringLength(p SpringParms) float64` — SpringLength returns the overall length of the spring defined by p.
+- `obj.Standoff3D(p StandoffParms) *solid.Solid` — Standoff3D returns a 3D PCB standoff.
+- `obj.StdPipe3D(name, units string, length float64) *solid.Solid` — StdPipe3D returns a 3D pipe section looked up by standard name.
+- `obj.StdPipeConnector3D(name, units string, length float64, cfg [6]bool) *solid.Solid` — StdPipeConnector3D returns a 3D pipe connector for a standard pipe.
+- `obj.ThreadedCylinder(p ThreadedCylinderParms) *solid.Solid` — ThreadedCylinder returns a 3D threaded cylinder from the given parameters.
+- `obj.TruncRectPyramid3D(p TruncRectPyramidParms) *solid.Solid` — TruncRectPyramid3D returns a truncated rectangular pyramid.
+- `obj.Washer2D(p WasherParms) *shape.Shape` — Washer2D returns the 2D profile of a washer.
+- `obj.Washer3D(p WasherParms) *solid.Solid` — Washer3D returns a 3D washer.
+
+`obj.AngleLeg` — AngleLeg describes one leg of an angle bracket.
+
+`obj.AngleParams` — AngleParams configures an angle bracket (L-profile).
+
+`obj.ArrowParms` — ArrowParms configures a 3D arrow.
+
+`obj.BoltParms` — BoltParms configures a bolt.
+
+`obj.CircleGrilleParms` — CircleGrilleParms configures a circular grille pattern.
+
+`obj.DisplayParms` — DisplayParms configures a display bezel.
+
+`obj.DrainCoverParms` — DrainCoverParms configures a drain cover.
+
+`obj.DroneArmParms` — DroneArmParms configures a drone motor arm.
+
+`obj.DroneArmSocketParms` — DroneArmSocketParms configures a drone motor arm socket.
+
+`obj.EuroRackParms` — EuroRackParms configures a Eurorack module panel.
+
+`obj.FingerButtonParms` — FingerButtonParms configures a finger button 2D profile.
+
+`obj.GenevaParms` — GenevaParms configures a Geneva drive mechanism.
+
+`obj.GridfinityBaseParms` — GridfinityBaseParms configures a Gridfinity base.
+
+`obj.GridfinityBodyParms` — GridfinityBodyParms configures a Gridfinity body (bin / container).
+
+`obj.InvoluteGearParms` — InvoluteGearParms configures an involute gear 2D profile.
+
+`obj.KeyedHoleParms` — KeyedHoleParms configures a keyed hole (circle with N key slots).
+
+`obj.KeywayParameters` — KeywayParameters configures a keyway.
+
+`obj.KnurlParms` — KnurlParms configures a knurled cylindrical surface.
+
+`obj.NutParms` — NutParms configures a nut.
+
+`obj.PanelBoxParms` — PanelBoxParms configures a panel box enclosure.
+
+`obj.PanelHoleParms` — PanelHoleParms configures a through-panel hole with indent/orientation.
+
+`obj.PanelParms` — PanelParms configures a 2D/3D panel with holes.
+
+`obj.PipeConnectorParms` — PipeConnectorParms configures a pipe connector.
+
+`obj.PipeParameters` — PipeParameters describes a standard pipe.
+
+`obj.ScrewTab` — ScrewTab configures a screw-type tab.
+
+`obj.ServoHornParms` — ServoHornParms configures a servo horn.
+
+`obj.ServoParms` — ServoParms describes a servo body and mounting.
+
+`obj.SpringParms` — SpringParms configures a flat planar spring.
+
+`obj.StandoffParms` — StandoffParms configures a PCB standoff.
+
+`obj.Tab` — Tab is an interface for tab geometry used when splitting a solid across a plane.
+
+`obj.ThreadedCylinderParms` — ThreadedCylinderParms configures a threaded cylinder.
+
+`obj.TruncRectPyramidParms` — TruncRectPyramidParms configures a truncated rectangular pyramid.
+
+`obj.WasherParms` — WasherParms configures a washer.
+
+### validate — Geometry checks for tests: probes, mesh stats, printability.
+
+Constants and variables:
+- `validate.LeftHand` — LeftHand rises along +Z while turning clockwise seen from +Z.
+- `validate.RightHand` — RightHand rises along +Z while turning counter-clockwise seen from +Z.
+- `validate.Unknown` — Unknown means the two screw-invariance errors were too close to call.
+
+Functions:
+- `validate.At(s *solid.Solid, p v3.Vec) float64` — At returns the signed distance field of s at p: negative inside material, positive in air, zero on the surface.
+- `validate.ChangedRegion(a, b *solid.Solid, cellsPerMM, tol float64) (v3.Box, int)` — ChangedRegion returns the bounding box of every surface point of either solid (sampled at cellsPerMM) at which the other solid's field exceeds tol in magnitude — that is, where a and b actually differ — together with the number of such points.
+- `validate.Clearance(a, b *solid.Solid, cellsPerMM float64) Gap` — Clearance samples a's surface at cellsPerMM and reads b's signed field at every one of those points: Min is the worst clearance in mm (negative means a penetrates b).
+- `validate.ClearanceIn(a, b *solid.Solid, region v3.Box, cellsPerMM float64) Gap` — ClearanceIn is Clearance restricted to the surface points of a that lie inside region (an axis-aligned box in world coordinates) — the way to ask about one feature of a big part without meshing it differently.
+- `validate.Components(s *solid.Solid, cellsPerMM float64) int` — Components counts the connected bodies in s's rendered mesh at cellsPerMM: triangles that share a vertex belong to the same body.
+- `validate.Compose(a, b []Pose) []Pose` — Compose returns the cartesian product of two pose families: len(a)*len(b) poses, each applying an a pose FIRST and then a b pose (b.Mul(a)), in a-major order — "for every bore shift, the whole screw travel".
+- `validate.Congruent(a, b *solid.Solid, cellsPerMM, tol float64) (ab, ba Gap, ok bool)` — Congruent reports whether a and b occupy the same surface: ab reads b's field on a's surface, ba reads a's field on b's surface, and ok is true when the 95th percentile of |field| is within tol mm in BOTH directions.
+- `validate.Coupon(s, keep *solid.Solid, cellsPerMM float64) *solid.Solid` — Coupon cuts a printable test piece out of s: the intersection of s with keep, dropped so its minimum Z is 0 (sitting on the plate).
+- `validate.Cyl(r, deg, z float64) v3.Vec` — Cyl returns the point at radius r, angle deg (degrees, counter-clockwise from +X seen from +Z) and height z: the cylindrical coordinate most probes on turned or patterned parts are written in.
+- `validate.DeviationSTL(path string, s *solid.Solid) (Gap, error)` — DeviationSTL measures an already-written mesh file against the solid it was rendered from: it reads the STL at path (binary or ASCII), deduplicates the vertices, and reports |field of s| at each one.
+- `validate.Dimples(s *solid.Solid, n int, at, normal, along v3.Vec, dia, depth, spacing float64) *solid.Solid` — Dimples returns s with n small blind cylinders cut into the face at `at`, sunk along -normal to depth `depth` and spaced `spacing` apart along `along`, centred on `at`.
+- `validate.FitCheck(dir, name string, parts []Part, point, normal v3.Vec, cellsPerMM float64) (map[string]Gap, error)` — FitCheck writes an inspection set for an assembly and reports every pairwise clearance.
+- `validate.Gradient(s *solid.Solid, p v3.Vec) v3.Vec` — Gradient returns the unit surface normal direction of the field at p by central differences: the direction in which the field increases, which on the surface points out of the material.
+- `validate.GridPoints(box v3.Box, step float64) []v3.Vec` — GridPoints returns a regular grid of points filling box at spacing step mm, starting at box.Min and including box.Max on any axis whose size is a whole multiple of step.
+- `validate.HelixHand(s *solid.Solid, pitch, cellsPerMM float64) HandResult` — HelixHand decides the hand of a helical solid of the given axial pitch (mm of rise per full turn about Z, always positive) by screw invariance: it samples the surface at cellsPerMM, advances each point by d = pitch/8 along +Z while rotating it +360*d/pitch (right-hand) and -360*d/pitch (left-hand), and returns the hand whose p95 |field| is smaller, with both errors.
+- `validate.Identical(a, b *solid.Solid, pts []v3.Vec, tol float64) IdentityResult` — Identical reports whether a and b have the same signed distance field at every point of pts within tol mm.
+- `validate.In(name string, p v3.Vec) Probe` — In returns a Probe expecting p to be inside material (At < 0).
+- `validate.Inside(s *solid.Solid, p v3.Vec) bool` — Inside reports whether p is inside the material of s (At(s, p) < 0).
+- `validate.IsWatertight(tris []mesh.Triangle3) (bool, int)` — IsWatertight reports whether the mesh is a closed surface and the boundary-edge count (0 = sealed).
+- `validate.LinearPoses(dir v3.Vec, from, to, step float64) []Pose` — LinearPoses returns pure translations of the moving body along the unit direction of dir, by from, from+step, ...
+- `validate.Manifest(parts []Part, cellsPerMM float64) string` — Manifest summarises parts as a markdown table — name, bounding-box min and max, size, volume and body count — for a build log, a PR comment, or a model deciding whether the part it just wrote is the size it meant.
+- `validate.MinWall(s *solid.Solid, region v3.Box, step, max float64) WallReport` — MinWall scans region on a grid of `step` mm and reports the thinnest material run found through any interior grid point along each of the three axes, searching at most max mm either side.
+- `validate.Of(s *solid.Solid, cellsPerMM float64) Stats` — Of computes validation stats by rendering s at cellsPerMM density.
+- `validate.OfMesh(tris []mesh.Triangle3) Stats` — OfMesh computes validation stats from a precomputed triangle mesh.
+- `validate.Opening(s *solid.Solid, p, dir v3.Vec, max float64) (float64, bool)` — Opening measures the clear void span (mm) through p along ±dir: p must be in air (At >= 0), and the result is the distance between the two material surfaces found within max mm either side.
+- `validate.Out(name string, p v3.Vec) Probe` — Out returns a Probe expecting p to be in air (At > 0).
+- `validate.OverhangArea(tris []mesh.Triangle3, maxAngleDeg float64) float64` — OverhangArea returns the total area of triangles whose downward-facing normal makes an angle greater than maxAngleDeg from vertical (Z+).
+- `validate.OverhangFaces(tris []mesh.Triangle3, maxAngleDeg float64) []mesh.Triangle3` — OverhangFaces returns the triangles overhanging more than maxAngleDeg — useful for visualizing problem areas (write them to their own STL and load alongside the part).
+- `validate.Overhangs(s *solid.Solid, cellsPerMM float64, o OverhangOptions) OverhangReport` — Overhangs audits s for unsupported overhangs at mesh density cellsPerMM, in the solid's current frame (minimum Z is the build plate).
+- `validate.Percentile(xs []float64, q float64) float64` — Percentile returns the q-th percentile (0..100) of xs by nearest rank on a sorted copy; NaN for an empty slice.
+- `validate.Probes(s *solid.Solid, probes []Probe) []ProbeResult` — Probes evaluates every probe against s in parallel and returns one result per probe, in the same order.
+- `validate.ProbesIn(solids map[string]*solid.Solid, probes []NamedProbe) []ProbeResult` — ProbesIn evaluates each NamedProbe against solids[probe.Solid] and returns results whose Name is "solid:name".
+- `validate.RequireBounds(t testing.TB, s *solid.Solid, want v3.Box, tol float64)` — RequireBounds calls t.Errorf if s's bounding box corners differ from want by more than tol mm in any component.
+- `validate.RequireClearance(t testing.TB, a, b *solid.Solid, cellsPerMM, minGap float64)` — RequireClearance fails the test unless every surface point of a is at least minGap mm clear of b's material (g.Min >= minGap).
+- `validate.RequireCongruent(t testing.TB, a, b *solid.Solid, cellsPerMM, tol float64)` — RequireCongruent fails the test unless a and b describe the same surface within tol mm (see Congruent).
+- `validate.RequireHelixHand(t testing.TB, s *solid.Solid, pitch, cellsPerMM float64, want Hand)` — RequireHelixHand fails the test unless HelixHand decides s winds the way want does — the guard against a mirrored thread shipping as a right-hand one.
+- `validate.RequireIdentical(t testing.TB, a, b *solid.Solid, pts []v3.Vec, tol float64)` — RequireIdentical compares the two fields at pts, logs the report line, and calls t.Errorf if any point differs by more than tol mm (or if pts is empty, which would otherwise pass vacuously).
+- `validate.RequireInterference(t testing.TB, a, b *solid.Solid, cellsPerMM, atLeast float64)` — RequireInterference fails the test unless a penetrates b by at least atLeast mm somewhere (g.Min <= -atLeast).
+- `validate.RequireMaxOverhang(t *testing.T, s *solid.Solid, cellsPerMM, maxAngleDeg float64, tinyArea ...float64)` — RequireMaxOverhang fails the test if any face overhangs more than maxAngleDeg — i.e. the part would need supports when FDM-printed in default Z-up orientation.
+- `validate.RequireMinWall(t testing.TB, s *solid.Solid, region v3.Box, step, max, wantMin float64)` — RequireMinWall runs MinWall over region and calls t.Errorf if the thinnest material run found is below wantMin mm, or if the region contained no interior sample at all (which would otherwise pass vacuously).
+- `validate.RequireNear(t testing.TB, name string, got, want, tol float64)` — RequireNear logs "name = got (want w ± tol)" and calls t.Errorf when |got-want| > tol — the standard dimension assertion for measurements read back out of a solid with SurfaceR, SurfaceZ, Opening or WallThickness.
+- `validate.RequireNoContact(t testing.TB, a, b *solid.Solid, cellsPerMM float64)` — RequireNoContact fails the test unless a's surface is strictly outside b everywhere (g.Min > 0): the two bodies do not touch at the sampled density.
+- `validate.RequireOneBody(t testing.TB, s *solid.Solid, cellsPerMM float64)` — RequireOneBody fails the test when s renders as anything other than a single connected body at cellsPerMM — the guard against a boolean that quietly severed a part, or a cut that left an island.
+- `validate.RequireOverhangArea(t testing.TB, s *solid.Solid, cellsPerMM float64, o OverhangOptions, areaBudget float64)` — RequireOverhangArea logs the audit and fails the test when the unsupported over-threshold area exceeds areaBudget (mm²).
+- `validate.RequireProbes(t testing.TB, s *solid.Solid, probes []Probe)` — RequireProbes evaluates probes against s, logs one report line per probe plus an "N/M probes passed" summary, and calls t.Errorf for every probe whose material state (or margin) was wrong.
+- `validate.RequireProbesIn(t testing.TB, solids map[string]*solid.Solid, probes []NamedProbe)` — RequireProbesIn evaluates a multi-solid probe table, logs one report line per probe plus an "N/M probes passed" summary, and calls t.Errorf for every failure.
+- `validate.RequireStandsOn(t testing.TB, s *solid.Solid, z, tol float64)` — RequireStandsOn calls t.Errorf unless the minimum Z of s's bounding box is within tol mm of z — the print-plate assertion, normally z = 0, that catches a part left floating or sunk after a transform.
+- `validate.RequireSweepBlocked(t testing.TB, moving, fixed *solid.Solid, poses []Pose, cellsPerMM, atLeast float64)` — RequireSweepBlocked fails the test unless the moving body collides with the fixed body by at least atLeast mm somewhere in the motion (r.Min <= -atLeast).
+- `validate.RequireSweepClear(t testing.TB, moving, fixed *solid.Solid, poses []Pose, cellsPerMM, minClear float64)` — RequireSweepClear fails the test unless the moving body stays at least minClear mm away from the fixed body at every pose (r.Min >= minClear).
+- `validate.RequireUnchangedOutside(t testing.TB, before, after *solid.Solid, region v3.Box, cellsPerMM, tol float64)` — RequireUnchangedOutside calls t.Errorf if any surface point of `before` or `after` that lies outside `region` reads further than tol mm from the other solid's surface — the assertion that an edit only moved geometry inside the region it was supposed to touch.
+- `validate.RequireVolumeNear(t *testing.T, s *solid.Solid, cellsPerMM, expectedMM3, relTol float64)` — RequireVolumeNear fails the test if the rendered solid's volume differs from expected by more than relTol (e.g. 0.02 = 2%).
+- `validate.RequireWatertight(t *testing.T, s *solid.Solid, cellsPerMM float64)` — RequireWatertight fails the test if the rendered mesh has any boundary edges.
+- `validate.RotationPoses(axis v3.Vec, from, to, step float64) []Pose` — RotationPoses returns rotations of the moving body about the line through the origin along axis, by from, from+step, ...
+- `validate.ScrewPoses(step, total, lead float64) []Pose` — ScrewPoses returns the poses of a screw motion about +Z: at each angle deg = 0, step, 2*step ...
+- `validate.Surface(s *solid.Solid, cellsPerMM float64) []v3.Vec` — Surface returns points lying on the surface of s: the deduplicated vertices of a marching-cubes mesh at cellsPerMM.
+- `validate.SurfaceAlong(s *solid.Solid, from, dir v3.Vec, maxDist, step float64) (float64, bool)` — SurfaceAlong marches from `from` along dir (normalised here) in steps of `step` mm (0 means 0.1) up to maxDist mm, until the sign of the field changes, then bisects that interval to 1e-6 mm.
+- `validate.SurfaceArea(tris []mesh.Triangle3) float64` — SurfaceArea returns the total area of all triangles in mm².
+- `validate.SurfaceR(s *solid.Solid, deg, z, rMin, rMax float64) (float64, bool)` — SurfaceR returns the radius (mm) at which a surface is met when marching outward from the Z axis at angle deg (degrees counter-clockwise from +X seen from +Z) and height z, starting at radius rMin and stopping at rMax.
+- `validate.SurfaceZ(s *solid.Solid, x, y, zTop, zBottom float64) (float64, bool)` — SurfaceZ returns the height (mm) of the first surface met marching down (-Z) from (x, y, zTop) to zBottom — the top surface of the solid at that plan-view point.
+- `validate.Sweep(moving, fixed *solid.Solid, poses []Pose, cellsPerMM float64) SweepResult` — Sweep samples moving's surface at cellsPerMM once, transforms those points by each pose, and reads fixed's signed field at every transformed point.
+- `validate.Vertices(tris []mesh.Triangle3) []v3.Vec` — Vertices returns the deduplicated vertices of a triangle mesh.
+- `validate.Volume(tris []mesh.Triangle3) float64` — Volume returns the enclosed volume in mm³, computed as the sum of signed tetrahedron volumes from the origin.
+- `validate.WallThickness(s *solid.Solid, p, dir v3.Vec, max float64) (float64, bool)` — WallThickness measures the material run (mm) through p along ±dir: p must be inside material (At < 0), and the result is the distance between the two surfaces found within max mm either side.
+
+`validate.Gap` — Gap describes how one solid's surface sits relative to another solid's field: every sampled value is the second solid's signed field (mm) at a surface point of the first.
+- `.String() string` — String renders the gap as one test-log line: worst and best readings with the points they occurred at, plus the median and 95th percentile.
+
+`validate.Hand` — Hand is the handedness of a helical feature about the +Z axis.
+- `.String() string` — String returns "right-hand", "left-hand" or "unknown".
+
+`validate.HandResult` — HandResult reports which hand won the screw-invariance test and by how much: RightErr and LeftErr are the 95th percentiles of |field| (mm) after applying the right-hand and left-hand screw transform to N surface points.
+- `.String() string` — String renders the verdict and both screw-invariance errors as one test-log line.
+
+`validate.IdentityResult` — IdentityResult is the outcome of comparing two fields point by point: the largest absolute difference found (mm), where it was found, how many points were compared, and whether the largest difference was within tolerance.
+- `.String() string` — String returns the one-line report, e.g.
+
+`validate.NamedProbe` — NamedProbe is a Probe that also names which solid of a set it applies to, for tables that check several parts of an assembly at once.
+
+`validate.OverhangOptions` — OverhangOptions controls the overhang audit.
+
+`validate.OverhangReport` — OverhangReport is the result of an overhang audit: how much downward-facing area is over threshold and unsupported, and the worst angle seen anywhere.
+- `.String() string` — String renders the audit as one log line: failing face count and area, the worst failing angle and where, and the worst downward angle anywhere.
+
+`validate.Part` — Part is a named solid in an assembly, as passed to FitCheck and Manifest.
+
+`validate.Pose` — Pose is a rigid transform applied to the moving body before its surface points are read against the fixed body: a solid.M44, applied with MulPosition, in world coordinates.
+
+`validate.Probe` — Probe is one named point in the solid's own coordinate frame together with the material state expected there: Inside true means At(s, P) must be negative (inside material), false means it must be positive (air).
+
+`validate.ProbeResult` — ProbeResult is the outcome of one Probe: the signed distance found there (negative inside material) and whether it met the expectation, including the Margin when one was given.
+- `.String() string` — String returns the one-line report for this probe, e.g.
+
+`validate.Stats` — Stats reports validation metrics on a solid's rendered mesh.
+
+`validate.SweepResult` — SweepResult reports the worst clearance found over a whole motion: Min is the fixed body's signed field (mm) at the worst transformed surface point of the moving body, so negative means the bodies collide there.
+- `.String() string` — String renders the sweep as one test-log line: the worst clearance, which pose and world point produced it, and how much was sampled.
+
+`validate.WallReport` — WallReport is the thinnest material run MinWall found: its thickness in mm, the interior sample point it was measured through, the axis it was measured along, and how many interior points were sampled.
+- `.String() string` — String returns the one-line report, e.g.
+
+### render — Output formats and renderer constructors.
+
+Constants and variables:
+- `render.DefaultDecimateMaxError` — DefaultDecimateMaxError is the default cap, in model units (mm), on how far decimation may move the surface from the rendered mesh.
+
+Functions:
+- `render.DecimateMesh(mesh []*sdf.Triangle3, keepRatio, maxErrorMM float64) []*sdf.Triangle3` — DecimateMesh simplifies a triangle mesh, moving no surface vertex more than maxErrorMM (model units) from the input.
+- `render.NewDXF(name string) *DXF` — NewDXF returns an empty DXF drawing target.
+- `render.NewDualContouring2D(meshCells int) Render2` — NewDualContouring2D returns a dual-contouring 2D renderer.
+- `render.NewMarchingCubesOctreeParallel(meshCells int) Render3` — NewMarchingCubesOctreeParallel returns the default parallel octree renderer for 3D.
+- `render.NewMarchingSquaresQuadtree(meshCells int) Render2` — NewMarchingSquaresQuadtree returns the default quadtree renderer for 2D.
+- `render.NewPNG(name string, bb v2.Box, pixels v2i.Vec) (*PNG, error)` — NewPNG returns an empty PNG drawing target sized to bb with the given pixel dimensions.
+- `render.Poly(p *sdf.Polygon, path string)` — Poly writes a polygon to a DXF file (one line per edge).
+- `render.SaveDXF(path string, lines []*v2.Line2)` — SaveDXF writes a list of line segments to a DXF file.
+- `render.SaveSVG(path, lineStyle string, lines []*v2.Line2)` — SaveSVG writes a list of line segments to an SVG file.
+- `render.To3MF(s SDF3, path string, meshCells int)` — To3MF renders an SDF3 to a 3MF file using the parallel octree renderer.
+- `render.ToDXF(s SDF2, path string, meshCells int)` — ToDXF renders an SDF2 to a DXF file using the quadtree marching-squares renderer.
+- `render.ToDXFWith(s SDF2, path string, r Render2)` — ToDXFWith renders an SDF2 to a DXF file using the given 2D renderer.
+- `render.ToPNG(s SDF2, path string, bb v2.Box, width, height int)` — ToPNG renders an SDF2 to a PNG file sized to the given bounding box and pixel dimensions.
+- `render.ToSTL(s SDF3, path string, r render.Render3, decimate ...float64)` — ToSTL renders an SDF3 to an STL file atomically.
+- `render.ToSVG(s SDF2, path string, meshCells int)` — ToSVG renders an SDF2 to an SVG file using the quadtree marching-squares renderer.
+- `render.ToSVGWith(s SDF2, path string, r Render2)` — ToSVGWith renders an SDF2 to an SVG file using the given 2D renderer.
+
+`render.DXF` — DXF is a DXF drawing target.
+- `.Box(b v2.Box)` — Box draws a bounding box.
+- `.Line(line *v2.Line2)` — Line draws a single line.
+- `.Lines(lines []*v2.Line2)` — Lines draws a list of lines.
+- `.Points(pts v2.VecSet, r float64)` — Points draws a set of points with the given radius.
+- `.Save() error` — Save writes the DXF to its file.
+- `.Triangle(t v2.Triangle2)` — Triangle draws a triangle.
+
+`render.PNG` — PNG is a PNG drawing target.
+- `.Line(p0, p1 v2.Vec)` — Line draws a line from p0 to p1.
+- `.Lines(pts v2.VecSet)` — Lines draws a polyline through pts.
+- `.RenderSDF2(s SDF2)` — RenderSDF2 renders a Shape to the PNG.
+- `.RenderSDF2MinMax(s SDF2, dmin, dmax float64)` — RenderSDF2MinMax renders a Shape with explicit min/max distance thresholds.
+- `.Save() error` — Save writes the PNG to its file.
+- `.Triangle(t v2.Triangle2)` — Triangle draws a triangle.
+
+`render.Render2` — Render2 is the sdfx 2D renderer interface.
+
+`render.Render3` — Render3 is the sdfx 3D renderer interface.
+
+`render.SDF2` — SDF2 is a 2D signed distance function.
+
+`render.SDF3` — SDF3 is a 3D signed distance function.
+
+### mesh — Triangle-mesh utilities.
+
+Functions:
+- `mesh.CollectTriangles(s *solid.Solid, r render.Render3) []Triangle3` — CollectTriangles renders a solid to a triangle mesh using the given renderer.
+- `mesh.CountBoundaryEdges(tris []Triangle3) int` — CountBoundaryEdges counts edges that only belong to one triangle — a non-zero count indicates a non-closed mesh.
+- `mesh.Delaunay2d(vs v2.VecSet) TriangleISet` — Delaunay2d computes a Delaunay triangulation for a set of 2D points.
+- `mesh.Delaunay2dE(vs v2.VecSet) (TriangleISet, error)` — Delaunay2dE computes a Delaunay triangulation for a set of 2D points, returning an error instead of panicking.
+- `mesh.Delaunay2dSlow(vs v2.VecSet) TriangleISet` — Delaunay2dSlow is a naive-algorithm reference implementation for testing.
+- `mesh.IsWatertight(tris []Triangle3) (bool, int)` — IsWatertight reports whether the mesh is a closed surface: every edge is shared by exactly two triangles.
+- `mesh.SDFLines(lines []*Line2) []*sdf.Line2` — SDFLines converts our []*Line2 to sdfx []*sdf.Line2 at package boundaries.
+- `mesh.SaveSTL(path string, mesh []*Triangle3)` — SaveSTL writes a triangle mesh to an STL file.
+- `mesh.ToTriangles(s *solid.Solid, r render.Render3) []*Triangle3` — ToTriangles renders a solid to a triangle mesh using the given renderer.
+- `mesh.VertexToLine(vs []v2.Vec, closed bool) []*Line2` — VertexToLine connects a sequence of vertices with line segments.
+
+`mesh.Line2` — Line2 is a 2D line segment defined by two v2.Vec endpoints.
+
+`mesh.Triangle2` — Triangle2 is a 2D triangle (three v2.Vec vertices).
+
+`mesh.Triangle3` — Triangle3 is a 3D triangle (three v3.Vec vertices).
+
+`mesh.TriangleI` — TriangleI is a triangle referencing three indices into a vertex list.
+- `.Canonical()` — Canonical rotates t so its smallest index is first.
+- `.ToTriangle2(pts v2.VecSet) Triangle2` — ToTriangle2 returns the triangle formed by indexing into pts.
+
+`mesh.TriangleISet` — TriangleISet is a set of triangles defined by vertex indices.
+- `.Canonical() []TriangleI` — Canonical returns a copy of ts with each triangle in canonical form.
+- `.Equals(s TriangleISet) bool` — Equals reports whether two triangle sets are identical after canonicalization.
+
+### units — Constants and unit conversion.
+
+Constants and variables:
+- `units.InchesPerMillimetre` — InchesPerMillimetre converts millimetres to inches.
+- `units.Mil` — Mil is 1/1000 of an inch in mm.
+- `units.MillimetresPerInch` — MillimetresPerInch converts inches to millimetres.
+- `units.Pi` — Math constants.
+- `units.Tau` — Math constants.
+
+Functions:
+- `units.DtoR(degrees float64) float64` — DtoR converts degrees to radians.
+- `units.EqualFloat64(a, b, epsilon float64) bool` — EqualFloat64 reports whether a and b are equal within epsilon.
+- `units.ErrMsg(msg string) error` — ErrMsg creates an error with the given message plus a stack frame hint.
+- `units.RtoD(radians float64) float64` — RtoD converts radians to degrees.
+
+### v3 — 3D vectors and boxes.
+
+Constants and variables:
+- `v3.Zero` — Zero is the zero vector.
+
+Functions:
+- `v3.FromSDF(b sdf.Box3) Box` — FromSDF promotes an sdfx Box3 to our Box.
+- `v3.FromSDFTriangle3(t sdf.Triangle3) Triangle3` — FromSDFTriangle3 promotes an sdfx Triangle3 to our Triangle3.
+- `v3.FromV3i(a v3i.Vec) Vec` — FromV3i promotes an integer 3D vector to float64.
+- `v3.NewBox(center, size Vec) Box` — NewBox returns a Box with the given center and size.
+- `v3.X(x float64) Vec` — X returns Vec{X: x}.
+- `v3.XY(x, y float64) Vec` — XY returns Vec{X: x, Y: y}.
+- `v3.XYZ(x, y, z float64) Vec` — XYZ returns Vec{X: x, Y: y, Z: z}.
+- `v3.XZ(x, z float64) Vec` — XZ returns Vec{X: x, Z: z}.
+- `v3.Y(y float64) Vec` — Y returns Vec{Y: y}.
+- `v3.YZ(y, z float64) Vec` — YZ returns Vec{Y: y, Z: z}.
+- `v3.Z(z float64) Vec` — Z returns Vec{Z: z}.
+
+`v3.Box` — Box is a 3D axis-aligned bounding box.
+- `.Anchor(x, y, z int) Vec` — Anchor returns the world-space point on this box for the given unit-cube position.
+- `.Center() Vec` — Center returns the center of the box.
+- `.Contains(v Vec) bool` — Contains reports whether v is inside the box.
+- `.Cube() Box` — Cube returns the smallest cubic box containing a.
+- `.Enlarge(v Vec) Box` — Enlarge grows the box by v on each side.
+- `.Equals(b Box, delta float64) bool` — Equals reports whether a and b are within delta of each other.
+- `.Extend(b Box) Box` — Extend returns the bounding box containing both a and b.
+- `.Include(v Vec) Box` — Include returns a box extended to include v.
+- `.Random() Vec` — Random returns a random point inside the box.
+- `.RandomSet(n int) VecSet` — RandomSet returns n random points inside the box.
+- `.SDF() sdf.Box3` — SDF returns the sdfx-compatible representation of the box.
+- `.ScaleAboutCenter(k float64) Box` — ScaleAboutCenter scales the box about its center by k.
+- `.Size() Vec` — Size returns the size of the box.
+- `.Translate(v Vec) Box` — Translate returns a translated box.
+- `.Vertices() VecSet` — Vertices returns the eight corners of the box.
+
+`v3.Triangle3` — Triangle3 is a 3D triangle defined by three vertices.
+- `.Degenerate(tolerance float64) bool` — Degenerate reports whether the triangle is degenerate (two or more vertices within tolerance).
+- `.Normal() Vec` — Normal returns the triangle's unit normal vector.
+- `.SDF() sdf.Triangle3` — SDF returns the sdfx-compatible representation of the triangle.
+
+`v3.Vec` — Vec is a 3D vector with X, Y, Z float64 components.
+- `.Abs() Vec` — Abs returns the component-wise absolute value.
+- `.Add(b Vec) Vec` — Add returns a + b.
+- `.AddScalar(b float64) Vec` — AddScalar adds b to each component.
+- `.Ceil() Vec` — Ceil returns the component-wise ceiling.
+- `.Clamp(b, c Vec) Vec` — Clamp clamps each component between b and c.
+- `.Cos() Vec` — Cos returns the component-wise cosine.
+- `.Cross(b Vec) Vec` — Cross returns the cross product a × b.
+- `.Div(b Vec) Vec` — Div returns component-wise a / b.
+- `.DivScalar(b float64) Vec` — DivScalar divides each component by b.
+- `.Dot(b Vec) float64` — Dot returns the dot product a · b.
+- `.Equals(b Vec, tolerance float64) bool` — Equals reports whether a and b are within tolerance of each other.
+- `.Get(i int) float64` — Get returns the i-th component (0=X, 1=Y, 2=Z).
+- `.LTEZero() bool` — LTEZero reports whether all components are ≤ 0.
+- `.LTZero() bool` — LTZero reports whether all components are < 0.
+- `.Length() float64` — Length returns the Euclidean length.
+- `.Length2() float64` — Length2 returns the squared Euclidean length.
+- `.Max(b Vec) Vec` — Max returns the component-wise max of a and b.
+- `.MaxComponent() float64` — MaxComponent returns the largest component.
+- `.Min(b Vec) Vec` — Min returns the component-wise min of a and b.
+- `.MinComponent() float64` — MinComponent returns the smallest component.
+- `.Mul(b Vec) Vec` — Mul returns component-wise a * b.
+- `.MulScalar(b float64) Vec` — MulScalar multiplies each component by b.
+- `.Neg() Vec` — Neg returns -a.
+- `.Normalize() Vec` — Normalize returns the unit vector in the direction of a.
+- `.Raw() v3sdf.Vec` — Raw returns the underlying sdfx v3.Vec.
+- `.Set(i int, val float64)` — Set sets the i-th component (0=X, 1=Y, 2=Z) to val.
+- `.Sin() Vec` — Sin returns the component-wise sine.
+- `.Sub(b Vec) Vec` — Sub returns a - b.
+- `.SubScalar(b float64) Vec` — SubScalar subtracts b from each component.
+- `.ToV3i() v3i.Vec` — ToV3i truncates to integer components.
+
+`v3.VecSet` — VecSet is a slice of Vec.
+
+### v2 — 2D vectors and boxes.
+
+Constants and variables:
+- `v2.Zero` — Zero is the zero vector.
+
+Functions:
+- `v2.FromP2(a p2.Vec) Vec` — FromP2 converts polar to cartesian.
+- `v2.FromSDF(b sdf.Box2) Box` — FromSDF promotes an sdfx Box2 to our Box.
+- `v2.FromSDFLine2(a sdf.Line2) Line2` — FromSDFLine2 promotes an sdfx Line2 to our Line2.
+- `v2.FromSDFTriangle2(a sdf.Triangle2) Triangle2` — FromSDFTriangle2 promotes an sdfx Triangle2 to our Triangle2.
+- `v2.FromV2i(a v2i.Vec) Vec` — FromV2i promotes an integer 2D vector to float64.
+- `v2.NewBox(center, size Vec) Box` — NewBox returns a Box with the given center and size.
+- `v2.X(x float64) Vec` — X returns Vec{X: x}.
+- `v2.XY(x, y float64) Vec` — XY returns Vec{X: x, Y: y}.
+- `v2.Y(y float64) Vec` — Y returns Vec{Y: y}.
+
+`v2.Box` — Box is a 2D axis-aligned bounding box.
+- `.Anchor(x, y int) Vec` — Anchor returns the world-space point on this box for the given unit-square position.
+- `.Center() Vec` — Center returns the center of the box.
+- `.Contains(v Vec) bool` — Contains reports whether v is inside the box.
+- `.Enlarge(v Vec) Box` — Enlarge grows the box by v on each side.
+- `.Equals(b Box, delta float64) bool` — Equals reports whether a and b are within delta of each other.
+- `.Extend(b Box) Box` — Extend returns the bounding box containing both a and b.
+- `.Include(v Vec) Box` — Include returns a box extended to include v.
+- `.Random() Vec` — Random returns a random point inside the box.
+- `.RandomSet(n int) VecSet` — RandomSet returns n random points inside the box.
+- `.SDF() sdf.Box2` — SDF returns the sdfx-compatible representation of the box.
+- `.ScaleAboutCenter(k float64) Box` — ScaleAboutCenter scales the box about its center by k.
+- `.Size() Vec` — Size returns the size of the box.
+- `.Square() Box` — Square returns the smallest square box containing a.
+- `.Translate(v Vec) Box` — Translate returns a translated box.
+- `.Vertices() VecSet` — Vertices returns the four corners of the box.
+
+`v2.Line2` — Line2 is a 2D line segment defined by two endpoints.
+- `.BoundingBox() Box` — BoundingBox returns the axis-aligned bounding box of the line.
+- `.Degenerate(tolerance float64) bool` — Degenerate reports whether the line endpoints are within tolerance.
+- `.Reverse() Line2` — Reverse returns the line with endpoints swapped.
+- `.SDF() sdf.Line2` — SDF returns the sdfx-compatible representation of the line.
+
+`v2.Triangle2` — Triangle2 is a 2D triangle defined by three vertices.
+- `.SDF() sdf.Triangle2` — SDF returns the sdfx-compatible representation of the triangle.
+
+`v2.Vec` — Vec is a 2D vector with X, Y float64 components.
+- `.Abs() Vec` — Abs returns the component-wise absolute value.
+- `.Add(b Vec) Vec` — Add returns a + b.
+- `.AddScalar(b float64) Vec` — AddScalar adds b to each component.
+- `.Ceil() Vec` — Ceil returns the component-wise ceiling.
+- `.Clamp(b, c Vec) Vec` — Clamp clamps each component between b and c.
+- `.Cross(b Vec) float64` — Cross returns the 2D cross product (scalar z-component).
+- `.Div(b Vec) Vec` — Div returns component-wise a / b.
+- `.DivScalar(b float64) Vec` — DivScalar divides each component by b.
+- `.Dot(b Vec) float64` — Dot returns the dot product a · b.
+- `.Equals(b Vec, tolerance float64) bool` — Equals reports whether a and b are within tolerance of each other.
+- `.LTEZero() bool` — LTEZero reports whether all components are ≤ 0.
+- `.LTZero() bool` — LTZero reports whether all components are < 0.
+- `.Length() float64` — Length returns the Euclidean length.
+- `.Length2() float64` — Length2 returns the squared Euclidean length.
+- `.Max(b Vec) Vec` — Max returns the component-wise max of a and b.
+- `.MaxComponent() float64` — MaxComponent returns the largest component.
+- `.Min(b Vec) Vec` — Min returns the component-wise min of a and b.
+- `.MinComponent() float64` — MinComponent returns the smallest component.
+- `.Mul(b Vec) Vec` — Mul returns component-wise a * b.
+- `.MulScalar(b float64) Vec` — MulScalar multiplies each component by b.
+- `.Neg() Vec` — Neg returns -a.
+- `.Normalize() Vec` — Normalize returns the unit vector in the direction of a.
+- `.Raw() v2sdf.Vec` — Raw returns the underlying sdfx v2.Vec.
+- `.Sub(b Vec) Vec` — Sub returns a - b.
+- `.SubScalar(b float64) Vec` — SubScalar subtracts b from each component.
+- `.ToP2() p2.Vec` — ToP2 converts cartesian to polar.
+- `.ToV2i() v2i.Vec` — ToV2i truncates to integer components.
+- `.ToV3(z float64) v3.Vec` — ToV3 extends to 3D with the given Z.
+
+`v2.VecSet` — VecSet is a slice of Vec.
+
+### p2 — Polar 2D points.
+
+Functions:
+- `p2.R(r float64) Vec` — R returns Vec{R: r}.
+- `p2.RT(r, t float64) Vec` — RT returns Vec{R: r, Theta: t}.
+- `p2.T(t float64) Vec` — T returns Vec{Theta: t}.
+
+`p2.Vec` — Vec is a 2D polar vector with R (radius) and Theta (radians) components.
+- `.Raw() p2sdf.Vec` — Raw returns the underlying sdfx p2.Vec.
+
+### v3i — Integer 3D vectors.
+
+Functions:
+- `v3i.X(x int) Vec` — X returns Vec{X: x}.
+- `v3i.XY(x, y int) Vec` — XY returns Vec{X: x, Y: y}.
+- `v3i.XYZ(x, y, z int) Vec` — XYZ returns Vec{X: x, Y: y, Z: z}.
+- `v3i.XZ(x, z int) Vec` — XZ returns Vec{X: x, Z: z}.
+- `v3i.Y(y int) Vec` — Y returns Vec{Y: y}.
+- `v3i.YZ(y, z int) Vec` — YZ returns Vec{Y: y, Z: z}.
+- `v3i.Z(z int) Vec` — Z returns Vec{Z: z}.
+
+`v3i.Vec` — Vec is a 3D integer vector with X, Y, Z int components.
+- `.Add(b Vec) Vec` — Add returns a + b.
+- `.AddScalar(b int) Vec` — AddScalar adds b to each component.
+- `.Raw() v3isdf.Vec` — Raw returns the underlying sdfx v3i.Vec.
+- `.SubScalar(b int) Vec` — SubScalar subtracts b from each component.
+
+### v2i — Integer 2D vectors.
+
+Functions:
+- `v2i.X(x int) Vec` — X returns Vec{X: x}.
+- `v2i.XY(x, y int) Vec` — XY returns Vec{X: x, Y: y}.
+- `v2i.Y(y int) Vec` — Y returns Vec{Y: y}.
+
+`v2i.Vec` — Vec is a 2D integer vector with X, Y int components.
+- `.Add(b Vec) Vec` — Add returns a + b.
+- `.AddScalar(b int) Vec` — AddScalar adds b to each component.
+- `.Raw() v2isdf.Vec` — Raw returns the underlying sdfx v2i.Vec.
+- `.SubScalar(b int) Vec` — SubScalar subtracts b from each component.

@@ -6,10 +6,21 @@
 #   make serve       — local SPA-fallback dev server for the docs site.
 #   make screenshots — regenerate every docs figure via f3d (expensive).
 
-.PHONY: build docs-sync vet test fmt-check screenshots serve install-hooks help
+.PHONY: build docs-sync llms-index llms-check vet test fmt-check screenshots serve install-hooks help
 
-build: docs-sync vet test
+build: docs-sync llms-index vet test llms-check
 	@echo "✓ build clean"
+
+# Regenerate the API index at the bottom of docs/llms.txt from the source,
+# so the agent-facing reference always lists every exported symbol.
+llms-index:
+	@go run ./tools/llms-check -gen
+
+# Fail if docs/llms.txt has fallen behind the code: a stale index, an
+# exported symbol with no doc comment, or a code block naming something
+# that no longer exists.
+llms-check:
+	@go run ./tools/llms-check
 
 # Re-inline tutorial Go source into matching docs/content/*.md code blocks.
 docs-sync:

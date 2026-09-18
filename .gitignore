@@ -19,3 +19,5 @@ testdata/fuzz/
 # Local-only planning / scratch docs. Kept out of git so they don't show
 # up in pkg.go.dev or on the GitHub repo page.
 /meta/
+# Benchmark scratch: generated scorers and model run outputs.
+/bench/_runs/
