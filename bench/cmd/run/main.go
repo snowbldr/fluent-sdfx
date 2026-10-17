@@ -47,6 +47,15 @@ type claudeOut struct {
 	TotalCostUSD float64 `json:"total_cost_usd"`
 	DurationMS   int     `json:"duration_ms"`
 	StopReason   string  `json:"stop_reason"`
+	// ModelUsage is keyed by the model that actually served the call, so the
+	// run records the resolved id (claude-opus-5-…) and not only the alias
+	// the flag was given.
+	ModelUsage map[string]modelUse `json:"modelUsage"`
+}
+
+type modelUse struct {
+	CanonicalModel string  `json:"canonicalModel"`
+	CostUSD        float64 `json:"costUSD"`
 }
 
 type turn struct {
@@ -69,6 +78,86 @@ type taskRun struct {
 	Transcript      []turn       `json:"transcript"`
 	Score           score.Result `json:"score"`
 	Error           string       `json:"error,omitempty"`
+	// Resolved model ids that served each stage, with the cost each incurred.
+	ArchitectModels map[string]float64 `json:"architect_models,omitempty"`
+	BuilderModels   map[string]float64 `json:"builder_models,omitempty"`
+}
+
+// runInfo is written to run.json at the start of a run and again at the
+// end. It is the answer to "which model was this?", which the run name alone
+// has twice failed to give.
+type runInfo struct {
+	Model            string             `json:"model"`
+	ArchitectModel   string             `json:"architect_model,omitempty"`
+	UserModel        string             `json:"user_model"`
+	Tools            string             `json:"tools"`
+	Architect        string             `json:"architect,omitempty"`
+	Ref              string             `json:"ref"`
+	MaxTurns         int                `json:"max_turns"`
+	Jobs             int                `json:"jobs"`
+	Timeout          string             `json:"timeout"`
+	Tasks            []string           `json:"tasks"`
+	ClaudeVersion    string             `json:"claude_version"`
+	FluentSDFXCommit string             `json:"fluent_sdfx_commit"`
+	StartedAt        string             `json:"started_at"`
+	FinishedAt       string             `json:"finished_at,omitempty"`
+	ArchitectModels  map[string]float64 `json:"architect_models,omitempty"`
+	BuilderModels    map[string]float64 `json:"builder_models,omitempty"`
+}
+
+// addModels folds one call's resolved model usage into a per-stage tally.
+func addModels(dst *map[string]float64, out claudeOut) {
+	if *dst == nil {
+		*dst = map[string]float64{}
+	}
+	for id, u := range out.ModelUsage {
+		if u.CanonicalModel != "" {
+			id = u.CanonicalModel
+		}
+		(*dst)[id] += u.CostUSD
+	}
+}
+
+func cmdOutput(dir, name string, args ...string) string {
+	c := exec.Command(name, args...)
+	c.Dir = dir
+	b, err := c.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(b))
+}
+
+func writeRunInfo(rootAbs, outAbs string, names []string, startedAt time.Time, rs []taskRun) {
+	ri := runInfo{
+		Model: *model, ArchitectModel: *archModel, UserModel: *userModel, Tools: *tools,
+		Architect: *architect, Ref: *refDoc, MaxTurns: *maxTurns, Jobs: *jobs, Timeout: callTO.String(),
+		Tasks:            names,
+		ClaudeVersion:    cmdOutput(rootAbs, "claude", "--version"),
+		FluentSDFXCommit: cmdOutput(rootAbs, "git", "rev-parse", "HEAD"),
+		StartedAt:        startedAt.Format(time.RFC3339),
+	}
+	if *architect != "" && ri.ArchitectModel == "" {
+		ri.ArchitectModel = *model
+	}
+	if rs != nil {
+		ri.FinishedAt = time.Now().Format(time.RFC3339)
+		for _, r := range rs {
+			for id, c := range r.ArchitectModels {
+				if ri.ArchitectModels == nil {
+					ri.ArchitectModels = map[string]float64{}
+				}
+				ri.ArchitectModels[id] += c
+			}
+			for id, c := range r.BuilderModels {
+				if ri.BuilderModels == nil {
+					ri.BuilderModels = map[string]float64{}
+				}
+				ri.BuilderModels[id] += c
+			}
+		}
+	}
+	saveJSON(filepath.Join(outAbs, "run.json"), ri)
 }
 
 var (
@@ -116,6 +205,8 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("run: %s\nmodel=%s tools=%s tasks=%d jobs=%d\n\n", outAbs, *model, *tools, len(names), *jobs)
+	startedAt := time.Now()
+	writeRunInfo(rootAbs, outAbs, names, startedAt, nil)
 
 	results := make([]taskRun, len(names))
 	var wg sync.WaitGroup
@@ -134,6 +225,7 @@ func main() {
 	wg.Wait()
 
 	writeSummary(outAbs, results)
+	writeRunInfo(rootAbs, outAbs, names, startedAt, results)
 }
 
 func selectTasks(rootAbs, filter string) []string {
@@ -239,6 +331,7 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 			}
 			archSession = out.SessionID
 			tr.CostUSD += out.TotalCostUSD
+			addModels(&tr.ArchitectModels, out)
 			tr.Transcript = append(tr.Transcript, turn{"architect", out.Result})
 			if q, ok := extractQuestion(out.Result); ok {
 				tr.Questions++
@@ -278,6 +371,7 @@ func runTask(rootAbs, outAbs, name, refText string) taskRun {
 		}
 		sessionID = out.SessionID
 		tr.CostUSD += out.TotalCostUSD
+		addModels(&tr.BuilderModels, out)
 		tr.Transcript = append(tr.Transcript, turn{"model", out.Result})
 		if q, ok := extractQuestion(out.Result); ok {
 			tr.Questions++
@@ -449,6 +543,7 @@ func writeSummary(outAbs string, rs []taskRun) {
 		}
 	}
 	fmt.Fprintf(&b, "# bench run\n\nmodel=%s tools=%s architect=%s tasks=%d\n\n", *model, *tools, arch, len(rs))
+	fmt.Fprintf(&b, "resolved models: %s\n\n", resolvedModels(rs))
 	fmt.Fprintf(&b, "| task | category | stage | iou | max_dev | probes | turns | asked | expected | cost |\n|---|---|---|---|---|---|---|---|---|---|\n")
 	pass, compiled, built := 0, 0, 0
 	var turns, cost float64
@@ -554,4 +649,27 @@ func rescoreRun(rootAbs, runDir string) {
 		}
 	}
 	writeSummary(runAbs, rs)
+}
+
+// resolvedModels renders the model ids that actually served the run, by
+// stage, so summary.md answers the question without opening run.json.
+func resolvedModels(rs []taskRun) string {
+	tally := func(pick func(taskRun) map[string]float64) string {
+		seen := map[string]bool{}
+		for _, r := range rs {
+			for id := range pick(r) {
+				seen[id] = true
+			}
+		}
+		ids := make([]string, 0, len(seen))
+		for id := range seen {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+		if len(ids) == 0 {
+			return "-"
+		}
+		return strings.Join(ids, ", ")
+	}
+	return fmt.Sprintf("architect=%s builder=%s", tally(func(r taskRun) map[string]float64 { return r.ArchitectModels }), tally(func(r taskRun) map[string]float64 { return r.BuilderModels }))
 }

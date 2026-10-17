@@ -140,6 +140,19 @@ comparable with a single-stage run.
 second, which is how you find out whether the translation needs the
 expensive model or only the building does.
 
+## What a run records about itself
+
+Every run writes `run.json` beside `summary.json`: the model flags as
+given, the tool condition, the architect prompt, the task list, the
+`claude` CLI version, the fluent-sdfx commit, and start and finish
+times. Because `-model opus` is an alias, each call's `modelUsage` from
+the CLI is folded in too, so `architect_models` and `builder_models`
+hold the resolved ids (`claude-opus-5-…`) that actually served each
+stage, with the cost each incurred. The same two maps appear per task in
+`result.json`, and `summary.md` prints them on its second line. A run
+whose name says one model and whose `run.json` says another is a run
+whose name is wrong.
+
 ## Comparing runs
 
 ```bash
