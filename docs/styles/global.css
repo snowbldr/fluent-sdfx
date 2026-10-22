@@ -84,7 +84,7 @@ a:hover {
 
 .app {
   display: grid;
-  grid-template-columns: 296px 1fr;
+  grid-template-columns: 296px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -108,6 +108,42 @@ a:hover {
 
 .topbar-spacer {
   flex: 1;
+}
+
+.nav-toggle,
+.topbar-brand,
+.nav-backdrop {
+  display: none;
+}
+
+.nav-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.nav-toggle-bar {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--fg-muted);
+}
+
+.topbar-brand {
+  margin-left: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--fg-strong);
+  border: none !important;
 }
 
 .theme-toggle {
@@ -379,16 +415,18 @@ a:hover {
 
 /* ── Page content ──────────────────────────────────────────────── */
 
+/* Block layout, not flex: the router wraps each page in plain divs, and a
+   flex item's default min-width lets one long code line widen the whole
+   column past the screen. */
 .content {
   flex: 1;
-  display: flex;
-  justify-content: center;
   padding: 0 36px 80px;
+  min-width: 0;
 }
 
 .page {
-  width: 100%;
   max-width: 760px;
+  margin: 0 auto;
 }
 
 .page-eyebrow {
@@ -506,6 +544,8 @@ a:hover {
 
 .markdown table {
   width: 100%;
+  display: block;
+  overflow-x: auto;
   border-collapse: collapse;
   margin: 16px 0;
   font-size: 14px;
@@ -539,6 +579,7 @@ a:hover {
   font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
   font-size: 0.9em;
   color: var(--fg-strong);
+  overflow-wrap: anywhere;
 }
 
 /* ── Code blocks (Prism) ───────────────────────────────────────── */
@@ -549,7 +590,8 @@ a:hover {
   background: var(--bg-code) !important;
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
   box-shadow: var(--shadow);
   padding: 18px 20px !important;
   font-size: 13.5px;
@@ -1154,7 +1196,7 @@ a:hover {
 
 @media (max-width: 1100px) {
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
 
@@ -1165,19 +1207,67 @@ a:hover {
 
 @media (max-width: 900px) {
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* The sidebar becomes a drawer that slides in over the page. */
   .sidebar {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 30;
+    width: min(296px, 85vw);
+    height: 100dvh;
     padding: 20px 18px;
+    transform: translateX(-100%);
+    transition: transform 200ms ease;
+    box-shadow: none;
+  }
+
+  .nav-open .sidebar {
+    transform: none;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .nav-open .nav-backdrop {
+    display: block;
+  }
+
+  .nav-open {
+    overflow: hidden;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .topbar-brand {
+    display: inline;
+  }
+
+  .topbar {
+    padding: 10px 16px;
+  }
+
+  .brand-mark {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sidebar-brand {
+    margin-bottom: 20px;
   }
 
   .content {
-    padding: 0 20px 60px;
+    padding: 0 16px 60px;
   }
 
   .page-title {
@@ -1185,8 +1275,12 @@ a:hover {
   }
 
   .hero {
-    margin: 0 -20px;
-    padding: 36px 20px 16px;
+    margin: 0 -16px;
+    padding: 28px 16px 16px;
+  }
+
+  .hero-grid {
+    margin-bottom: 32px;
   }
 
   .hero-title {
@@ -1194,6 +1288,6 @@ a:hover {
   }
 
   .features {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

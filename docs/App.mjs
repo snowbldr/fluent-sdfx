@@ -1,10 +1,11 @@
 import { div, header, main, span } from '@srfnstack/fntags'
-import { route, routeSwitch, setRootPath } from '@srfnstack/fntags/src/fnroute.mjs'
+import { fnlink, route, routeSwitch, setRootPath } from '@srfnstack/fntags/src/fnroute.mjs'
 import { allPages } from './nav.mjs'
 import { BASE } from './constants.mjs'
 import { Sidebar } from './components/Sidebar.mjs'
 import { ThemeToggle } from './components/ThemeToggle.mjs'
 import { PageView } from './components/PageView.mjs'
+import { NavToggle, NavBackdrop, navOpen } from './components/NavToggle.mjs'
 
 // fnroute initialises rootPath from window.location.pathname, which on a
 // deep link makes everything relative to that — collapsing all our routes
@@ -28,10 +29,13 @@ routes.push(
 )
 
 export const App = () =>
-  div({ class: 'app' },
+  div({ class: navOpen.bindAttr(() => navOpen() ? 'app nav-open' : 'app') },
     Sidebar(),
+    NavBackdrop(),
     div({ class: 'main-col' },
       header({ class: 'topbar' },
+        NavToggle(),
+        fnlink({ to: '/', class: 'topbar-brand' }, 'fluent-sdfx'),
         div({ class: 'topbar-spacer' }),
         ThemeToggle()
       ),
