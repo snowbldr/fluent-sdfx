@@ -1,12 +1,12 @@
 # fluent-sdfx project Makefile.
 #
 # Conventions:
-#   make build       — sync docs from tutorial code, vet, test (the main check).
-#   make install-hooks — install git hooks that auto-run `make build` on commit.
-#   make serve       — local SPA-fallback dev server for the docs site.
-#   make screenshots — regenerate every docs figure via f3d (expensive).
+#   make build: sync docs from tutorial code, vet, test (the main check).
+#   make install-hooks: install git hooks that auto-run `make build` on commit.
+#   make serve: local SPA-fallback dev server for the docs site.
+#   make screenshots: regenerate every docs figure via f3d (expensive).
 
-.PHONY: build docs-sync llms-index llms-check vet test fmt-check screenshots serve install-hooks install-skill help
+.PHONY: build docs-sync llms-index llms-check vet test fmt-check screenshots serve sculpt install-hooks install-skill help
 
 build: docs-sync llms-index vet test llms-check
 	@echo "✓ build clean"
@@ -38,7 +38,7 @@ fmt-check:
 		echo "gofmt issues:"; echo "$$unformatted"; exit 1; \
 	fi
 
-# Regenerate every docs/images/<page>-<step>.png via f3d. Expensive — runs
+# Regenerate every docs/images/<page>-<step>.png via f3d. Expensive: runs
 # every tutorial step's `go run` and a headless f3d render. Not part of
 # `make build`; invoke manually when tutorial code or output changes
 # meaningfully.
@@ -49,19 +49,25 @@ screenshots:
 serve:
 	@./tools/serve.py
 
+# Sculpt test loop: a browser view on :7175 where dragging pulls the
+# surface and every pull is a step in sculpt.yaml.
+sculpt:
+	@go run ./tools/sculptui -file sculpt.yaml
+
 install-hooks:
 	@./tools/install-hooks.sh
 
 help:
 	@echo "Targets:"
-	@echo "  build         — docs-sync + vet + test"
-	@echo "  docs-sync     — re-inline tutorial Go source into docs/content/*.md"
-	@echo "  vet           — go vet ./..."
-	@echo "  test          — go test ./..."
-	@echo "  fmt-check     — gofmt -l . (zero output = clean)"
-	@echo "  screenshots   — regenerate every docs figure via f3d"
-	@echo "  serve         — local SPA-fallback dev server on :7174"
-	@echo "  install-hooks — install git pre-commit hook"
+	@echo "  build: docs-sync + vet + test"
+	@echo "  docs-sync: re-inline tutorial Go source into docs/content/*.md"
+	@echo "  vet: go vet ./..."
+	@echo "  test: go test ./..."
+	@echo "  fmt-check: gofmt -l . (zero output = clean)"
+	@echo "  screenshots: regenerate every docs figure via f3d"
+	@echo "  serve: local SPA-fallback dev server on :7174"
+	@echo "  sculpt: sculpt test loop on :7175, history in sculpt.yaml"
+	@echo "  install-hooks: install git pre-commit hook"
 
 # Install the fluent-sdfx Claude Code skill for the current user, so any
 # project that uses the library gets the intake, reference and verification

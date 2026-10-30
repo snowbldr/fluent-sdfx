@@ -21,3 +21,5 @@ testdata/fuzz/
 /meta/
 # Benchmark scratch: generated scorers and model run outputs.
 /bench/_runs/
+# Sculpt test loop history (make sculpt).
+/sculpt.yaml

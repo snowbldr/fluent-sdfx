@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sculpt test loop</title>
+<style>
+  :root {
+    --bg: #0a0b0f; --panel: #11131a; --fg: #e6e7ee; --muted: #8d90a0; --faint: #5a5d6c;
+    --accent: #7c9bff; --border: #1d2030; --border-strong: #2a2e44; --warn: #ffb86b; --bad: #ff7b7b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
+  #view { position: relative; min-width: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #hud { position: absolute; left: 14px; bottom: 12px; color: var(--muted); font-size: 12px;
+    font-family: ui-monospace, monospace; pointer-events: none; }
+  #hint { position: absolute; left: 14px; top: 12px; color: var(--muted); font-size: 12.5px;
+    pointer-events: none; max-width: 520px; }
+  #hint kbd { font-family: ui-monospace, monospace; font-size: 11px; border: 1px solid var(--border-strong);
+    border-radius: 4px; padding: 0 4px; color: var(--fg); }
+  aside { background: var(--panel); border-left: 1px solid var(--border); padding: 16px;
+    overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint);
+    margin: 0 0 8px; font-weight: 600; }
+  label { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  input[type=range] { flex: 1; accent-color: var(--accent); }
+  .val { font-family: ui-monospace, monospace; color: var(--fg); min-width: 52px; text-align: right; }
+  select, button { background: var(--bg); color: var(--fg); border: 1px solid var(--border-strong);
+    border-radius: 6px; padding: 5px 9px; font: inherit; cursor: pointer; }
+  button:hover, select:hover { border-color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 6px; align-items: center;
+    padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
+  li .desc { font-family: ui-monospace, monospace; color: var(--fg); overflow-wrap: anywhere; }
+  li.off .desc { color: var(--faint); text-decoration: line-through; }
+  li.bad { border-color: var(--bad); }
+  li.blocked .desc { color: var(--faint); }
+  li .err { grid-column: 2 / 4; color: var(--bad); font-size: 11.5px; }
+  li button { padding: 1px 7px; font-size: 12px; }
+  .empty { color: var(--faint); font-size: 12.5px; }
+  #file { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  #loadErr { color: var(--warn); font-size: 12px; white-space: pre-wrap; }
+  @media (max-width: 760px) {
+    body { grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; }
+    aside { border-left: none; border-top: 1px solid var(--border); }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="view">
+  <div id="hint">Drag on the surface to pull it out, drag down to push it in.
+    <kbd>Shift</kbd>-drag pulls sideways in the screen plane.
+    Drag off the form to orbit, scroll to zoom. <kbd>Ctrl/⌘ Z</kbd> undoes the last step.</div>
+  <div id="hud"></div>
+</div>
+<aside>
+  <section>
+    <h2>Brush</h2>
+    <label>radius <input id="radius" type="range" min="2" max="16" step="0.5" value="7"><span class="val" id="radiusVal"></span></label>
+    <label style="margin-top:6px"><input id="mirror" type="checkbox" checked> mirror across X (left and right together)</label>
+  </section>
+  <section>
+    <h2>Base form</h2>
+    <div class="row">
+      <select id="base"><option>figure</option><option>sphere</option><option>box</option></select>
+      <button id="clear">Clear steps</button>
+    </div>
+  </section>
+  <section>
+    <h2>History</h2>
+    <ol id="steps"></ol>
+  </section>
+  <section>
+    <h2>File</h2>
+    <div id="file"></div>
+    <div id="loadErr"></div>
+  </section>
+</aside>
+
+<script type="module">
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
+
+// Fold limit of sculpt.Pull is 0.65 × radius; stay just under it.
+const MAX_PULL = 0.6
+
+const view = document.getElementById('view')
+const hud = document.getElementById('hud')
+const radiusInput = document.getElementById('radius')
+const radiusVal = document.getElementById('radiusVal')
+const mirrorInput = document.getElementById('mirror')
+
+// ── Scene ────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.setPixelRatio(window.devicePixelRatio)
+view.appendChild(renderer.domElement)
+const scene = new THREE.Scene()
+scene.background = new THREE.Color(0x0a0b0f)
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000)
+camera.up.set(0, 0, 1)
+camera.position.set(-45, -80, 40)
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.target.set(0, 0, 6)
+controls.enableDamping = true
+controls.update()
+
+scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x20222c, 1.1))
+const key = new THREE.DirectionalLight(0xffffff, 1.6)
+key.position.set(-40, -60, 80)
+scene.add(key)
+const rim = new THREE.DirectionalLight(0x7c9bff, 0.6)
+rim.position.set(50, 60, 20)
+scene.add(rim)
+const grid = new THREE.GridHelper(80, 16, 0x2a2e44, 0x1d2030)
+grid.rotation.x = Math.PI / 2
+grid.position.z = -12
+scene.add(grid)
+
+const material = new THREE.MeshStandardMaterial({ color: 0xb8c4e8, roughness: 0.55, metalness: 0.05 })
+const form = new THREE.Mesh(new THREE.BufferGeometry(), material)
+scene.add(form)
+
+// The brush: a ring on the surface showing the radius, and the pull arrow.
+const ring = new THREE.Mesh(
+  new THREE.RingGeometry(0.96, 1, 64),
+  new THREE.MeshBasicMaterial({ color: 0x7c9bff, side: THREE.DoubleSide, transparent: true, opacity: 0.9, depthTest: false })
+)
+ring.renderOrder = 2
+ring.visible = false
+scene.add(ring)
+const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 1, 0xffb86b, 1, 0.6)
+arrow.visible = false
+arrow.line.material.depthTest = false
+arrow.cone.material.depthTest = false
+arrow.renderOrder = 3
+scene.add(arrow)
+const marker = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0xffb86b, depthTest: false }))
+marker.renderOrder = 3
+marker.visible = false
+scene.add(marker)
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight
+  renderer.setSize(w, h, false)
+  camera.aspect = w / h
+  camera.updateProjectionMatrix()
+}
+new ResizeObserver(resize).observe(view)
+resize()
+
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera) })
+
+// ── Server ───────────────────────────────────────────────────────────
+let state = { version: -1, history: { base: 'figure', steps: [] } }
+let lastInfo = {}
+
+function setMesh(buf) {
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf), 3))
+  const merged = mergeVertices(g, 1e-4)
+  merged.computeVertexNormals()
+  form.geometry.dispose()
+  form.geometry = merged
+  form.geometry.computeBoundsTree?.()
+}
+
+async function fetchMesh(res, info) {
+  const buf = await res.arrayBuffer()
+  info = JSON.parse(res.headers.get('X-Mesh-Info') || '{}')
+  if (buf.byteLength) setMesh(buf)
+  lastInfo = info
+  showHud()
+  return info
+}
+
+function showHud(extra = '') {
+  const i = lastInfo
+  hud.textContent = `${i.triangles ?? 0} triangles · ${i.millis ?? 0} ms` + (extra ? ` · ${extra}` : '') +
+    (i.error ? ` · ${i.error}` : '')
+}
+
+async function loadState() {
+  const s = await (await fetch('/api/state')).json()
+  const changed = s.version !== state.version
+  state = s
+  renderPanel()
+  if (changed) await fetchMesh(await fetch('/api/mesh'))
+  renderPanel()
+}
+
+async function post(url, body, method = 'POST') {
+  const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) })
+  if (!res.ok) { hud.textContent = await res.text(); return }
+  state = await res.json()
+  renderPanel()
+  await fetchMesh(await fetch('/api/mesh'))
+  renderPanel()
+}
+
+// A hand edit, or anything else writing the file, shows up here.
+setInterval(async () => {
+  if (dragging) return
+  const s = await (await fetch('/api/state')).json()
+  if (s.version !== state.version) loadState()
+}, 1000)
+
+// ── Panel ────────────────────────────────────────────────────────────
+const fmt = v => v.map(x => (Math.round(x * 10) / 10).toString()).join(', ')
+
+function renderPanel() {
+  document.getElementById('base').value = state.history.base
+  document.getElementById('file').textContent = state.file || ''
+  document.getElementById('loadErr').textContent = state.loadErr ? 'The file does not parse; showing the last good version.\n' + state.loadErr : ''
+  const ol = document.getElementById('steps')
+  ol.replaceChildren()
+  const steps = state.history.steps || []
+  if (!steps.length) {
+    const p = document.createElement('div')
+    p.className = 'empty'
+    p.textContent = 'No steps yet. Drag on the form.'
+    ol.append(p)
+    return
+  }
+  const bad = lastInfo.stepError?.index
+  steps.forEach((st, i) => {
+    const li = document.createElement('li')
+    if (st.off) li.classList.add('off')
+    if (bad === i) li.classList.add('bad')
+    if (bad !== undefined && i > bad) li.classList.add('blocked')
+    const on = document.createElement('input')
+    on.type = 'checkbox'
+    on.checked = !st.off
+    on.title = 'Turn this step off without deleting it'
+    on.onchange = () => post(`/api/steps/${i}/toggle`)
+    const desc = document.createElement('span')
+    desc.className = 'desc'
+    desc.textContent = `${i + 1}. ${st.op} at (${fmt(st.at)}) by (${fmt(st.by)}) r ${st.radius}`
+    const del = document.createElement('button')
+    del.textContent = '×'
+    del.title = 'Delete this step'
+    del.onclick = () => post(`/api/steps/${i}`, null, 'DELETE')
+    li.append(on, desc, del)
+    if (bad === i) {
+      const e = document.createElement('div')
+      e.className = 'err'
+      e.textContent = lastInfo.stepError.msg.replace(/\.?$/, '.') + ' The steps after it are not applied.'
+      li.append(e)
+    }
+    li.onmouseenter = () => { marker.position.set(...st.at); marker.visible = true }
+    li.onmouseleave = () => { marker.visible = false }
+    ol.append(li)
+  })
+}
+
+document.getElementById('base').onchange = e => post('/api/base', { base: e.target.value, clear: false })
+document.getElementById('clear').onclick = () => post('/api/base', { base: state.history.base, clear: true })
+radiusInput.oninput = () => { radiusVal.textContent = radiusInput.value + ' mm'; ring.scale.setScalar(+radiusInput.value) }
+radiusInput.oninput()
+window.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); post('/api/undo') }
+})
+
+// ── Picking and the pull gesture ─────────────────────────────────────
+const raycaster = new THREE.Raycaster()
+const ndc = new THREE.Vector2()
+
+function hitAt(ev) {
+  const r = renderer.domElement.getBoundingClientRect()
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1)
+  raycaster.setFromCamera(ndc, camera)
+  const hit = raycaster.intersectObject(form)[0]
+  if (!hit) return null
+  const n = hit.face.normal.clone().transformDirection(form.matrixWorld).normalize()
+  return { point: hit.point.clone(), normal: n }
+}
+
+function placeRing(p, n) {
+  ring.position.copy(p).addScaledVector(n, 0.05)
+  ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n)
+  ring.visible = true
+}
+
+let dragging = null
+let inFlight = false, queued = null
+
+function pullSteps(d) {
+  const radius = +radiusInput.value
+  const at = d.point.toArray(), by = d.by.toArray()
+  const steps = [{ op: 'pull', at, by, radius }]
+  // The mirror copy, unless the pull is on the mirror plane itself.
+  if (mirrorInput.checked && Math.abs(at[0]) > radius * 0.25) {
+    steps.push({ op: 'pull', at: [-at[0], at[1], at[2]], by: [-by[0], by[1], by[2]], radius })
+  }
+  return steps
+}
+
+async function preview(steps) {
+  if (inFlight) { queued = steps; return }
+  inFlight = true
+  try {
+    const res = await fetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(steps) })
+    if (dragging) await fetchMesh(res)
+  } finally {
+    inFlight = false
+    if (queued && dragging) { const q = queued; queued = null; preview(q) }
+  }
+}
+
+const el = renderer.domElement
+el.addEventListener('pointermove', ev => {
+  if (dragging) return
+  const h = hitAt(ev)
+  if (h) placeRing(h.point, h.normal)
+  else ring.visible = false
+})
+
+el.addEventListener('pointerdown', ev => {
+  if (ev.button !== 0) return
+  const h = hitAt(ev)
+  if (!h) return // empty space: let the orbit controls have it
+  controls.enabled = false
+  el.setPointerCapture(ev.pointerId)
+  // World size of one screen pixel at the grabbed point, for the drag scale.
+  const dist = camera.position.distanceTo(h.point)
+  const pxWorld = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / el.clientHeight
+  const viewDir = new THREE.Vector3()
+  camera.getWorldDirection(viewDir)
+  dragging = {
+    point: h.point, normal: h.normal, startY: ev.clientY, pxWorld,
+    plane: new THREE.Plane().setFromNormalAndCoplanarPoint(viewDir, h.point),
+    by: new THREE.Vector3()
+  }
+  placeRing(h.point, h.normal)
+})
+
+el.addEventListener('pointermove', ev => {
+  const d = dragging
+  if (!d) return
+  const radius = +radiusInput.value
+  if (ev.shiftKey) {
+    // Sideways: wherever the cursor is, on the plane facing the camera.
+    const r = el.getBoundingClientRect()
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1)
+    raycaster.setFromCamera(ndc, camera)
+    const p = new THREE.Vector3()
+    if (raycaster.ray.intersectPlane(d.plane, p)) d.by.copy(p).sub(d.point)
+  } else {
+    // Out along the surface normal: drag up to pull, down to push.
+    d.by.copy(d.normal).multiplyScalar((d.startY - ev.clientY) * d.pxWorld)
+  }
+  const max = MAX_PULL * radius
+  if (d.by.length() > max) d.by.setLength(max)
+  const len = d.by.length()
+  arrow.visible = len > 0.05
+  if (arrow.visible) {
+    arrow.position.copy(d.point)
+    arrow.setDirection(d.by.clone().normalize())
+    arrow.setLength(len, Math.min(1.2, len * 0.4), Math.min(0.8, len * 0.3))
+  }
+  showHud(`pull ${len.toFixed(1)} mm of ${max.toFixed(1)}`)
+  if (len > 0.05) preview(pullSteps(d))
+})
+
+async function endDrag(ev) {
+  const d = dragging
+  if (!d) return
+  dragging = null
+  queued = null
+  controls.enabled = true
+  arrow.visible = false
+  if (d.by.length() > 0.05) await post('/api/steps', pullSteps(d))
+  else await fetchMesh(await fetch('/api/mesh'))
+}
+el.addEventListener('pointerup', endDrag)
+el.addEventListener('pointercancel', endDrag)
+
+loadState()
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# SDF CAD — framework build plan
+# SDF CAD: framework build plan
 
 The framework changes that have to exist before a UI can be built on
 fluent-sdfx: a sculpting kernel, anchors, a data history that runs by
@@ -46,7 +46,7 @@ open library underneath that an AI can also drive.
   A grid is recomputable from a prefix of the history and is discarded
   when that prefix changes.
 
-## Phase 1 — Sculpt kernel (`sculpt/`, exists; extend)
+## Phase 1: Sculpt kernel (`sculpt/`, exists; extend)
 
 What exists: `Pull`, `Grid` with `Sample`, `Redistance`, `Fill`,
 `Enclosed`, `Components`, `Keep`, `Smooth`, `Volume`, `Solid`. Redistance
@@ -97,7 +97,7 @@ Not a public interchange format.
 - One new verb (local smooth or flatten) landed through the full loop:
   words, code, scenario test.
 
-## Phase 2 — Anchors
+## Phase 2: Anchors
 
 Anchors are what make a reflow land in the right place rather than at the
 same coordinates. Three kinds.
@@ -155,7 +155,7 @@ A named anchor defined by any of the above and stored in the history.
   still sits flush. Asserted by probes after the reflow.
 - A scenario where a ray anchor misses and the step reports it.
 
-## Phase 3 — History runtime
+## Phase 3: History runtime
 
 The DSL. A package that parses a history, evaluates it against the
 library by reflection, caches, reports per-step errors, and exports Go.
@@ -268,7 +268,7 @@ also what the bench and an AI will call.
 - The Go export compiles and is congruent.
 - A registered function appears in the palette description and runs.
 
-## Phase 4 — Materials
+## Phase 4: Materials
 
 - A material field: a wrapper that evaluates distance and a material id
   together. Rules: union takes the nearer child's material; cut and
@@ -277,7 +277,7 @@ also what the bench and an AI will call.
 - A material channel on `Grid` next to the distance samples, so baked
   forms keep paint.
 - Paint ops: assign a material to a step, or to a region (a ball, a
-  box, a falloff) — the Dreams colour edit.
+  box, a falloff), which is the Dreams colour edit.
 - Export: 3MF with per-triangle material and colour (the mesh writer
   needs a colour path; today it writes geometry only). Per-material STL
   split for printers that want one file per filament.
@@ -285,7 +285,7 @@ also what the bench and an AI will call.
   both materials assigned; a blended seam has a soft boundary of the
   expected width.
 
-## Phase 5 — Render backends
+## Phase 5: Render backends
 
 ### 5.1 Turnaround renders (first, cheap, needed by the AI loop)
 
@@ -313,7 +313,7 @@ judged before any UI exists, and how an AI looks at its own work.
 - Go: a CPU path tracer for headless final frames and docs figures.
   Parallel, slow, fine.
 
-## Phase 6 — Sparse grid
+## Phase 6: Sparse grid
 
 The one real engineering project, and gated on need: start it when a
 test piece needs detail beyond what a 256-cell dense grid gives.
@@ -365,13 +365,29 @@ So the follow-up plan has a fixed surface to build against:
 - Any change to `docs/llms.txt` or the bench until the verbs have been
   used on a real piece and the names are settled.
 
-## Open decisions for the owner
+## Decisions (owner, 2026-10-29)
 
-1. Names: the package for the history runtime, the YAML keys, the brush
-   verbs. Everything above is placeholder.
-2. Where the history runtime lives: inside this module or a sibling
-   module that imports it. A sibling keeps the library small; inside
-   keeps one `go test ./...`.
-3. Whether the Go export is a feature or the save format. This plan says
-   feature, with YAML as the format, for the round-trip reason.
-4. When to start the sparse grid.
+The owner accepted the suggestions on all four open questions.
+
+1. Names: the placeholders stand for now (`sculpt`, the verb names, the
+   YAML keys in 3.1). They change only by the owner's call.
+2. The history runtime lives inside this module, next to `sculpt/` and
+   `tools/sculptui`, so one `go test ./...` covers everything. A sibling
+   module stays possible later if the library's dependency list matters.
+3. YAML is the save format. The Go export is a feature, for the
+   round-trip reason in 3.4.
+4. The sparse grid (Phase 6) starts when a real piece needs detail beyond
+   a 256-cell dense grid, not before.
+
+## First UI test loop (built 2026-10-29)
+
+`tools/sculptui` (`make sculpt`) is the smallest loop from the UI
+discussion, built ahead of Phase 3 to test whether the way of working
+feels right. A local Go server holds a YAML history (a base form plus
+pull steps), rebuilds and meshes on every change, and serves a three.js
+page. Dragging on the surface pulls along the normal with a live preview;
+shift-drag pulls in the screen plane; a mirror toggle adds the X-mirrored
+step. Steps can be turned off or deleted and the form reflows; a hand edit
+to the file reloads the view within a second; a step that fails is shown
+in red and the steps after it are skipped. It knows one operation and
+three base forms, and it is where the Phase 3 runtime will plug in.
