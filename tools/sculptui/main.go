@@ -118,6 +118,7 @@ func main() {
 	mux.HandleFunc("GET /api/mesh", s.handleMesh)
 	mux.HandleFunc("POST /api/preview", s.handlePreview)
 	mux.HandleFunc("POST /api/steps", s.handleAdd)
+	mux.HandleFunc("PUT /api/steps/{i}", s.handleEdit)
 	mux.HandleFunc("POST /api/steps/{i}/toggle", s.handleToggle)
 	mux.HandleFunc("DELETE /api/steps/{i}", s.handleDelete)
 	mux.HandleFunc("POST /api/undo", s.handleUndo)
@@ -213,21 +214,52 @@ func (s *server) handleMesh(w http.ResponseWriter, _ *http.Request) {
 	writeMesh(w, s.meshBytes, s.meshInfo, v)
 }
 
-// handlePreview builds the history plus the steps in flight, unsaved, at
-// preview resolution: the live view while a drag is under way.
+// handlePreview builds an unsaved variant of the history at preview
+// resolution: the live view while a drag is under way or a step's form is
+// being edited. The body is the full step list to show. Everything before
+// the first step that differs from the committed history is unchanged, so
+// it is baked once and every later preview of the same edit starts there.
 func (s *server) handlePreview(w http.ResponseWriter, r *http.Request) {
-	var extra []Step
-	if err := json.NewDecoder(r.Body).Decode(&extra); err != nil {
+	var req struct {
+		Steps []Step `json:"steps"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	s.mu.Lock()
-	h := s.hist
-	h.Steps = append(append([]Step(nil), s.hist.Steps...), extra...)
+	committed := s.hist
 	v := s.version
 	s.mu.Unlock()
+	h := History{Base: committed.Base, Steps: req.Steps}
+	if s.bakeCells > 0 {
+		same := 0
+		for same < len(h.Steps) && same < len(committed.Steps) && h.Steps[same].equal(committed.Steps[same]) {
+			same++
+		}
+		if same < len(h.Steps) && s.coverage(h) < same {
+			s.bakeFor(History{Base: committed.Base, Steps: committed.Steps[:same]})
+		}
+	}
 	b, info := s.meshOf(h, s.previewCells)
 	writeMesh(w, b, info, v)
+}
+
+// handleEdit replaces one step with the one in the body.
+func (s *server) handleEdit(w http.ResponseWriter, r *http.Request) {
+	i, err := strconv.Atoi(r.PathValue("i"))
+	var st Step
+	if derr := json.NewDecoder(r.Body).Decode(&st); derr != nil {
+		http.Error(w, derr.Error(), http.StatusBadRequest)
+		return
+	}
+	s.commit(w, func(h *History) error {
+		if err != nil || i < 0 || i >= len(h.Steps) {
+			return fmt.Errorf("no step %s", r.PathValue("i"))
+		}
+		h.Steps[i] = st
+		return nil
+	})
 }
 
 func (s *server) handleAdd(w http.ResponseWriter, r *http.Request) {
@@ -346,6 +378,19 @@ func (s *server) bakeFor(h History) *bake {
 		s.bakeMu.Unlock()
 		<-wait // someone else is building it; take theirs
 	}
+}
+
+// coverage is how many of h's steps the best kept bake already holds.
+func (s *server) coverage(h History) int {
+	s.bakeMu.Lock()
+	defer s.bakeMu.Unlock()
+	n := -1
+	for _, b := range s.bakes {
+		if h.samePrefix(b.hist) && len(b.hist.Steps) > n {
+			n = len(b.hist.Steps)
+		}
+	}
+	return n
 }
 
 // solidOf evaluates h from the kept bake that covers the most of it, then

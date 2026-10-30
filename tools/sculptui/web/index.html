@@ -31,6 +31,7 @@
   select, button { background: var(--bg); color: var(--fg); border: 1px solid var(--border-strong);
     border-radius: 6px; padding: 5px 9px; font: inherit; cursor: pointer; }
   button:hover, select:hover { border-color: var(--accent); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
   li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 6px; align-items: center;
@@ -42,6 +43,22 @@
   li .err { grid-column: 2 / 4; color: var(--bad); font-size: 11.5px; }
   li button { padding: 1px 7px; font-size: 12px; }
   .empty { color: var(--faint); font-size: 12.5px; }
+  li.editing { border-color: var(--accent); }
+  .edit { grid-column: 1 / 4; display: grid; grid-template-columns: 52px repeat(3, minmax(0, 1fr)); gap: 6px 6px;
+    align-items: center; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .edit .lbl { color: var(--muted); font-size: 12px; }
+  .edit input[type=number] { width: 100%; min-width: 0; background: var(--bg); color: var(--fg);
+    border: 1px solid var(--border-strong); border-radius: 5px; padding: 3px 5px;
+    font: 12px ui-monospace, monospace; }
+  .edit input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .edit input[type=range] { grid-column: 2 / 5; }
+  .edit .wide { grid-column: 2 / 5; display: flex; gap: 6px; align-items: center; }
+  .edit .wide input[type=range] { flex: 1; }
+  .edit .wide .val { min-width: 60px; font-size: 12px; }
+  .edit .actions { grid-column: 1 / 5; display: flex; gap: 8px; justify-content: flex-end; }
+  .edit .actions .primary { background: var(--accent); border-color: var(--accent); color: #0a0b0f; font-weight: 600; }
+  .edit .msg { grid-column: 1 / 5; color: var(--bad); font-size: 11.5px; min-height: 0; }
+  .edit .tip { grid-column: 1 / 5; color: var(--faint); font-size: 11px; }
   #file { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
   #loadErr { color: var(--warn); font-size: 12px; white-space: pre-wrap; }
   @media (max-width: 760px) {
@@ -216,10 +233,19 @@ async function post(url, body, method = 'POST') {
 }
 
 // A hand edit, or anything else writing the file, shows up here.
+// If the server is down (restarted, say), say so and pick up again when it
+// is back.
+let offline = false
 setInterval(async () => {
-  if (dragging) return
-  const s = await (await fetch('/api/state')).json()
-  if (s.version !== state.version) loadState()
+  if (dragging || editing) return
+  try {
+    const s = await (await fetch('/api/state')).json()
+    if (offline) { offline = false; showHud() }
+    if (s.version !== state.version) loadState()
+  } catch {
+    offline = true
+    hud.textContent = 'server not reachable; start it with make sculpt'
+  }
 }, 1000)
 
 // ── Panel ────────────────────────────────────────────────────────────
@@ -257,17 +283,203 @@ function renderPanel() {
     del.textContent = '×'
     del.title = 'Delete this step'
     del.onclick = () => post(`/api/steps/${i}`, null, 'DELETE')
-    li.append(on, desc, del)
+    const edit = document.createElement('button')
+    edit.textContent = 'edit'
+    edit.title = 'Change this step\'s numbers and watch the form update'
+    edit.onclick = () => openEdit(i)
+    const btns = document.createElement('span')
+    btns.style.display = 'flex'
+    btns.style.gap = '4px'
+    btns.append(edit, del)
+    li.append(on, desc, btns)
+    if (editing?.index === i) {
+      li.classList.add('editing')
+      li.append(editForm(i))
+    }
     if (bad === i) {
       const e = document.createElement('div')
       e.className = 'err'
       e.textContent = lastInfo.stepError.msg.replace(/\.?$/, '.') + ' The steps after it are not applied.'
       li.append(e)
     }
-    li.onmouseenter = () => { marker.position.set(...st.at); marker.visible = true }
-    li.onmouseleave = () => { marker.visible = false }
+    li.onmouseenter = () => { if (!editing) { marker.position.set(...st.at); marker.visible = true } }
+    li.onmouseleave = () => { if (!editing) marker.visible = false }
     ol.append(li)
   })
+}
+
+// ── Step editor ──────────────────────────────────────────────────────
+// One step at a time opens a form under its row. Every change previews the
+// whole history with that step replaced, unsaved, and shows where the pull
+// grabs and where it goes. Save writes it to the file; Cancel puts the
+// form back as it was.
+let editing = null // { index, step, original }
+
+function openEdit(i) {
+  const st = state.history.steps[i]
+  editing = { index: i, step: structuredClone(st), original: st }
+  renderPanel()
+  showEditGizmo()
+  previewEdit()
+}
+
+function closeEdit() {
+  editing = null
+  marker.visible = false
+  arrow.visible = false
+}
+
+async function saveEdit() {
+  // A step that fails cannot be saved from the form; the message says why.
+  if (!editing || document.querySelector('.edit .primary')?.disabled) return
+  const { index, step } = editing
+  closeEdit()
+  await post(`/api/steps/${index}`, step, 'PUT')
+}
+
+async function cancelEdit() {
+  closeEdit()
+  renderPanel()
+  await fetchMesh(await fetch('/api/mesh'))
+}
+
+function previewEdit() {
+  const steps = state.history.steps.slice()
+  steps[editing.index] = editing.step
+  preview(steps)
+}
+
+function showEditGizmo() {
+  const st = editing.step
+  marker.position.set(...st.at)
+  marker.visible = true
+  const by = new THREE.Vector3(...st.by)
+  const len = by.length()
+  arrow.visible = len > 0.05
+  if (arrow.visible) {
+    arrow.position.set(...st.at)
+    arrow.setDirection(by.clone().normalize())
+    arrow.setLength(len, Math.min(1.2, len * 0.4), Math.min(0.8, len * 0.3))
+  }
+}
+
+// A number field that previews on every change.
+function numberField(get, set, step) {
+  const input = document.createElement('input')
+  input.type = 'number'
+  input.step = step
+  const sync = () => { input.value = (Math.round(get() * 100) / 100).toString() }
+  sync()
+  input.oninput = () => { if (input.value !== '' && !isNaN(+input.value)) { set(+input.value); changed() } }
+  input.onkeydown = e => {
+    if (e.key === 'Enter') saveEdit()
+    if (e.key === 'Escape') cancelEdit()
+    // Shift with an arrow nudges by a whole millimetre; the browser's own
+    // arrow handling does the 0.1 steps.
+    if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault()
+      input.value = (+input.value + (e.key === 'ArrowUp' ? 1 : -1)).toFixed(2)
+      input.oninput()
+    }
+  }
+  input.sync = sync
+  return input
+}
+
+function label(text) {
+  const lbl = document.createElement('span')
+  lbl.className = 'lbl'
+  lbl.textContent = text
+  return lbl
+}
+
+let refreshEditFields = () => {}
+
+function changed() {
+  refreshEditFields()
+  showEditGizmo()
+  previewEdit()
+}
+
+function editForm(i) {
+  const st = editing.step
+  const box = document.createElement('div')
+  box.className = 'edit'
+  const fields = []
+  const vecRow = (name, key) => {
+    const row = [0, 1, 2].map(c => {
+      const input = numberField(() => st[key][c], v => { st[key][c] = v }, 0.1)
+      const f = { input }
+      fields.push(f)
+      return f
+    })
+    box.append(label(name), ...row.map(f => f.input))
+  }
+  vecRow('at', 'at')
+  vecRow('by', 'by')
+
+  // Radius: a slider and a number.
+  const radiusRow = document.createElement('div')
+  radiusRow.className = 'wide'
+  const rSlider = document.createElement('input')
+  rSlider.type = 'range'; rSlider.min = 1; rSlider.max = 20; rSlider.step = 0.1
+  const rVal = document.createElement('span'); rVal.className = 'val'
+  rSlider.oninput = () => { st.radius = +rSlider.value; changed() }
+  radiusRow.append(rSlider, rVal)
+  box.append(label('radius'), radiusRow)
+
+  // Pull length: scales `by` keeping its direction, up to the fold limit.
+  const lenRow = document.createElement('div')
+  lenRow.className = 'wide'
+  const lSlider = document.createElement('input')
+  lSlider.type = 'range'; lSlider.min = 0; lSlider.step = 0.05
+  const lVal = document.createElement('span'); lVal.className = 'val'
+  lSlider.oninput = () => {
+    const v = new THREE.Vector3(...st.by)
+    if (v.length() < 1e-6) v.set(0, 0, 1)
+    v.setLength(+lSlider.value)
+    st.by = v.toArray()
+    changed()
+  }
+  lenRow.append(lSlider, lVal)
+  box.append(label('length'), lenRow)
+
+  const msg = document.createElement('div')
+  msg.className = 'msg'
+  box.append(msg)
+
+  const tip = document.createElement('div')
+  tip.className = 'tip'
+  tip.textContent = 'x, y, z in mm. Arrow keys nudge a number by 0.1, Shift+arrow by 1. Enter saves, Escape cancels.'
+  box.append(tip)
+
+  const actions = document.createElement('div')
+  actions.className = 'actions'
+  const cancel = document.createElement('button')
+  cancel.textContent = 'Cancel'
+  cancel.onclick = cancelEdit
+  const save = document.createElement('button')
+  save.textContent = 'Save'
+  save.className = 'primary'
+  save.onclick = saveEdit
+  actions.append(cancel, save)
+  box.append(actions)
+
+  refreshEditFields = () => {
+    fields.forEach(f => { if (document.activeElement !== f.input) f.input.sync() })
+    rSlider.value = st.radius
+    rVal.textContent = st.radius.toFixed(1) + ' mm'
+    const len = Math.hypot(...st.by)
+    lSlider.max = (0.64 * st.radius).toFixed(2) // just under the fold limit
+    lSlider.value = len
+    lVal.textContent = `${len.toFixed(2)} of ${(0.65 * st.radius).toFixed(1)}`
+    const err = lastInfo.stepError
+    const broken = !!(err && err.index === editing?.index)
+    msg.textContent = broken ? err.msg + '. Fix it to save.' : ''
+    save.disabled = broken
+  }
+  refreshEditFields()
+  return box
 }
 
 document.getElementById('base').onchange = e => post('/api/base', { base: e.target.value, clear: false })
@@ -275,7 +487,8 @@ document.getElementById('clear').onclick = () => post('/api/base', { base: state
 radiusInput.oninput = () => { radiusVal.textContent = radiusInput.value + ' mm'; ring.scale.setScalar(+radiusInput.value); mirrorRing.scale.setScalar(+radiusInput.value) }
 radiusInput.oninput()
 window.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); post('/api/undo') }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !editing) { e.preventDefault(); post('/api/undo') }
+  if (e.key === 'Escape' && editing) cancelEdit()
 })
 
 // ── Picking and the pull gesture ─────────────────────────────────────
@@ -322,15 +535,20 @@ function pullSteps(d) {
   return steps
 }
 
+// preview shows an unsaved version of the whole step list. One request at
+// a time; while one is out, only the newest waiting list is kept.
 async function preview(steps) {
   if (inFlight) { queued = steps; return }
   inFlight = true
   try {
-    const res = await fetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(steps) })
-    if (dragging) await fetchMesh(res)
+    const res = await fetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ steps }) })
+    if (dragging || editing) {
+      await fetchMesh(res)
+      if (editing) refreshEditFields()
+    }
   } finally {
     inFlight = false
-    if (queued && dragging) { const q = queued; queued = null; preview(q) }
+    if (queued && (dragging || editing)) { const q = queued; queued = null; preview(q) }
   }
 }
 
@@ -343,7 +561,7 @@ el.addEventListener('pointermove', ev => {
 })
 
 el.addEventListener('pointerdown', ev => {
-  if (ev.button !== 0) return
+  if (ev.button !== 0 || editing) return
   const h = hitAt(ev)
   if (!h) return // empty space: let the orbit controls have it
   controls.enabled = false
@@ -386,7 +604,7 @@ el.addEventListener('pointermove', ev => {
     arrow.setLength(len, Math.min(1.2, len * 0.4), Math.min(0.8, len * 0.3))
   }
   showHud(`pull ${len.toFixed(1)} mm of ${max.toFixed(1)}`)
-  if (len > 0.05) preview(pullSteps(d))
+  if (len > 0.05) preview(state.history.steps.concat(pullSteps(d)))
 })
 
 async function endDrag(ev) {
