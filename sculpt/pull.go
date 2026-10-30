@@ -43,11 +43,17 @@ func Pull(s *solid.Solid, at, by v3.Vec, radius float64) *solid.Solid {
 	if stretch >= 1 {
 		panic(fmt.Sprintf("sculpt.Pull: a pull of %.3g mm with radius %.3g folds the surface through itself; keep the pull under %.3g mm (0.65 × radius) or widen the radius", l, radius, radius/pullSlope))
 	}
-	bb := s.Bounds().Box
-	bb = bb.Extend(bb.Translate(by))
+	// Only the ball of the brush around the landing point changes, so the
+	// result lies within the source's bounds plus that ball. Extending by
+	// the whole box moved by `by` grew the bounds by the full pull every
+	// time, and a mesh or grid sized from the bounds got coarser with each
+	// stroke.
+	dest := at.Add(by)
+	reach := v3.XYZ(radius, radius, radius)
+	bb := s.Bounds().Box.Extend(v3.Box{Min: dest.Sub(reach), Max: dest.Add(reach)})
 	return solid.Wrap(&pullSDF{
 		s:     s.SDF3,
-		dest:  at.Add(by).Raw(),
+		dest:  dest.Raw(),
 		by:    by.Raw(),
 		r2:    radius * radius,
 		scale: 1 / (1 + stretch),

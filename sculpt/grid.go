@@ -369,68 +369,96 @@ func (g *Grid) Redistance() *Grid {
 // seeds by |p−q|² + f(q), the distance to the seed corner lifted by its own
 // distance to the surface, which is only an estimate of the distance to the
 // seed's surface point and can pick a neighbour's seed over the right one
-// by a fraction of a cell. Two sweeps over the lattice, forward and back,
-// let every corner compare its seed with those of the 26 corners around it
-// and keep the nearest surface point. On return src holds the corrected
-// seeds and the result is each corner's squared distance to its surface
-// point, in mm².
+// by a fraction of a cell. Each pass lets every corner compare its seed
+// with those its 26 neighbours chose in the previous pass and keep the
+// nearest surface point. The wrong choices are local, so a few passes
+// settle them; each pass runs across all CPUs, one z-slab per goroutine.
+// On return src holds the corrected seeds and the result is each corner's
+// squared distance to its surface point, in mm².
 func (g *Grid) refine(src []int32, cpOf []int32, cps []v3.Vec) []float64 {
+	const passes = 3
 	n := len(src)
 	best := make([]float64, n)
-	for i := range src {
-		best[i] = g.posOf(i).Sub(cps[cpOf[src[i]]]).Length2()
-	}
-	nx1, ny1 := g.nx+1, g.ny+1
-	// The 13 neighbours that precede a corner in sweep order; negated,
-	// the 13 that follow it.
-	type off struct{ di, dj, dk int }
-	var before []off
-	for dk := -1; dk <= 1; dk++ {
-		for dj := -1; dj <= 1; dj++ {
-			for di := -1; di <= 1; di++ {
-				if dk < 0 || (dk == 0 && dj < 0) || (dk == 0 && dj == 0 && di < 0) {
-					before = append(before, off{di, dj, dk})
-				}
-			}
-		}
-	}
-	visit := func(i, j, k int, offs []off) {
-		id := g.idx(i, j, k)
-		p := g.pos(i, j, k)
-		for _, o := range offs {
-			ii, jj, kk := i+o.di, j+o.dj, k+o.dk
-			if ii < 0 || jj < 0 || kk < 0 || ii > g.nx || jj > g.ny || kk > g.nz {
-				continue
-			}
-			cand := src[(kk*ny1+jj)*nx1+ii]
-			if cand == src[id] {
-				continue
-			}
-			if d := p.Sub(cps[cpOf[cand]]).Length2(); d < best[id] {
-				best[id] = d
-				src[id] = cand
-			}
-		}
-	}
-	for k := 0; k <= g.nz; k++ {
+	g.parallelSlabs(func(k int) {
 		for j := 0; j <= g.ny; j++ {
 			for i := 0; i <= g.nx; i++ {
-				visit(i, j, k, before)
+				id := g.idx(i, j, k)
+				best[id] = g.pos(i, j, k).Sub(cps[cpOf[src[id]]]).Length2()
 			}
 		}
-	}
-	after := make([]off, len(before))
-	for i, o := range before {
-		after[i] = off{-o.di, -o.dj, -o.dk}
-	}
-	for k := g.nz; k >= 0; k-- {
-		for j := g.ny; j >= 0; j-- {
-			for i := g.nx; i >= 0; i-- {
-				visit(i, j, k, after)
+	})
+	prev := make([]int32, n)
+	for pass := 0; pass < passes; pass++ {
+		copy(prev, src)
+		changed := false
+		var mu sync.Mutex
+		g.parallelSlabs(func(k int) {
+			moved := false
+			for j := 0; j <= g.ny; j++ {
+				for i := 0; i <= g.nx; i++ {
+					id := g.idx(i, j, k)
+					p := g.pos(i, j, k)
+					for dk := -1; dk <= 1; dk++ {
+						kk := k + dk
+						if kk < 0 || kk > g.nz {
+							continue
+						}
+						for dj := -1; dj <= 1; dj++ {
+							jj := j + dj
+							if jj < 0 || jj > g.ny {
+								continue
+							}
+							for di := -1; di <= 1; di++ {
+								ii := i + di
+								if ii < 0 || ii > g.nx {
+									continue
+								}
+								cand := prev[g.idx(ii, jj, kk)]
+								if cand == src[id] {
+									continue
+								}
+								if d := p.Sub(cps[cpOf[cand]]).Length2(); d < best[id] {
+									best[id] = d
+									src[id] = cand
+									moved = true
+								}
+							}
+						}
+					}
+				}
 			}
+			if moved {
+				mu.Lock()
+				changed = true
+				mu.Unlock()
+			}
+		})
+		if !changed {
+			break
 		}
 	}
 	return best
+}
+
+// parallelSlabs runs f once for every z index of the lattice, spread
+// across all CPUs. f must only write corners in its own slab.
+func (g *Grid) parallelSlabs(f func(k int)) {
+	slabs := make(chan int, g.nz+1)
+	for k := 0; k <= g.nz; k++ {
+		slabs <- k
+	}
+	close(slabs)
+	var wg sync.WaitGroup
+	for w := 0; w < runtime.NumCPU(); w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for k := range slabs {
+				f(k)
+			}
+		}()
+	}
+	wg.Wait()
 }
 
 // seeds locates the surface. For every corner within reach of a sign

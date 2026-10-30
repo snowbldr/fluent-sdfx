@@ -99,17 +99,55 @@ func (h History) build() (s *solid.Solid, stepErr *StepError, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	for i, st := range h.Steps {
+	s, stepErr = h.applyFrom(s, 0)
+	return s, stepErr, nil
+}
+
+// applyFrom applies steps[from:] to s, stopping at the first that fails.
+func (h History) applyFrom(s *solid.Solid, from int) (*solid.Solid, *StepError) {
+	for i := from; i < len(h.Steps); i++ {
+		st := h.Steps[i]
 		if st.Off {
 			continue
 		}
 		next, e := applyStep(s, st)
 		if e != nil {
-			return s, &StepError{Index: i, Msg: e.Error()}, nil
+			return s, &StepError{Index: i, Msg: e.Error()}
 		}
 		s = next
 	}
-	return s, nil, nil
+	return s, nil
+}
+
+// samePrefix reports whether h starts with exactly the base and steps of b.
+func (h History) samePrefix(b History) bool {
+	if h.Base != b.Base || len(b.Steps) > len(h.Steps) {
+		return false
+	}
+	for i, st := range b.Steps {
+		if !st.equal(h.Steps[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// key identifies a history exactly, for matching bakes.
+func (h History) key() string { return fmt.Sprintf("%s %v", h.Base, h.Steps) }
+
+func (a Step) equal(b Step) bool {
+	eq := func(x, y []float64) bool {
+		if len(x) != len(y) {
+			return false
+		}
+		for i := range x {
+			if x[i] != y[i] {
+				return false
+			}
+		}
+		return true
+	}
+	return a.Op == b.Op && a.Radius == b.Radius && a.Off == b.Off && eq(a.At, b.At) && eq(a.By, b.By)
 }
 
 func applyStep(s *solid.Solid, st Step) (out *solid.Solid, err error) {

@@ -32,6 +32,8 @@ import (
 
 	"github.com/snowbldr/fluent-sdfx/mesh"
 	"github.com/snowbldr/fluent-sdfx/render"
+	"github.com/snowbldr/fluent-sdfx/sculpt"
+	"github.com/snowbldr/fluent-sdfx/solid"
 )
 
 //go:embed web
@@ -48,15 +50,37 @@ type server struct {
 	modTime time.Time // of the file as we last wrote or read it
 	loadErr string    // the file on disk does not parse; the last good history is shown
 
+	bakeCells int
+
+	// The bake: the committed history sampled onto a grid and redistanced,
+	// so a mesh or a preview evaluates eight array reads per point plus
+	// only the steps added since, instead of walking every pull. It is a
+	// cache, never the truth: rebuilt from the full history in the
+	// background after every change, and skipped whenever the history no
+	// longer starts with what it holds.
+	bakeMu   sync.Mutex
+	bakes    []*bake                  // most recent first, at most keepBakes
+	inflight map[string]chan struct{} // bakes being built, by history key
+
 	meshMu      sync.Mutex
 	meshVersion int
 	meshBytes   []byte
 	meshInfo    meshInfo
 }
 
+type bake struct {
+	hist  History // what the grid holds: these steps, all of which built
+	solid *solid.Solid
+}
+
+// keepBakes is how many recent bakes are kept, so undo, and turning a step
+// back on, find one already made.
+const keepBakes = 8
+
 type meshInfo struct {
 	Triangles int        `json:"triangles"`
 	Millis    int64      `json:"millis"`
+	Baked     int        `json:"baked"` // steps served from the bake
 	StepError *StepError `json:"stepError,omitempty"`
 	Error     string     `json:"error,omitempty"`
 }
@@ -66,9 +90,11 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:7175", "listen address")
 	cells := flag.Int("cells", 140, "mesh resolution after a change (cells on the longest side)")
 	preview := flag.Int("preview", 90, "mesh resolution while dragging")
+	bakeCells := flag.Int("bake", 128, "grid resolution the committed history is baked at (0 turns baking off)")
 	flag.Parse()
 
-	s := &server{path: *path, cells: *cells, previewCells: *preview, meshVersion: -1}
+	s := &server{path: *path, cells: *cells, previewCells: *preview, bakeCells: *bakeCells, meshVersion: -1,
+		inflight: map[string]chan struct{}{}}
 	if h, err := loadHistory(*path); err == nil {
 		s.hist = h
 	} else if errors.Is(err, os.ErrNotExist) {
@@ -83,6 +109,7 @@ func main() {
 		s.modTime = fi.ModTime()
 	}
 	go s.watch()
+	s.rebake(s.hist)
 
 	web, _ := fs.Sub(webFS, "web")
 	mux := http.NewServeMux()
@@ -125,7 +152,9 @@ func (s *server) watch() {
 			s.hist = h
 		}
 		s.version++
+		h = s.hist
 		s.mu.Unlock()
+		s.rebake(h)
 		log.Printf("reloaded %s (version %d)", s.path, s.version)
 	}
 }
@@ -153,6 +182,7 @@ func (s *server) commit(w http.ResponseWriter, change func(h *History) error) {
 	s.loadErr = ""
 	s.version++
 	s.mu.Unlock()
+	s.rebake(h)
 	s.handleState(w, nil)
 }
 
@@ -177,7 +207,7 @@ func (s *server) handleMesh(w http.ResponseWriter, _ *http.Request) {
 	s.meshMu.Lock()
 	defer s.meshMu.Unlock()
 	if s.meshVersion != v {
-		s.meshBytes, s.meshInfo = meshOf(h, s.cells)
+		s.meshBytes, s.meshInfo = s.meshOf(h, s.cells)
 		s.meshVersion = v
 	}
 	writeMesh(w, s.meshBytes, s.meshInfo, v)
@@ -196,7 +226,7 @@ func (s *server) handlePreview(w http.ResponseWriter, r *http.Request) {
 	h.Steps = append(append([]Step(nil), s.hist.Steps...), extra...)
 	v := s.version
 	s.mu.Unlock()
-	b, info := meshOf(h, s.previewCells)
+	b, info := s.meshOf(h, s.previewCells)
 	writeMesh(w, b, info, v)
 }
 
@@ -265,11 +295,90 @@ func (s *server) handleBase(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// rebake bakes h in the background, so the next preview or mesh starts
+// from it.
+func (s *server) rebake(h History) {
+	if s.bakeCells > 0 {
+		go s.bakeFor(h)
+	}
+}
+
+// bakeFor returns the bake of exactly h, building it if no kept bake
+// matches. Concurrent requests for the same history share one build. A
+// history whose step fails is baked up to the step before it.
+func (s *server) bakeFor(h History) *bake {
+	sol, stepErr, err := h.build()
+	if err != nil {
+		return nil
+	}
+	if stepErr != nil {
+		h.Steps = h.Steps[:stepErr.Index]
+	}
+	key := h.key()
+	for {
+		s.bakeMu.Lock()
+		for _, b := range s.bakes {
+			if b.hist.key() == key {
+				s.bakeMu.Unlock()
+				return b
+			}
+		}
+		wait, building := s.inflight[key]
+		if !building {
+			done := make(chan struct{})
+			s.inflight[key] = done
+			s.bakeMu.Unlock()
+
+			t0 := time.Now()
+			b := &bake{hist: h, solid: sculpt.Sample(sol, s.bakeCells).Redistance().Solid()}
+			log.Printf("baked %d steps in %v", len(h.Steps), time.Since(t0).Round(time.Millisecond))
+
+			s.bakeMu.Lock()
+			s.bakes = append([]*bake{b}, s.bakes...)
+			if len(s.bakes) > keepBakes {
+				s.bakes = s.bakes[:keepBakes]
+			}
+			delete(s.inflight, key)
+			close(done)
+			s.bakeMu.Unlock()
+			return b
+		}
+		s.bakeMu.Unlock()
+		<-wait // someone else is building it; take theirs
+	}
+}
+
+// solidOf evaluates h from the kept bake that covers the most of it, then
+// only the steps after that. With no bake covering any of it, it bakes h
+// itself: sampling and redistancing beats meshing the whole chain.
+func (s *server) solidOf(h History) (*solid.Solid, *StepError, int, error) {
+	if s.bakeCells <= 0 {
+		sol, stepErr, err := h.build()
+		return sol, stepErr, 0, err
+	}
+	s.bakeMu.Lock()
+	var best *bake
+	for _, b := range s.bakes {
+		if h.samePrefix(b.hist) && (best == nil || len(b.hist.Steps) > len(best.hist.Steps)) {
+			best = b
+		}
+	}
+	s.bakeMu.Unlock()
+	if best == nil {
+		if _, err := base(h.Base); err != nil {
+			return nil, nil, 0, err
+		}
+		best = s.bakeFor(h)
+	}
+	sol, stepErr := h.applyFrom(best.solid, len(best.hist.Steps))
+	return sol, stepErr, len(best.hist.Steps), nil
+}
+
 // meshOf builds the history and meshes the result with cells on the
 // longest side of its bounds.
-func meshOf(h History, cells int) ([]byte, meshInfo) {
+func (s *server) meshOf(h History, cells int) ([]byte, meshInfo) {
 	t0 := time.Now()
-	sol, stepErr, err := h.build()
+	sol, stepErr, baked, err := s.solidOf(h)
 	if err != nil {
 		return nil, meshInfo{Error: err.Error()}
 	}
@@ -282,7 +391,7 @@ func meshOf(h History, cells int) ([]byte, meshInfo) {
 			b = binary.LittleEndian.AppendUint32(b, math.Float32bits(float32(p.Z)))
 		}
 	}
-	return b, meshInfo{Triangles: len(tris), Millis: time.Since(t0).Milliseconds(), StepError: stepErr}
+	return b, meshInfo{Triangles: len(tris), Millis: time.Since(t0).Milliseconds(), StepError: stepErr, Baked: baked}
 }
 
 func writeMesh(w http.ResponseWriter, b []byte, info meshInfo, version int) {

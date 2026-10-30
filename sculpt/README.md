@@ -66,16 +66,16 @@ in sign, the zero crossing by linear interpolation; and for every corner
 within a cell of the other side, the point found by projecting along the
 field's gradient (which is what seeds a sharp edge, where no lattice edge
 crosses). A separable Euclidean distance transform (Felzenszwalb and
-Huttenlocher) finds each corner's nearest seed, two neighbour-comparison
-sweeps correct its choice, and the distance to that seed's surface point is
-the new sample. Signs are kept from the input.
+Huttenlocher) finds each corner's nearest seed, up to three parallel passes
+in which every corner compares its seed with its neighbours' correct the
+choice, and the distance to that seed's surface point is the new sample. Signs are kept from the input.
 
 ## Known limits
 
 - Everything grid-side is accurate to a fraction of a cell and loses
   features smaller than a cell. Choose `cells` for the smallest feature.
-- The refinement sweeps in `Redistance` are single-threaded; `Smooth` runs
-  five redistances. A 128-cell grid smooths in about two seconds.
+- A 128-cell `Redistance` takes about 110 ms on a laptop, most of it the
+  seed search, which is still single-threaded. `Smooth` runs five of them.
 - `Fill` fills enclosed regions only. A pocket open on one side is filled
   by capping it (union a plate), filling, then cutting the cap away.
 - `Pull` is one brush. Symmetry, pinch, inflate and a region-limited smooth

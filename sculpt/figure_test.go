@@ -164,3 +164,24 @@ func gradMag(s *solid.Solid, p v3.Vec, eps float64) float64 {
 	dz := validate.At(s, p.Add(v3.Z(eps))) - validate.At(s, p.Sub(v3.Z(eps)))
 	return math.Sqrt(dx*dx+dy*dy+dz*dz) / (2 * eps)
 }
+
+// Repeated strokes must not inflate the bounds: only the brush's ball
+// moves, so the bounds grow to cover the pulled tips and no further. A
+// mesh or grid sized from the bounds would otherwise coarsen with every
+// stroke.
+func TestPullBoundsStayTight(t *testing.T) {
+	f := figure()
+	before := f.Bounds().Size()
+	for i := 0; i < 12; i++ {
+		f = Pull(f, v3.XYZ(0, -headR, headZ), v3.Y(-0.5), noseR) // a dab in the same spot
+	}
+	after := f.Bounds().Size()
+	t.Logf("bounds before %v, after twelve dabs %v", before, after)
+	if after.X > before.X+1e-9 || after.Z > before.Z+1e-9 {
+		t.Errorf("bounds grew across X or Z (%v to %v) for pulls along -Y inside the form", before, after)
+	}
+	// The pulls only ever go out along -Y, and only within the brush ball.
+	if grow := after.Y - before.Y; grow > noseR {
+		t.Errorf("bounds grew %.2f mm along Y, more than the brush radius %.1f", grow, noseR)
+	}
+}
