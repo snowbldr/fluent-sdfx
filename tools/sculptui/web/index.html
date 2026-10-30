@@ -67,7 +67,7 @@
   <section>
     <h2>Brush</h2>
     <label>radius <input id="radius" type="range" min="2" max="16" step="0.5" value="7"><span class="val" id="radiusVal"></span></label>
-    <label style="margin-top:6px"><input id="mirror" type="checkbox" checked> mirror across X (left and right together)</label>
+    <label style="margin-top:6px"><input id="mirror" type="checkbox"> mirror across X: each pull also lands on the opposite side</label>
   </section>
   <section>
     <h2>Base form</h2>
@@ -139,6 +139,12 @@ const ring = new THREE.Mesh(
 ring.renderOrder = 2
 ring.visible = false
 scene.add(ring)
+// Where the mirror copy of a pull will land, shown only while mirror is on.
+const mirrorRing = new THREE.Mesh(ring.geometry,
+  new THREE.MeshBasicMaterial({ color: 0x7c9bff, side: THREE.DoubleSide, transparent: true, opacity: 0.45, depthTest: false }))
+mirrorRing.renderOrder = 2
+mirrorRing.visible = false
+scene.add(mirrorRing)
 const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 1, 0xffb86b, 1, 0.6)
 arrow.visible = false
 arrow.line.material.depthTest = false
@@ -266,7 +272,7 @@ function renderPanel() {
 
 document.getElementById('base').onchange = e => post('/api/base', { base: e.target.value, clear: false })
 document.getElementById('clear').onclick = () => post('/api/base', { base: state.history.base, clear: true })
-radiusInput.oninput = () => { radiusVal.textContent = radiusInput.value + ' mm'; ring.scale.setScalar(+radiusInput.value) }
+radiusInput.oninput = () => { radiusVal.textContent = radiusInput.value + ' mm'; ring.scale.setScalar(+radiusInput.value); mirrorRing.scale.setScalar(+radiusInput.value) }
 radiusInput.oninput()
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); post('/api/undo') }
@@ -290,7 +296,17 @@ function placeRing(p, n) {
   ring.position.copy(p).addScaledVector(n, 0.05)
   ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n)
   ring.visible = true
+  mirrorRing.visible = mirrors(p.x)
+  if (mirrorRing.visible) {
+    const mp = new THREE.Vector3(-p.x, p.y, p.z), mn = new THREE.Vector3(-n.x, n.y, n.z)
+    mirrorRing.position.copy(mp).addScaledVector(mn, 0.05)
+    mirrorRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), mn)
+  }
 }
+
+// A pull gets a mirror copy only when mirror is on and the pull is off the
+// mirror plane; on the plane the copy would land on top of it.
+const mirrors = x => mirrorInput.checked && Math.abs(x) > +radiusInput.value * 0.25
 
 let dragging = null
 let inFlight = false, queued = null
@@ -300,7 +316,7 @@ function pullSteps(d) {
   const at = d.point.toArray(), by = d.by.toArray()
   const steps = [{ op: 'pull', at, by, radius }]
   // The mirror copy, unless the pull is on the mirror plane itself.
-  if (mirrorInput.checked && Math.abs(at[0]) > radius * 0.25) {
+  if (mirrors(at[0])) {
     steps.push({ op: 'pull', at: [-at[0], at[1], at[2]], by: [-by[0], by[1], by[2]], radius })
   }
   return steps
@@ -323,7 +339,7 @@ el.addEventListener('pointermove', ev => {
   if (dragging) return
   const h = hitAt(ev)
   if (h) placeRing(h.point, h.normal)
-  else ring.visible = false
+  else ring.visible = mirrorRing.visible = false
 })
 
 el.addEventListener('pointerdown', ev => {
