@@ -1,18 +1,19 @@
 // Command sculptui is the first test loop for sculpting fluent-sdfx solids
 // from a browser: a 3D view of a form, click and drag on it to pull the
-// surface, every pull a step in a YAML history on disk. Edit the file by
+// surface, every pull a step in a history file on disk. Edit the file by
 // hand and the view reloads; turn a step off or delete it and the form
 // reflows as if it never happened.
 //
 //	go run ./tools/sculptui              # history in ./sculpt.yaml
 //	go run ./tools/sculptui -file nose.yaml -addr 127.0.0.1:7175
 //
-// It exists to find out whether this way of working feels right before the
-// full history runtime in meta/sculpt-cad-build-plan.md is built. It knows
-// one operation (pull) and three base forms.
+// The file is a fluent-sdfx history (package history): any op the library
+// has can be written into it by hand or by an agent, and the view shows
+// it. The UI itself makes pulls, and edits the numbers of a pull.
 package main
 
 import (
+	"bytes"
 	"embed"
 	"encoding/binary"
 	"encoding/json"
@@ -30,10 +31,9 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"github.com/snowbldr/fluent-sdfx/history"
 	"github.com/snowbldr/fluent-sdfx/mesh"
 	"github.com/snowbldr/fluent-sdfx/render"
-	"github.com/snowbldr/fluent-sdfx/sculpt"
-	"github.com/snowbldr/fluent-sdfx/solid"
 )
 
 //go:embed web
@@ -42,25 +42,18 @@ var webFS embed.FS
 type server struct {
 	path         string
 	cells        int // final mesh resolution, cells on the longest side
-	previewCells int // while dragging
+	previewCells int // while dragging or editing
+
+	// rt caches every step's result by what it is and what it depends on,
+	// so a preview of an edit recomputes only the edited step and those
+	// after it, and undo finds the old results still there.
+	rt *history.Runtime
 
 	mu      sync.Mutex
-	hist    History
+	hist    *history.History
 	version int
 	modTime time.Time // of the file as we last wrote or read it
 	loadErr string    // the file on disk does not parse; the last good history is shown
-
-	bakeCells int
-
-	// The bake: the committed history sampled onto a grid and redistanced,
-	// so a mesh or a preview evaluates eight array reads per point plus
-	// only the steps added since, instead of walking every pull. It is a
-	// cache, never the truth: rebuilt from the full history in the
-	// background after every change, and skipped whenever the history no
-	// longer starts with what it holds.
-	bakeMu   sync.Mutex
-	bakes    []*bake                  // most recent first, at most keepBakes
-	inflight map[string]chan struct{} // bakes being built, by history key
 
 	meshMu      sync.Mutex
 	meshVersion int
@@ -68,21 +61,17 @@ type server struct {
 	meshInfo    meshInfo
 }
 
-type bake struct {
-	hist  History // what the grid holds: these steps, all of which built
-	solid *solid.Solid
+type meshInfo struct {
+	Triangles int          `json:"triangles"`
+	Millis    int64        `json:"millis"`
+	Steps     []stepStatus `json:"steps,omitempty"` // the steps that are not ok
+	Error     string       `json:"error,omitempty"`
 }
 
-// keepBakes is how many recent bakes are kept, so undo, and turning a step
-// back on, find one already made.
-const keepBakes = 8
-
-type meshInfo struct {
-	Triangles int        `json:"triangles"`
-	Millis    int64      `json:"millis"`
-	Baked     int        `json:"baked"` // steps served from the bake
-	StepError *StepError `json:"stepError,omitempty"`
-	Error     string     `json:"error,omitempty"`
+type stepStatus struct {
+	Index  int            `json:"index"`
+	Status history.Status `json:"status"`
+	Error  string         `json:"error,omitempty"`
 }
 
 func main() {
@@ -90,16 +79,27 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:7175", "listen address")
 	cells := flag.Int("cells", 140, "mesh resolution after a change (cells on the longest side)")
 	preview := flag.Int("preview", 90, "mesh resolution while dragging")
-	bakeCells := flag.Int("bake", 128, "grid resolution the committed history is baked at (0 turns baking off)")
+	bakeEvery := flag.Int("bake-every", 8, "sample the form onto a grid after this many pulls in a row (0 never)")
+	bakeCells := flag.Int("bake", 128, "grid resolution of a bake")
 	flag.Parse()
 
-	s := &server{path: *path, cells: *cells, previewCells: *preview, bakeCells: *bakeCells, meshVersion: -1,
-		inflight: map[string]chan struct{}{}}
-	if h, err := loadHistory(*path); err == nil {
+	s := &server{path: *path, cells: *cells, previewCells: *preview, meshVersion: -1,
+		rt: history.NewRuntime(history.Options{BakeEvery: *bakeEvery, BakeCells: *bakeCells})}
+	if h, err := history.Load(*path); err == nil {
 		s.hist = h
+	} else if old, lerr := legacy(*path); lerr == nil {
+		// A file from the first version of this tool: keep a copy, rewrite it.
+		if err := os.Rename(*path, *path+".v1"); err != nil {
+			log.Fatal(err)
+		}
+		if err := old.Save(*path); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("converted %s to a history; the old file is %s.v1", *path, *path)
+		s.hist = old
 	} else if errors.Is(err, os.ErrNotExist) {
-		s.hist = newHistory()
-		if err := s.hist.save(*path); err != nil {
+		s.hist, _ = starter("figure")
+		if err := s.hist.Save(*path); err != nil {
 			log.Fatal(err)
 		}
 	} else {
@@ -109,7 +109,6 @@ func main() {
 		s.modTime = fi.ModTime()
 	}
 	go s.watch()
-	s.rebake(s.hist)
 
 	web, _ := fs.Sub(webFS, "web")
 	mux := http.NewServeMux()
@@ -122,14 +121,14 @@ func main() {
 	mux.HandleFunc("POST /api/steps/{i}/toggle", s.handleToggle)
 	mux.HandleFunc("DELETE /api/steps/{i}", s.handleDelete)
 	mux.HandleFunc("POST /api/undo", s.handleUndo)
-	mux.HandleFunc("POST /api/base", s.handleBase)
+	mux.HandleFunc("POST /api/start", s.handleStart)
 
 	log.Printf("sculptui: http://%s  (history: %s)", *addr, *path)
 	log.Fatal(http.ListenAndServe(*addr, mux))
 }
 
 // watch reloads the history when the file changes under us: a hand edit,
-// or an AI editing it. A file that does not parse leaves the last good
+// or an agent editing it. A file that does not parse leaves the last good
 // history on screen and reports the error.
 func (s *server) watch() {
 	for range time.Tick(400 * time.Millisecond) {
@@ -143,7 +142,7 @@ func (s *server) watch() {
 		if !changed {
 			continue
 		}
-		h, err := loadHistory(s.path)
+		h, err := history.Load(s.path)
 		s.mu.Lock()
 		s.modTime = fi.ModTime()
 		if err != nil {
@@ -153,27 +152,25 @@ func (s *server) watch() {
 			s.hist = h
 		}
 		s.version++
-		h = s.hist
 		s.mu.Unlock()
-		s.rebake(h)
 		log.Printf("reloaded %s (version %d)", s.path, s.version)
 	}
 }
 
-// commit applies a change to the history, writes the file and bumps the
-// version. The change runs under the lock.
-func (s *server) commit(w http.ResponseWriter, change func(h *History) error) {
+// commit applies a change to a copy of the history, writes the file and
+// bumps the version. The change runs under the lock; a change that fails,
+// or leaves the history invalid, leaves everything as it was.
+func (s *server) commit(w http.ResponseWriter, change func(h *history.History) error) {
 	s.mu.Lock()
-	h := s.hist
-	h.Steps = append([]Step(nil), s.hist.Steps...)
-	if err := change(&h); err != nil {
+	h := s.hist.Clone()
+	if err := change(h); err != nil {
 		s.mu.Unlock()
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.save(s.path); err != nil {
+	if err := h.Save(s.path); err != nil {
 		s.mu.Unlock()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if fi, err := os.Stat(s.path); err == nil {
@@ -183,7 +180,6 @@ func (s *server) commit(w http.ResponseWriter, change func(h *History) error) {
 	s.loadErr = ""
 	s.version++
 	s.mu.Unlock()
-	s.rebake(h)
 	s.handleState(w, nil)
 }
 
@@ -214,218 +210,135 @@ func (s *server) handleMesh(w http.ResponseWriter, _ *http.Request) {
 	writeMesh(w, s.meshBytes, s.meshInfo, v)
 }
 
-// handlePreview builds an unsaved variant of the history at preview
+// handlePreview meshes an unsaved variant of the history at preview
 // resolution: the live view while a drag is under way or a step's form is
-// being edited. The body is the full step list to show. Everything before
-// the first step that differs from the committed history is unchanged, so
-// it is baked once and every later preview of the same edit starts there.
+// being edited. The body is the full step list to show; the runtime's
+// cache means only the steps that differ, and those after them, are
+// evaluated.
 func (s *server) handlePreview(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Steps []Step `json:"steps"`
+		Steps []history.Step `json:"steps"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	s.mu.Lock()
-	committed := s.hist
+	h := s.hist.Clone()
 	v := s.version
 	s.mu.Unlock()
-	h := History{Base: committed.Base, Steps: req.Steps}
-	if s.bakeCells > 0 {
-		same := 0
-		for same < len(h.Steps) && same < len(committed.Steps) && h.Steps[same].equal(committed.Steps[same]) {
-			same++
-		}
-		if same < len(h.Steps) && s.coverage(h) < same {
-			s.bakeFor(History{Base: committed.Base, Steps: committed.Steps[:same]})
-		}
+	h.Steps = req.Steps
+	if err := h.Validate(); err != nil {
+		writeMesh(w, nil, meshInfo{Error: err.Error()}, v)
+		return
 	}
 	b, info := s.meshOf(h, s.previewCells)
 	writeMesh(w, b, info, v)
 }
 
+func stepIndex(r *http.Request, h *history.History) (int, error) {
+	i, err := strconv.Atoi(r.PathValue("i"))
+	if err != nil || i < 0 || i >= len(h.Steps) {
+		return 0, fmt.Errorf("no step %s", r.PathValue("i"))
+	}
+	return i, nil
+}
+
 // handleEdit replaces one step with the one in the body.
 func (s *server) handleEdit(w http.ResponseWriter, r *http.Request) {
-	i, err := strconv.Atoi(r.PathValue("i"))
-	var st Step
-	if derr := json.NewDecoder(r.Body).Decode(&st); derr != nil {
-		http.Error(w, derr.Error(), http.StatusBadRequest)
+	var st history.Step
+	if err := json.NewDecoder(r.Body).Decode(&st); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	s.commit(w, func(h *History) error {
-		if err != nil || i < 0 || i >= len(h.Steps) {
-			return fmt.Errorf("no step %s", r.PathValue("i"))
+	s.commit(w, func(h *history.History) error {
+		i, err := stepIndex(r, h)
+		if err != nil {
+			return err
 		}
-		h.Steps[i] = st
-		return nil
+		return h.Set(i, st)
 	})
 }
 
 func (s *server) handleAdd(w http.ResponseWriter, r *http.Request) {
-	var add []Step
+	var add []history.Step
 	if err := json.NewDecoder(r.Body).Decode(&add); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	s.commit(w, func(h *History) error {
-		h.Steps = append(h.Steps, add...)
+	s.commit(w, func(h *history.History) error {
+		for _, st := range add {
+			if err := h.Insert(len(h.Steps), st); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
 
 func (s *server) handleToggle(w http.ResponseWriter, r *http.Request) {
-	i, err := strconv.Atoi(r.PathValue("i"))
-	s.commit(w, func(h *History) error {
-		if err != nil || i < 0 || i >= len(h.Steps) {
-			return fmt.Errorf("no step %s", r.PathValue("i"))
+	s.commit(w, func(h *history.History) error {
+		i, err := stepIndex(r, h)
+		if err != nil {
+			return err
 		}
-		h.Steps[i].Off = !h.Steps[i].Off
-		return nil
+		return h.SetOff(i, !h.Steps[i].Off)
 	})
 }
 
 func (s *server) handleDelete(w http.ResponseWriter, r *http.Request) {
-	i, err := strconv.Atoi(r.PathValue("i"))
-	s.commit(w, func(h *History) error {
-		if err != nil || i < 0 || i >= len(h.Steps) {
-			return fmt.Errorf("no step %s", r.PathValue("i"))
+	s.commit(w, func(h *history.History) error {
+		i, err := stepIndex(r, h)
+		if err != nil {
+			return err
 		}
-		h.Steps = append(h.Steps[:i], h.Steps[i+1:]...)
-		return nil
+		return h.Remove(i)
 	})
 }
 
 func (s *server) handleUndo(w http.ResponseWriter, _ *http.Request) {
-	s.commit(w, func(h *History) error {
+	s.commit(w, func(h *history.History) error {
 		if len(h.Steps) == 0 {
 			return errors.New("nothing to undo")
 		}
-		h.Steps = h.Steps[:len(h.Steps)-1]
-		return nil
+		return h.Remove(len(h.Steps) - 1)
 	})
 }
 
-func (s *server) handleBase(w http.ResponseWriter, r *http.Request) {
+// handleStart replaces the whole history with a starter form.
+func (s *server) handleStart(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Base  string `json:"base"`
-		Clear bool   `json:"clear"`
+		Form string `json:"form"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	s.commit(w, func(h *History) error {
-		if _, err := base(req.Base); err != nil {
+	s.commit(w, func(h *history.History) error {
+		fresh, err := starter(req.Form)
+		if err != nil {
 			return err
 		}
-		h.Base = req.Base
-		if req.Clear {
-			h.Steps = nil
-		}
+		*h = *fresh
 		return nil
 	})
 }
 
-// rebake bakes h in the background, so the next preview or mesh starts
-// from it.
-func (s *server) rebake(h History) {
-	if s.bakeCells > 0 {
-		go s.bakeFor(h)
-	}
-}
-
-// bakeFor returns the bake of exactly h, building it if no kept bake
-// matches. Concurrent requests for the same history share one build. A
-// history whose step fails is baked up to the step before it.
-func (s *server) bakeFor(h History) *bake {
-	sol, stepErr, err := h.build()
-	if err != nil {
-		return nil
-	}
-	if stepErr != nil {
-		h.Steps = h.Steps[:stepErr.Index]
-	}
-	key := h.key()
-	for {
-		s.bakeMu.Lock()
-		for _, b := range s.bakes {
-			if b.hist.key() == key {
-				s.bakeMu.Unlock()
-				return b
-			}
-		}
-		wait, building := s.inflight[key]
-		if !building {
-			done := make(chan struct{})
-			s.inflight[key] = done
-			s.bakeMu.Unlock()
-
-			t0 := time.Now()
-			b := &bake{hist: h, solid: sculpt.Sample(sol, s.bakeCells).Redistance().Solid()}
-			log.Printf("baked %d steps in %v", len(h.Steps), time.Since(t0).Round(time.Millisecond))
-
-			s.bakeMu.Lock()
-			s.bakes = append([]*bake{b}, s.bakes...)
-			if len(s.bakes) > keepBakes {
-				s.bakes = s.bakes[:keepBakes]
-			}
-			delete(s.inflight, key)
-			close(done)
-			s.bakeMu.Unlock()
-			return b
-		}
-		s.bakeMu.Unlock()
-		<-wait // someone else is building it; take theirs
-	}
-}
-
-// coverage is how many of h's steps the best kept bake already holds.
-func (s *server) coverage(h History) int {
-	s.bakeMu.Lock()
-	defer s.bakeMu.Unlock()
-	n := -1
-	for _, b := range s.bakes {
-		if h.samePrefix(b.hist) && len(b.hist.Steps) > n {
-			n = len(b.hist.Steps)
-		}
-	}
-	return n
-}
-
-// solidOf evaluates h from the kept bake that covers the most of it, then
-// only the steps after that. With no bake covering any of it, it bakes h
-// itself: sampling and redistancing beats meshing the whole chain.
-func (s *server) solidOf(h History) (*solid.Solid, *StepError, int, error) {
-	if s.bakeCells <= 0 {
-		sol, stepErr, err := h.build()
-		return sol, stepErr, 0, err
-	}
-	s.bakeMu.Lock()
-	var best *bake
-	for _, b := range s.bakes {
-		if h.samePrefix(b.hist) && (best == nil || len(b.hist.Steps) > len(best.hist.Steps)) {
-			best = b
-		}
-	}
-	s.bakeMu.Unlock()
-	if best == nil {
-		if _, err := base(h.Base); err != nil {
-			return nil, nil, 0, err
-		}
-		best = s.bakeFor(h)
-	}
-	sol, stepErr := h.applyFrom(best.solid, len(best.hist.Steps))
-	return sol, stepErr, len(best.hist.Steps), nil
-}
-
-// meshOf builds the history and meshes the result with cells on the
-// longest side of its bounds.
-func (s *server) meshOf(h History, cells int) ([]byte, meshInfo) {
+// meshOf evaluates the history and meshes its bodies with cells on the
+// longest side of their bounds.
+func (s *server) meshOf(h *history.History, cells int) ([]byte, meshInfo) {
 	t0 := time.Now()
-	sol, stepErr, baked, err := s.solidOf(h)
-	if err != nil {
-		return nil, meshInfo{Error: err.Error()}
+	res := s.rt.Eval(h)
+	var info meshInfo
+	for _, st := range res.Steps {
+		if st.Status == history.Failed || st.Status == history.Blocked {
+			info.Steps = append(info.Steps, stepStatus{Index: st.Index, Status: st.Status, Error: st.Error})
+		}
+	}
+	sol := res.Solid()
+	if sol == nil {
+		info.Error = "the history makes no solid"
+		return nil, info
 	}
 	tris := mesh.CollectTriangles(sol, render.NewMarchingCubesOctreeParallel(cells))
 	b := make([]byte, 0, len(tris)*36)
@@ -436,7 +349,8 @@ func (s *server) meshOf(h History, cells int) ([]byte, meshInfo) {
 			b = binary.LittleEndian.AppendUint32(b, math.Float32bits(float32(p.Z)))
 		}
 	}
-	return b, meshInfo{Triangles: len(tris), Millis: time.Since(t0).Milliseconds(), StepError: stepErr, Baked: baked}
+	info.Triangles, info.Millis = len(tris), time.Since(t0).Milliseconds()
+	return b, info
 }
 
 func writeMesh(w http.ResponseWriter, b []byte, info meshInfo, version int) {
@@ -462,6 +376,8 @@ func asciiJSON(j []byte) string {
 	}
 	return b.String()
 }
+
+func bytesReader(b []byte) *bytes.Reader { return bytes.NewReader(b) }
 
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")

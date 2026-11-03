@@ -87,10 +87,10 @@
     <label style="margin-top:6px"><input id="mirror" type="checkbox"> mirror across X: each pull also lands on the opposite side</label>
   </section>
   <section>
-    <h2>Base form</h2>
+    <h2>Start over</h2>
     <div class="row">
-      <select id="base"><option>figure</option><option>sphere</option><option>box</option></select>
-      <button id="clear">Clear steps</button>
+      <select id="start"><option>figure</option><option>sphere</option><option>box</option></select>
+      <button id="restart" title="Replace the whole history with this form">Start over</button>
     </div>
   </section>
   <section>
@@ -186,7 +186,7 @@ resize()
 renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera) })
 
 // ── Server ───────────────────────────────────────────────────────────
-let state = { version: -1, history: { base: 'figure', steps: [] } }
+let state = { version: -1, history: { steps: [] } }
 let lastInfo = {}
 
 function setMesh(buf) {
@@ -249,10 +249,38 @@ setInterval(async () => {
 }, 1000)
 
 // ── Panel ────────────────────────────────────────────────────────────
-const fmt = v => v.map(x => (Math.round(x * 10) / 10).toString()).join(', ')
+const fmt = v => Array.isArray(v) ? v.map(x => (Math.round(x * 10) / 10).toString()).join(', ') : JSON.stringify(v)
+const isPull = st => st.op === 'sculpt.Pull' && st.args && Array.isArray(st.args.at) && Array.isArray(st.args.by)
+
+// A step in one line: a pull by its numbers, anything else by its op and
+// args as written.
+function describe(st) {
+  if (st.anchor) return `${st.name || 'anchor'}: anchor ${JSON.stringify(st.anchor)}`
+  const name = st.name ? st.name + ': ' : ''
+  if (isPull(st)) {
+    const a = st.args
+    return `${name}pull at (${fmt(a.at)}) by (${fmt(a.by)}) r ${a.radius}` + (st.mirror ? `, mirrored in ${st.mirror}` : '')
+  }
+  let args = st.args === undefined ? '' : ' ' + brief(st.args)
+  if (st.then) args += ' then ' + st.then.map(c => c.op + (c.args === undefined ? '' : ' ' + brief(c.args))).join(', ')
+  return `${name}${st.op}${args}`
+}
+
+// brief writes args as they read in the file: {radius: 12}, [0, 0, 14], an
+// inline op as op(args).
+function brief(v) {
+  if (Array.isArray(v)) return '[' + v.map(brief).join(', ') + ']'
+  if (v && typeof v === 'object') {
+    if (typeof v.op === 'string') return v.op.replace(/^solid\./, '') + '(' + (v.args === undefined ? '' : brief(v.args).replace(/^[[{]|[\]}]$/g, '')) + ')'
+    return '{' + Object.entries(v).map(([k, x]) => `${k}: ${brief(x)}`).join(', ') + '}'
+  }
+  return typeof v === 'number' ? (Math.round(v * 100) / 100).toString() : String(v)
+}
+
+// The status of each step that is not ok, from the last mesh.
+const statusOf = i => (lastInfo.steps || []).find(s => s.index === i)
 
 function renderPanel() {
-  document.getElementById('base').value = state.history.base
   document.getElementById('file').textContent = state.file || ''
   document.getElementById('loadErr').textContent = state.loadErr ? 'The file does not parse; showing the last good version.\n' + state.loadErr : ''
   const ol = document.getElementById('steps')
@@ -261,16 +289,16 @@ function renderPanel() {
   if (!steps.length) {
     const p = document.createElement('div')
     p.className = 'empty'
-    p.textContent = 'No steps yet. Drag on the form.'
+    p.textContent = 'No steps. Start over from a form.'
     ol.append(p)
     return
   }
-  const bad = lastInfo.stepError?.index
   steps.forEach((st, i) => {
     const li = document.createElement('li')
+    const status = statusOf(i)
     if (st.off) li.classList.add('off')
-    if (bad === i) li.classList.add('bad')
-    if (bad !== undefined && i > bad) li.classList.add('blocked')
+    if (status?.status === 'error') li.classList.add('bad')
+    if (status?.status === 'blocked') li.classList.add('blocked')
     const on = document.createElement('input')
     on.type = 'checkbox'
     on.checked = !st.off
@@ -278,7 +306,8 @@ function renderPanel() {
     on.onchange = () => post(`/api/steps/${i}/toggle`)
     const desc = document.createElement('span')
     desc.className = 'desc'
-    desc.textContent = `${i + 1}. ${st.op} at (${fmt(st.at)}) by (${fmt(st.by)}) r ${st.radius}`
+    desc.textContent = `${i + 1}. ${describe(st)}` + (st.by === 'agent' ? ' (agent)' : '')
+    if (st.from) desc.title = 'from ' + st.from
     const del = document.createElement('button')
     del.textContent = '×'
     del.title = 'Delete this step'
@@ -290,20 +319,24 @@ function renderPanel() {
     const btns = document.createElement('span')
     btns.style.display = 'flex'
     btns.style.gap = '4px'
-    btns.append(edit, del)
+    if (isPull(st)) btns.append(edit)
+    btns.append(del)
     li.append(on, desc, btns)
     if (editing?.index === i) {
       li.classList.add('editing')
       li.append(editForm(i))
     }
-    if (bad === i) {
+    if (status && !(editing?.index === i)) {
       const e = document.createElement('div')
       e.className = 'err'
-      e.textContent = lastInfo.stepError.msg.replace(/\.?$/, '.') + ' The steps after it are not applied.'
+      if (status.status === 'blocked') e.style.color = 'var(--muted)'
+      e.textContent = status.error.replace(/\.?$/, '.')
       li.append(e)
     }
-    li.onmouseenter = () => { if (!editing) { marker.position.set(...st.at); marker.visible = true } }
-    li.onmouseleave = () => { if (!editing) marker.visible = false }
+    if (isPull(st)) {
+      li.onmouseenter = () => { if (!editing) { marker.position.set(...st.args.at); marker.visible = true } }
+      li.onmouseleave = () => { if (!editing) marker.visible = false }
+    }
     ol.append(li)
   })
 }
@@ -350,7 +383,7 @@ function previewEdit() {
 }
 
 function showEditGizmo() {
-  const st = editing.step
+  const st = editing.step.args
   marker.position.set(...st.at)
   marker.visible = true
   const by = new THREE.Vector3(...st.by)
@@ -402,7 +435,7 @@ function changed() {
 }
 
 function editForm(i) {
-  const st = editing.step
+  const st = editing.step.args
   const box = document.createElement('div')
   box.className = 'edit'
   const fields = []
@@ -444,6 +477,20 @@ function editForm(i) {
   lenRow.append(lSlider, lVal)
   box.append(label('length'), lenRow)
 
+  // Mirror: the same pull again across the X = 0 plane, in this one step.
+  const mirrorRow = document.createElement('label')
+  mirrorRow.className = 'wide'
+  const mirrorBox = document.createElement('input')
+  mirrorBox.type = 'checkbox'
+  mirrorBox.checked = editing.step.mirror === 'x'
+  mirrorBox.onchange = () => {
+    if (mirrorBox.checked) editing.step.mirror = 'x'
+    else delete editing.step.mirror
+    changed()
+  }
+  mirrorRow.append(mirrorBox, 'also on the opposite side (x)')
+  box.append(label('mirror'), mirrorRow)
+
   const msg = document.createElement('div')
   msg.className = 'msg'
   box.append(msg)
@@ -473,17 +520,16 @@ function editForm(i) {
     lSlider.max = (0.64 * st.radius).toFixed(2) // just under the fold limit
     lSlider.value = len
     lVal.textContent = `${len.toFixed(2)} of ${(0.65 * st.radius).toFixed(1)}`
-    const err = lastInfo.stepError
-    const broken = !!(err && err.index === editing?.index)
-    msg.textContent = broken ? err.msg + '. Fix it to save.' : ''
+    const err = editing && statusOf(editing.index)
+    const broken = err?.status === 'error'
+    msg.textContent = broken ? err.error.replace(/\.?$/, '.') + ' Fix it to save.' : ''
     save.disabled = broken
   }
   refreshEditFields()
   return box
 }
 
-document.getElementById('base').onchange = e => post('/api/base', { base: e.target.value, clear: false })
-document.getElementById('clear').onclick = () => post('/api/base', { base: state.history.base, clear: true })
+document.getElementById('restart').onclick = () => post('/api/start', { form: document.getElementById('start').value })
 radiusInput.oninput = () => { radiusVal.textContent = radiusInput.value + ' mm'; ring.scale.setScalar(+radiusInput.value); mirrorRing.scale.setScalar(+radiusInput.value) }
 radiusInput.oninput()
 window.addEventListener('keydown', e => {
@@ -524,15 +570,13 @@ const mirrors = x => mirrorInput.checked && Math.abs(x) > +radiusInput.value * 0
 let dragging = null
 let inFlight = false, queued = null
 
+// The step a drag makes: one pull, mirrored in x when mirror is on and the
+// pull is off the mirror plane.
+const round = v => v.map(x => Math.round(x * 1000) / 1000)
 function pullSteps(d) {
-  const radius = +radiusInput.value
-  const at = d.point.toArray(), by = d.by.toArray()
-  const steps = [{ op: 'pull', at, by, radius }]
-  // The mirror copy, unless the pull is on the mirror plane itself.
-  if (mirrors(at[0])) {
-    steps.push({ op: 'pull', at: [-at[0], at[1], at[2]], by: [-by[0], by[1], by[2]], radius })
-  }
-  return steps
+  const step = { op: 'sculpt.Pull', args: { at: round(d.point.toArray()), by: round(d.by.toArray()), radius: +radiusInput.value } }
+  if (mirrors(d.point.x)) step.mirror = 'x'
+  return [step]
 }
 
 // preview shows an unsaved version of the whole step list. One request at
