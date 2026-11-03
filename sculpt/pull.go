@@ -26,11 +26,15 @@ var pullSlope = 8 / (3 * math.Sqrt(3))
 // or widen the radius.
 //
 // The result is a solid whose surface is exactly where it should be and
-// whose field is a safe lower bound on the distance, scaled down by a
-// constant so it renders without holes. The magnitudes are therefore wrong
-// everywhere, not just near the pull: a Shell or Offset built straight on
-// a pulled solid comes out several times too thick. Sample the result and
-// Redistance before anything that reads magnitudes.
+// whose field is a safe lower bound on the distance. Inside the brush the
+// field is scaled down by a constant so it renders without holes, and
+// near the brush it is held below the distance to the brush, so the
+// magnitudes are wrong there: a Shell or Offset built straight on a
+// pulled solid comes out several times too thick through the pull. Far
+// from the brush (farther from it than from the surface) the field is the
+// source's, unchanged, so a chain of pulls does not compound into a field
+// too small everywhere for the mesher to skip empty space. Sample the
+// result and Redistance before anything that reads magnitudes.
 func Pull(s *solid.Solid, at, by v3.Vec, radius float64) *solid.Solid {
 	if radius <= 0 {
 		panic(fmt.Sprintf("sculpt.Pull: radius must be positive, got %g", radius))
@@ -55,6 +59,7 @@ func Pull(s *solid.Solid, at, by v3.Vec, radius float64) *solid.Solid {
 		s:     s.SDF3,
 		dest:  dest.Raw(),
 		by:    by.Raw(),
+		r:     radius,
 		r2:    radius * radius,
 		scale: 1 / (1 + stretch),
 		bb:    bb.SDF(),
@@ -65,7 +70,7 @@ type pullSDF struct {
 	s     sdf.SDF3
 	dest  v3sdf.Vec // where the grabbed point lands
 	by    v3sdf.Vec
-	r2    float64
+	r, r2 float64
 	scale float64
 	bb    sdf.Box3
 }
@@ -76,11 +81,26 @@ func (p *pullSDF) BoundingBox() sdf.Box3 { return p.bb }
 // falloff is centred on the landing point, so the landing point reads the
 // source exactly at the grabbed point, and the warp's inverse is closed
 // form.
+//
+// Outside the brush's ball the surface is the source's, and the only
+// surface nearer than the source says is the pulled part inside the ball.
+// A path from q to it crosses the ball at some b, where the inside field
+// c·s(b) is already a bound, so the distance is at least
+// c·|s(q)| + (1-c)·δ, δ being q's distance to the ball. The field outside
+// is the smaller of that and |s(q)|: continuous with the inside at the
+// ball, 1-Lipschitz (a min of two), and exactly the source once the ball
+// is farther away than the surface.
 func (p *pullSDF) Evaluate(q v3sdf.Vec) float64 {
-	t2 := q.Sub(p.dest).Length2() / p.r2
-	if t2 >= 1 {
-		return p.s.Evaluate(q) * p.scale
+	d2 := q.Sub(p.dest).Length2()
+	if d2 >= p.r2 {
+		f := p.s.Evaluate(q)
+		a := math.Abs(f)
+		if b := p.scale*a + (1-p.scale)*(math.Sqrt(d2)-p.r); b < a {
+			a = b
+		}
+		return math.Copysign(a, f)
 	}
+	t2 := d2 / p.r2
 	w := (1 - t2) * (1 - t2)
 	return p.s.Evaluate(q.Sub(p.by.MulScalar(w))) * p.scale
 }

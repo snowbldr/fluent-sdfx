@@ -30,10 +30,14 @@ The usual chain: build with primitives and `Pull`, `Sample`, grid verbs,
 A `Pull` (and a twist, a smooth blend, a difference) leaves the field a
 *bound* on the distance, not the distance. The surface is right; the
 magnitudes are not. `Shell`, `Offset`, clearance probes and smooth blends
-read magnitudes, so on a pulled solid they are wrong, and not subtly:
-`TestFigureShellNeedsRedistance` measures a 1.6 mm shell coming out at 5.7
-to 9.0 mm on the raw pulled figure and at 1.60 after `Redistance`.
-`Redistance` is what makes chaining sculpt operations honest.
+read magnitudes, so on a pulled solid they are wrong near the pull, and not
+subtly: `TestFigureShellNeedsRedistance` measures a 1.6 mm shell coming out
+at 3.6 mm through the nose and 4.7 mm through the stem on the raw pulled
+figure, and at 1.60 after `Redistance`. Far from every brush (farther from
+it than from the surface) a pull leaves the field exactly as it was, so the
+body's side measures 1.60 either way and a chain of pulls does not shrink
+the field everywhere. `Redistance` is what makes chaining sculpt operations
+honest.
 
 ## The test cases
 

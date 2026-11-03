@@ -2,6 +2,7 @@ package sculpt
 
 import (
 	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/snowbldr/fluent-sdfx/solid"
@@ -100,10 +101,10 @@ func TestFigurePullRefusesToFold(t *testing.T) {
 	Pull(figure(), v3.XYZ(0, -headR, headZ), v3.Y(-5), 7)
 }
 
-// The pulled field is a scaled bound, and the test says so in numbers: a
-// shell built on it is several times too thick, and the same shell on the
-// redistanced grid is the stated thickness, through the nose and through
-// the untouched body alike.
+// The pulled field is a bound near the brushes, and the test says so in
+// numbers: a shell built on it is several times too thick through a pull,
+// the same shell on the redistanced grid is the stated thickness, and
+// through the untouched body, far from any brush, both are right.
 func TestFigureShellNeedsRedistance(t *testing.T) {
 	f := sculptedFigure()
 	const wall = 1.6
@@ -137,10 +138,11 @@ func TestFigureShellNeedsRedistance(t *testing.T) {
 	for _, c := range []struct {
 		name   string
 		p, dir v3.Vec
+		pulled bool
 	}{
-		{"through the nose", v3.XYZ(0, -headR-noseBy, noseAt), v3.Y(1)},
-		{"through the body side", v3.X(-bodyR), v3.X(1)},
-		{"through the stem", v3.Z(headZ + headR + stemBy), v3.Z(1)},
+		{"through the nose", v3.XYZ(0, -headR-noseBy, noseAt), v3.Y(1), true},
+		{"through the body side", v3.X(-bodyR), v3.X(1), false},
+		{"through the stem", v3.Z(headZ + headR + stemBy), v3.Z(1), true},
 	} {
 		good, ok := validate.WallThickness(goodHollow, c.p, c.dir, 10)
 		if !ok {
@@ -150,9 +152,48 @@ func TestFigureShellNeedsRedistance(t *testing.T) {
 		raw, _ := validate.WallThickness(rawHollow, c.p, c.dir, 10)
 		t.Logf("%s: stated %.2f, raw pulled %.3f, redistanced %.3f", c.name, wall, raw, good)
 		validate.RequireNear(t, c.name+" wall", good, wall, 0.25)
-		if raw < 2*wall {
+		switch {
+		case c.pulled && raw < 2*wall:
 			t.Errorf("%s: the raw pulled shell (%.3f) is not the trap it should be (expected > %.1f)", c.name, raw, 2*wall)
+		case !c.pulled:
+			validate.RequireNear(t, c.name+" raw wall, far from a brush", raw, wall, 0.05)
 		}
+	}
+}
+
+// The pulled field must stay a bound: never steeper than 1 (or a sphere
+// tracer steps through the surface) and never more than the distance to
+// the redistanced surface. Checked on random pairs of nearby points and
+// against the redistanced grid, after a chain of strokes.
+func TestPullFieldIsABound(t *testing.T) {
+	f := sculptedFigure()
+	for i := 0; i < 6; i++ {
+		a := float64(i)
+		f = Pull(f, v3.XYZ(10*math.Cos(a), 10*math.Sin(a), 2*a-4), v3.XYZ(math.Cos(a), math.Sin(a), 0.2).MulScalar(2), 5)
+	}
+	r := Sample(f, 128).Redistance().Solid()
+	bb := f.Bounds()
+	rng := rand.New(rand.NewSource(3))
+	steep, over := 0.0, 0.0
+	for i := 0; i < 20000; i++ {
+		s := bb.Size()
+		p := bb.Min.Add(v3.XYZ(rng.Float64()*s.X, rng.Float64()*s.Y, rng.Float64()*s.Z))
+		q := p.Add(v3.XYZ(rng.NormFloat64(), rng.NormFloat64(), rng.NormFloat64()).MulScalar(0.5))
+		fp := validate.At(f, p)
+		if l := math.Abs(fp-validate.At(f, q)) / p.Sub(q).Length(); l > steep {
+			steep = l
+		}
+		if d := math.Abs(fp) - math.Abs(validate.At(r, p)); d > over {
+			over = d
+		}
+	}
+	h := bb.Size().MaxComponent() / 128
+	t.Logf("steepest slope %.4f; most above the true distance %.3f mm (a cell is %.3f)", steep, over, h)
+	if steep > 1+1e-6 {
+		t.Errorf("the field is steeper than 1 (%.4f)", steep)
+	}
+	if over > h {
+		t.Errorf("the field overstates the distance by %.3f mm", over)
 	}
 }
 
