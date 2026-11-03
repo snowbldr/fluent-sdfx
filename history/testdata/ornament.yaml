@@ -1,0 +1,31 @@
+# sculpt's ornament scenario: a hollow bauble with a hanging loop, filled
+# solid for a plaster mould. The fill seed is anchored to the inner wall,
+# 2 mm into the void, so it stays in the void if the ball changes size.
+steps:
+  - name: ball
+    op: solid.Sphere
+    args: [15]
+    then:
+      - {op: Shell, args: [1.5]}
+  - name: loop
+    op: solid.Torus
+    args: {majorR: 3, minorR: 0.8}
+    then:
+      - {op: RotateX, args: [90]}
+      - {op: TranslateZ, args: [18.3]}
+  - name: bauble
+    op: Union
+    on: ball
+    args: [loop]
+  - name: grid
+    op: sculpt.Sample
+    args: {cells: 96}
+  - name: VoidSeed
+    anchor:
+      on: bauble
+      nearest: [0, 0, 0]
+      offset: 2
+  - name: filled
+    op: Fill
+    on: grid
+    args: {seed: VoidSeed}

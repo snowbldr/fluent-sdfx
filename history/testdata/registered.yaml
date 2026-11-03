@@ -1,0 +1,11 @@
+steps:
+  - name: ring
+    op: test.Ring
+    args: {outer: 10, inner: 6, height: 3, notches: 4}
+  - name: peg
+    op: test.Peg
+    args: {height: 12, radius: 1}
+    then: [{op: TranslateX, args: [8]}]
+  - op: Union
+    on: ring
+    args: [peg]

@@ -1,0 +1,37 @@
+# Every way a step can be written: positional and named args, a variadic,
+# an int, a placement chain on body anchors, a nested op, a method step on
+# the previous step, an off step.
+params:
+  n: 6
+  lift: [0, 0, 2]
+steps:
+  - name: plate
+    op: solid.Cylinder
+    args: [3, 20, 0.5]
+  - name: peg
+    op: solid.Cylinder
+    args: {height: 8, radius: 1.5, round: 0}
+    then:
+      - {op: TranslateX, args: [14]}
+      - {op: RotateCopyZ, args: {n: $n}}
+  - name: stem
+    op: solid.Capsule
+    args: {height: 10, radius: 2}
+  - name: mast
+    op: Bottom
+    on: stem
+    then:
+      - {op: On, args: [plate.Top]}
+      - {op: Union}
+  - name: assembly
+    op: Union
+    args: [peg]
+  - op: Translate
+    args: [$lift]
+    off: true
+  - name: rounded
+    op: solid.SmoothUnion
+    args:
+      - {op: solid.RoundMin, args: [1]}
+      - assembly
+      - {op: solid.Torus, args: [17, 1]}

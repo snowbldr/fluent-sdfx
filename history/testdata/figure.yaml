@@ -1,0 +1,44 @@
+# The figure from sculpt's scenario tests, as a history: a body with a
+# head blended on top, a nose pulled from the face at an anchor, both
+# cheeks pulled by one mirrored step, then hollowed for printing.
+params:
+  headR: 8
+  wall: 1.6
+steps:
+  - name: body
+    op: solid.Sphere
+    args: {radius: 12}
+  - name: head
+    op: solid.Sphere
+    args: {radius: $headR}
+    then:
+      - op: Translate
+        args: {v: [0, 0, 14]}
+  - name: figure
+    op: solid.SmoothUnion
+    args:
+      min: {op: solid.RoundMin, args: {k: 3}}
+      solids: [body, head]
+  - name: NoseTip
+    anchor:
+      on: figure
+      ray: {from: [0, -40, 14], dir: [0, 1, 0]}
+  - name: nose
+    op: sculpt.Pull
+    args: {at: NoseTip, by: [0, -4, 0], radius: 7}
+    by: agent
+    from: chat/123
+  - name: cheeks
+    op: sculpt.Pull
+    args:
+      at: {anchor: {ray: {from: [-30, -14, 12], toward: [0, 0, 12]}}}
+      by: [-1.5, -1, 0]
+      radius: 4
+    mirror: x
+  - name: grid
+    op: sculpt.Sample
+    args: {cells: 96}
+  - op: Redistance
+  - name: hollow
+    op: Shell
+    args: {thickness: $wall}

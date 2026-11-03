@@ -1,0 +1,29 @@
+# sculpt's cluster scenario: blobs with a crease, a block with sharp
+# edges and a bead that floats. Keep the body at the origin, then smooth.
+steps:
+  - name: body
+    op: solid.Sphere
+    args: [10]
+  - name: arm
+    op: solid.Sphere
+    args: [4]
+    then: [{op: TranslateX, args: [10]}]
+  - name: block
+    op: solid.Box
+    args: {size: [10, 10, 10], round: 0}
+    then: [{op: TranslateZ, args: [10]}]
+  - name: bead
+    op: solid.Sphere
+    args: [2]
+    then: [{op: TranslateZ, args: [20]}]
+  - name: form
+    op: Union
+    on: body
+    args: {other: [arm, block, bead]}
+  - op: sculpt.Sample
+    args: {cells: 128}
+  - op: Keep
+    args: {seed: [0, 0, 0]}
+  - name: smooth
+    op: Smooth
+    args: {r: 2}
