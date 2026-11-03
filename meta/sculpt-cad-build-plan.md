@@ -416,3 +416,21 @@ Where to pick it up:
    real gizmo (handles at `at` and `at+by`) is the obvious next try.
 3. The Redistance seed search is still single-threaded and is most of
    the 110 ms at 128 cells.
+
+## Asks from thingbuildr (2026-11-03)
+
+thingbuildr is building an AI-forward studio on this runtime: a chat scoped to each panel,
+an MCP generated from the palette, the agent's questions as forms (its
+`docs/plan/ai-cad.md`). Two changes here make that work; the owner agreed both.
+
+1. Provenance on every step. A step carries `by: user | agent` and an opaque reference to
+   the prompt or chat that produced it (`from: chat/123`), which the runtime stores and
+   round-trips but never interprets. Without it the history records what happened and
+   never why, and a chat cannot answer "why is the nose like this".
+2. Anchors ahead of the runtime. A step that stores `at: [0, -8, 14]` breaks silently when
+   an earlier dimension changes, and an agent changes earlier dimensions all the time.
+   Surface and user anchors (2.2, 2.4) let a step say `NoseTip`, which survives the reflow
+   and is the same word the person used. The 2.5 acceptance scenario is the test.
+
+Branching is not an ask: the history stays a line here, and thingbuildr branches the file
+in git.
