@@ -102,6 +102,14 @@ Not a public interchange format.
 Anchors are what make a reflow land in the right place rather than at the
 same coordinates. Three kinds.
 
+Phase 2 lands before Phase 3 starts, not alongside it. A step that stores
+`at: [0, -8, 14]` breaks silently when an earlier dimension changes, and
+an agent changes earlier dimensions all the time (thingbuildr's ask,
+2026-11-03). So surface anchors (2.2) and user anchors (2.4) are built
+first as Go API, tested by the 2.5 scenario in Go, and the runtime's
+first schema files already use them. Only the storing of user anchors in
+the YAML waits for Phase 3.
+
 ### 2.1 Body anchors (exist)
 
 The 27 bounding-box anchors and the placement verbs. No change, but the
@@ -145,7 +153,10 @@ also what parametric CAD does.
 ### 2.4 User anchors
 
 A named anchor defined by any of the above and stored in the history.
-"NoseTip" is then a word later steps, the UI and an AI can all use.
+"NoseTip" is then a word later steps, the UI and an AI can all use, and
+the same word the person used when they asked for it. In Go (before the
+runtime) a user anchor is a named value that resolves against the current
+surface; the runtime stores it under `anchors:` (3.1).
 
 ### 2.5 Acceptance
 
@@ -179,6 +190,8 @@ steps:
     args: {min: {op: solid.RoundMin, args: {k: 3}}, solids: [body, head]}
   - name: nose
     op: sculpt.Pull
+    by: agent          # provenance: user | agent
+    from: chat/123     # provenance: opaque, never interpreted
     args:
       s: figure
       at: {anchor: {ray: {from: head.Front, toward: head.Center}}}
@@ -198,9 +211,17 @@ Rules: step names are the variables; `on` is the receiver for a method;
 inline value; `$name` is a param; `[x, y, z]` is a vector; `step.Anchor`
 is an anchor reference. No expressions.
 
+Provenance: any step may carry `by: user | agent` and `from:`, an opaque
+string naming the prompt or chat that produced it. The runtime stores and
+round-trips both exactly and never interprets `from`. Neither is part of
+the step's content hash (3.3), so relabelling a step never recomputes it.
+Without provenance the history records what happened and never why, and
+a chat cannot answer "why is the nose like this". A step with no `by` is
+`user`.
+
 Pin the schema with a handful of files before the runtime exists: a
 method chain, a blend, a param, a registered function, an anchor, a
-symmetry step. These files are the first tests.
+symmetry step, a step with provenance. These files are the first tests.
 
 ### 3.2 Evaluator
 
@@ -224,7 +245,8 @@ symmetry step. These files are the first tests.
 ### 3.3 Incremental evaluation and the cache
 
 - Each step has a content hash of its own definition plus the hashes of
-  what it references. Unchanged hash, unchanged result.
+  what it references, leaving out `by` and `from`. Unchanged hash,
+  unchanged result.
 - A step whose result is a grid (anything that went through `Sample`)
   caches the grid in memory and on disk (Phase 1.3) keyed by hash.
 - Baking policy: the runtime inserts an implicit bake after every N
@@ -239,7 +261,8 @@ symmetry step. These files are the first tests.
 Generate a `main.go` that builds the same form with the fluent API: one
 statement per step, step names as variables, params as constants, anchors
 resolved to the calls that find them, registered functions imported from
-their module. It must compile and produce congruent geometry
+their module, and provenance as a comment above the step's statement
+(`// agent, chat/123`). It must compile and produce congruent geometry
 (`validate.Congruent` against the runtime's result). This is what makes
 the history a real artefact and what lets a person leave the UI for Go.
 
@@ -267,6 +290,9 @@ also what the bench and an AI will call.
 - Changing `wall` in params changes every shell.
 - The Go export compiles and is congruent.
 - A registered function appears in the palette description and runs.
+- Provenance round-trips: load, edit another step, save, and every `by`
+  and `from` comes back byte for byte; changing only a step's `from`
+  recomputes nothing.
 
 ## Phase 4: Materials
 
@@ -333,7 +359,7 @@ test piece needs detail beyond what a 256-cell dense grid gives.
 Phase 1.1 perf ─┐
 Phase 1.2 verbs ├──► Phase 3 runtime ──► Phase 4 materials ──► Phase 5.2 GLSL ──► 5.3 path tracer
 Phase 1.3 grids ┘         ▲
-Phase 2 anchors ──────────┘
+Phase 2 anchors ──────────┘  (2.2, 2.4 and the 2.5 scenario done first)
 Phase 5.1 turnarounds (any time, early)
 Phase 6 sparse grid (when a piece needs it)
 ```
@@ -348,11 +374,13 @@ with 5.1 in hand so pieces can be judged by eye.
 
 So the follow-up plan has a fixed surface to build against:
 
-- Load, save, and edit a history (add, change, delete, reorder steps).
+- Load, save, and edit a history (add, change, delete, reorder steps),
+  with each step's provenance (`by`, `from`) kept as given.
 - Evaluate at preview or final resolution; receive a mesh per named body
   and the per-step status (ok, error with message, blocked).
 - The palette description (3.5) with widget hints.
-- Anchor listing per step (body, feature, user) with world positions.
+- Anchor listing per step (body, feature, user) with world positions,
+  and user anchors addressable by name (`NoseTip`).
 - Pick: a ray in, the hit step, point and normal out.
 - Export: STL, 3MF, Go.
 - Later: the transpiled GLSL for the history and grid textures.
@@ -378,6 +406,16 @@ The owner accepted the suggestions on all four open questions.
    round-trip reason in 3.4.
 4. The sparse grid (Phase 6) starts when a real piece needs detail beyond
    a 256-cell dense grid, not before.
+
+Added 2026-11-03, from thingbuildr (an AI-forward studio built on this
+runtime: a chat per panel, an MCP generated from the palette, the agent's
+questions as forms; its `docs/plan/ai-cad.md`). The owner agreed both.
+
+5. Every step carries provenance, `by` and an opaque `from` (3.1, 3.3,
+   3.4, 3.7).
+6. Surface and user anchors are built before the runtime (Phase 2 intro,
+   2.4, order). Branching is not an ask: the history stays a line, and
+   thingbuildr branches the file in git.
 
 ## First UI test loop (built 2026-10-29)
 
@@ -410,27 +448,10 @@ What exists:
 
 Where to pick it up:
 
-1. Phase 2 (anchors) and Phase 3 (the reflection runtime) are next; the
-   sculptui server's `applyStep` is the seam the runtime replaces.
+1. Phase 2 (anchors) is next, finished before Phase 3 (the reflection
+   runtime) starts; the sculptui server's `applyStep` is the seam the
+   runtime replaces.
 2. UI controls: the drag gesture and the edit form are first drafts. A
    real gizmo (handles at `at` and `at+by`) is the obvious next try.
 3. The Redistance seed search is still single-threaded and is most of
    the 110 ms at 128 cells.
-
-## Asks from thingbuildr (2026-11-03)
-
-thingbuildr is building an AI-forward studio on this runtime: a chat scoped to each panel,
-an MCP generated from the palette, the agent's questions as forms (its
-`docs/plan/ai-cad.md`). Two changes here make that work; the owner agreed both.
-
-1. Provenance on every step. A step carries `by: user | agent` and an opaque reference to
-   the prompt or chat that produced it (`from: chat/123`), which the runtime stores and
-   round-trips but never interprets. Without it the history records what happened and
-   never why, and a chat cannot answer "why is the nose like this".
-2. Anchors ahead of the runtime. A step that stores `at: [0, -8, 14]` breaks silently when
-   an earlier dimension changes, and an agent changes earlier dimensions all the time.
-   Surface and user anchors (2.2, 2.4) let a step say `NoseTip`, which survives the reflow
-   and is the same word the person used. The 2.5 acceptance scenario is the test.
-
-Branching is not an ask: the history stays a line here, and thingbuildr branches the file
-in git.
