@@ -430,28 +430,61 @@ to the file reloads the view within a second; a step that fails is shown
 in red and the steps after it are skipped. It knows one operation and
 three base forms, and it is where the Phase 3 runtime will plug in.
 
-## Where it was left (2026-11-03)
+## Built (2026-11-03): Phase 2 surface and user anchors, Phase 3 runtime
 
-Parked by the owner after the first UI loop. The loop works as a proof of
-concept; the controls are usable but hard to aim, which is a UI problem
-for the follow-up plan, not a kernel one.
+Unparked the same day because thingbuildr was blocked on it. What landed,
+and where it differs from the sections above:
 
-What exists:
-
-- `sculpt/`: Pull, Sample, Redistance, Fill, Enclosed, Components, Keep,
-  Smooth, Solid, with scenario tests (`go test ./sculpt/ -v`).
-- `tools/sculptui` (`make sculpt`): drag to pull, mirror off by default
-  with a ghost ring, toggle, delete, undo, hand edits reload, and an edit
-  form per step with live preview (Save locks while the step errors).
-  The history is baked onto a grid and cached by prefix, so a preview on
-  the last step costs about 5 ms and an edit of step 2 of 15 about 190 ms.
+- `anchor/` (2.2): `Ray`, `Toward`, `Nearest`, `Point{Pos, Normal}`,
+  `Point.Offset`. Works on bounds (pulled, blended fields) by never
+  trusting a magnitude: sphere tracing with a floor on the step and
+  bisection at the crossing; Newton projection plus a tangential walk for
+  nearest. A miss panics. The 2.5 scenario passes in Go
+  (`TestReflowFollowsAnchors`) and in the history
+  (`TestFigureReflowsWithTheHead`).
+- User anchors (2.4) are steps, not a top-level `anchors:` map:
+  `- name: NoseTip` with `anchor: {on, ray | nearest, offset}`. As steps
+  they get provenance, ordering, red-node errors and the edit operations
+  for free. Inline anchors (`at: {anchor: {...}}`) default their surface to
+  the step's input.
+- Feature anchors (2.3) are not built; box anchors and surface anchors
+  covered every case so far.
+- `history/` (3.1 to 3.6): schema as in 3.1 with the anchor change, plus
+  provenance (`by`, `from`), `off`, positional args, and an omitted `on`
+  meaning the previous step for a method or a function whose first
+  parameter is a solid. The function table is generated
+  (`history/internal/opsgen`, `go generate ./history/`) with parameter
+  names and doc synopses, and `TestOpsTableFresh` fails the build when it
+  is stale, instead of a check in llms-check. Cache keys leave out name
+  and provenance. Bakes (`Options.BakeEvery`) sample without
+  redistancing, so a bake never changes what a Shell after it measures,
+  and the Go export (no bakes) stays congruent. `history/cli` is the
+  command line as a function, for programs that register their own ops;
+  `tools/history` is the stock binary.
+- 3.7 acceptance passes: the three sculpt scenario forms as YAML match
+  the Go builds exactly; deleting the nose reflows; deleting the body
+  blocks downstream and the head still shows; a param changes every
+  shell; the Go export compiles and matches the runtime at 500 points for
+  five histories; a registered function runs and is in the palette;
+  provenance round-trips and relabelling recomputes nothing.
+- `sculpt.Pull` changed: outside the brush the field is
+  min(|s|, c|s| + (1-c)δ) instead of c·s everywhere, so far from every
+  brush it is the source's field. A 15-pull chain meshes in 0.25 s
+  instead of 1.28 s, and a shell through untouched parts of a pulled
+  form is right without a redistance. `TestPullFieldIsABound` checks the
+  slope stays at most 1 and the field never overstates the distance.
+- `tools/sculptui` runs on the runtime: the file is a history, any op can
+  be written into it, a drag makes one `sculpt.Pull` step (mirrored with
+  `mirror: x`), and an old-format file is converted on load with the
+  original kept as `.v1`.
 
 Where to pick it up:
 
-1. Phase 2 (anchors) is next, finished before Phase 3 (the reflection
-   runtime) starts; the sculptui server's `applyStep` is the seam the
-   runtime replaces.
-2. UI controls: the drag gesture and the edit form are first drafts. A
-   real gizmo (handles at `at` and `at+by`) is the obvious next try.
-3. The Redistance seed search is still single-threaded and is most of
+1. thingbuildr builds its history panel and MCP on `history.Palette`,
+   the edit operations and `StepResult` JSON.
+2. Feature anchors (2.3), grid persistence (1.3), and Phase 4 materials.
+3. UI controls: the drag gesture and the edit form are first drafts. A
+   gizmo with handles at `at` and `at+by` is the next try, and a pull
+   could store a ray anchor instead of the hit point.
+4. The Redistance seed search is still single-threaded and is most of
    the 110 ms at 128 cells.
