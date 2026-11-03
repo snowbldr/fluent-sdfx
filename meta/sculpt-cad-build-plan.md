@@ -28,21 +28,21 @@ open library underneath that an AI can also drive.
 
 ## Principles that hold through every phase
 
-- **The kernel never changes to serve the UI.** The UI consumes the
+- The kernel never changes to serve the UI. The UI consumes the
   history runtime; the runtime consumes the library. Anything the UI
   needs that the library lacks is a library feature with its own tests
   and its own reason to exist.
-- **Public API changes go through the bench.** The AI-friendly findings
+- Public API changes go through the bench. The AI-friendly findings
   rule stands: measure before changing `solid` or `shape`. New packages
   are free until they are documented in `docs/llms.txt`.
-- **No control flow and no arithmetic in the history.** Named params,
+- No control flow and no arithmetic in the history. Named params,
   references to steps and anchors, literal numbers. Anything procedural
   is a registered Go function. The moment the YAML grows an `if`, it is a
   worse Go.
-- **Every phase ends with a scenario test** in the style of `sculpt/`: a
+- Every phase ends with a scenario test in the style of `sculpt/`: a
   realistic piece, numbers asserted against geometry computed another
   way, log lines carrying the measurements.
-- **Bake is a cache, never a flatten.** The history is always the truth.
+- Bake is a cache, never a flatten. The history is always the truth.
   A grid is recomputable from a prefix of the history and is discarded
   when that prefix changes.
 
@@ -114,10 +114,10 @@ unambiguous aliases for `FrontAt`/`BackAt`. Goes through the bench.
 A point on a surface, remembered by how it was found, resolved at run
 time against the current surface:
 
-- **Ray anchor**: from a point (a body anchor, a literal, or the camera)
+- Ray anchor: from a point (a body anchor, a literal, or the camera)
   toward a point or along a direction; `Raycast` finds the hit. Misses
   are a step error, never a silent fallback.
-- **Nearest anchor**: the surface point nearest a given point.
+- Nearest anchor: the surface point nearest a given point.
 
 Both return position and normal (`Normal` exists). This is how a pull
 remembers "the nose", and how a fill remembers "inside the body" when
@@ -391,3 +391,28 @@ step. Steps can be turned off or deleted and the form reflows; a hand edit
 to the file reloads the view within a second; a step that fails is shown
 in red and the steps after it are skipped. It knows one operation and
 three base forms, and it is where the Phase 3 runtime will plug in.
+
+## Where it was left (2026-11-03)
+
+Parked by the owner after the first UI loop. The loop works as a proof of
+concept; the controls are usable but hard to aim, which is a UI problem
+for the follow-up plan, not a kernel one.
+
+What exists:
+
+- `sculpt/`: Pull, Sample, Redistance, Fill, Enclosed, Components, Keep,
+  Smooth, Solid, with scenario tests (`go test ./sculpt/ -v`).
+- `tools/sculptui` (`make sculpt`): drag to pull, mirror off by default
+  with a ghost ring, toggle, delete, undo, hand edits reload, and an edit
+  form per step with live preview (Save locks while the step errors).
+  The history is baked onto a grid and cached by prefix, so a preview on
+  the last step costs about 5 ms and an edit of step 2 of 15 about 190 ms.
+
+Where to pick it up:
+
+1. Phase 2 (anchors) and Phase 3 (the reflection runtime) are next; the
+   sculptui server's `applyStep` is the seam the runtime replaces.
+2. UI controls: the drag gesture and the edit form are first drafts. A
+   real gizmo (handles at `at` and `at+by`) is the obvious next try.
+3. The Redistance seed search is still single-threaded and is most of
+   the 110 ms at 128 cells.

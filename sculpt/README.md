@@ -1,4 +1,4 @@
-# sculpt — sculpting-app verbs on fluent-sdfx solids (experimental)
+# sculpt: sculpting-app verbs on fluent-sdfx solids (experimental)
 
 The operations a person reaches for in a 3D sculpting app, as Go functions:
 pull a point of the surface out, smooth every edge at a radius, bucket-fill
@@ -37,22 +37,22 @@ to 9.0 mm on the raw pulled figure and at 1.60 after `Redistance`.
 
 ## The test cases
 
-- **`ornament_test.go`** — a hollow bauble with a hanging loop, going into a
+- `ornament_test.go`: a hollow bauble with a hanging loop, going into a
   plaster mould where the pattern must be solid. `Fill` from the centre:
   the void fills, the outer surface does not move, the loop and its hole
   survive, the volume matches a solid ball. A vented bauble is not enclosed
   and `Fill` refuses.
-- **`figure_test.go`** — a body-and-head figure with a nose pulled from the
+- `figure_test.go`: a body-and-head figure with a nose pulled from the
   face and a stem from the top. The grabbed points land exactly, nothing
   outside the brushes moves, a pull that would fold is refused. Then the
   shell test above.
-- **`cluster_test.go`** — a form built from blobs with a sharp crease, a
+- `cluster_test.go`: a form built from blobs with a sharp crease, a
   block with sharp edges and a bead that floats. `Components` finds the
   bead, `Keep` drops it, `Smooth(2)` fills the crease to the depth a 2 mm
   ball leaves (checked against the exact rolling-ball geometry) and rounds
   the block edge to a 2 mm fillet (checked against sdfx's rounded box).
   A stem thinner than 4 mm does not survive `Smooth(2)`, and the test says so.
-- **`redistance_test.go`** — the primitive on its own: a sphere's field is
+- `redistance_test.go`: the primitive on its own: a sphere's field is
   recovered everywhere from scaled samples to within 0.2 cells; a twisted
   column's shell, 2.28 mm on sdfx's raw field, measures 1.99 after
   redistance; smoothing a sphere leaves it alone.
